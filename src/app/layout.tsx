@@ -33,6 +33,7 @@ export default function RootLayout({
           <div className="mx-auto max-w-6xl px-6 py-4 flex items-center justify-between">
             <Link href="/" className="text-lg font-semibold tracking-tight">Full Hundred</Link>
             <nav className="flex items-center gap-6 text-sm">
+              <Link href="/services" className="hover:underline">Services</Link>
               <Link href="/portfolio" className="hover:underline">View Our Work</Link>
               <Link href="/#quote" className="hover:underline">Get a Free Quote</Link>
               <AuthProvider />
@@ -82,6 +83,11 @@ export default function RootLayout({
                   <li>
                     <Link href="/" className="text-gray-300 hover:text-white transition-colors">
                       Home
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href="/services" className="text-gray-300 hover:text-white transition-colors">
+                      Services
                     </Link>
                   </li>
                   <li>

@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { getCloudinary } from "@/lib/cloudinary";
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();
