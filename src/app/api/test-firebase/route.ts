@@ -24,12 +24,42 @@ export async function GET() {
       const adminAuth = getAdminAuth();
       console.log('Firebase Admin Auth initialized');
       
-      return NextResponse.json({ 
-        success: true, 
-        message: 'Firebase Admin initialized successfully',
-        envCheck,
-        appName: adminApp.name
-      });
+      // Test Firestore connectivity
+      try {
+        const { getFirestore } = await import('firebase-admin/firestore');
+        const db = getFirestore(adminApp);
+        console.log('Firestore instance created');
+        
+        // Test a simple Firestore operation
+        const testCollection = db.collection('_test_connection');
+        const testDoc = await testCollection.doc('test').get();
+        console.log('Firestore read test successful');
+        
+        // Clean up test document
+        await testCollection.doc('test').delete();
+        console.log('Firestore cleanup successful');
+        
+        return NextResponse.json({ 
+          success: true, 
+          message: 'Firebase Admin and Firestore working correctly',
+          envCheck,
+          appName: adminApp.name,
+          firestoreTest: 'passed'
+        });
+        
+      } catch (firestoreError) {
+        console.error('Firestore test failed:', firestoreError);
+        return NextResponse.json({ 
+          success: false, 
+          error: 'Firestore connectivity failed',
+          errorMessage: firestoreError instanceof Error ? firestoreError.message : 'Unknown error',
+          errorCode: (firestoreError as { code?: number })?.code,
+          errorDetails: (firestoreError as { details?: string })?.details,
+          envCheck,
+          appName: adminApp.name
+        }, { status: 500 });
+      }
+      
     } catch (firebaseError) {
       console.error('Firebase Admin test failed:', firebaseError);
       return NextResponse.json({ 

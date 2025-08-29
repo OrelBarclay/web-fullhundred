@@ -84,8 +84,28 @@ export async function getAllProjects() {
     return { success: true, projects };
   } catch (error) {
     console.error('getAllProjects: Error fetching projects:', error);
+    
+    // Temporary fallback for development - try client-side Firebase
+    try {
+      console.log('getAllProjects: Trying client-side Firebase fallback...');
+      
+      // This is a temporary workaround - in production, fix the service account permissions
+      const response = await fetch('/api/projects-fallback', { 
+        method: 'GET',
+        cache: 'no-store'
+      });
+      
+      if (response.ok) {
+        const fallbackProjects = await response.json();
+        console.log('getAllProjects: Fallback successful, got projects:', fallbackProjects.length);
+        return { success: true, projects: fallbackProjects };
+      }
+    } catch (fallbackError) {
+      console.error('getAllProjects: Fallback also failed:', fallbackError);
+    }
+    
     const errorMessage = error instanceof Error ? error.message : 'Failed to fetch projects';
-    return { success: false, error: errorMessage };
+    return { success: false, error: errorMessage, projects: [] };
   }
 }
 

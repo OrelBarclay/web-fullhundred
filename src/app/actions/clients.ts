@@ -49,8 +49,28 @@ export async function getAllClients() {
     return { success: true, clients };
   } catch (error) {
     console.error('getAllClients: Error fetching clients:', error);
+    
+    // Temporary fallback for development - try client-side Firebase
+    try {
+      console.log('getAllClients: Trying client-side Firebase fallback...');
+      
+      // This is a temporary workaround - in production, fix the service account permissions
+      const response = await fetch('/api/clients-fallback', { 
+        method: 'GET',
+        cache: 'no-store'
+      });
+      
+      if (response.ok) {
+        const fallbackClients = await response.json();
+        console.log('getAllClients: Fallback successful, got clients:', fallbackClients.length);
+        return { success: true, clients: fallbackClients };
+      }
+    } catch (fallbackError) {
+      console.error('getAllClients: Fallback also failed:', fallbackError);
+    }
+    
     const errorMessage = error instanceof Error ? error.message : 'Failed to fetch clients';
-    return { success: false, error: errorMessage };
+    return { success: false, error: errorMessage, clients: [] };
   }
 }
 

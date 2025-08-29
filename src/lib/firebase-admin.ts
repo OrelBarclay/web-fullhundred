@@ -17,22 +17,49 @@ export const getFirebaseAdmin = (): App => {
     privateKeyLength: privateKey?.length || 0
   });
 
-  if (!projectId || !clientEmail || !privateKey) {
-    throw new Error('Missing Firebase Admin environment variables');
+  if (!projectId) {
+    throw new Error('Missing FIREBASE_PROJECT_ID environment variable');
   }
 
   try {
     const existing = getApps();
-    adminApp = existing.length ? existing[0]! : initializeApp({
-      credential: cert({
-        projectId,
-        clientEmail,
-        privateKey: privateKey.replace(/\\n/g, '\n'),
-      }),
-    }, 'admin');
     
-    console.log('Firebase Admin initialized successfully');
-    return adminApp;
+    if (existing.length > 0) {
+      adminApp = existing[0]!;
+      console.log('Using existing Firebase Admin app');
+      return adminApp;
+    }
+
+    // Try service account credentials first
+    if (clientEmail && privateKey) {
+      try {
+        adminApp = initializeApp({
+          credential: cert({
+            projectId,
+            clientEmail,
+            privateKey: privateKey.replace(/\\n/g, '\n'),
+          }),
+        }, 'admin');
+        console.log('Firebase Admin initialized with service account credentials');
+        return adminApp;
+      } catch (serviceAccountError) {
+        console.warn('Service account initialization failed, trying application default credentials:', serviceAccountError);
+      }
+    }
+
+    // Fallback: Use application default credentials
+    try {
+      adminApp = initializeApp({
+        projectId,
+        // This will use GOOGLE_APPLICATION_CREDENTIALS or default service account
+      }, 'admin');
+      console.log('Firebase Admin initialized with application default credentials');
+      return adminApp;
+    } catch (defaultCredError) {
+      console.error('Application default credentials also failed:', defaultCredError);
+      throw new Error('Failed to initialize Firebase Admin with any authentication method');
+    }
+    
   } catch (error) {
     console.error('Firebase Admin initialization error:', error);
     throw error;
