@@ -1,18 +1,30 @@
 import { NextResponse } from 'next/server';
+import { getFirestore, collection, getDocs } from 'firebase/firestore';
+import { getFirebaseApp } from '@/lib/firebase';
 
 export async function GET() {
   try {
-    // This is a temporary fallback API route
-    // In production, fix the Firebase Admin service account permissions
+    console.log('projects-fallback: Starting to fetch projects using client-side Firebase...');
     
-    // For now, return empty array to prevent errors
-    // You can implement actual client-side Firebase logic here if needed
+    // Use client-side Firebase to read from the database
+    const app = getFirebaseApp();
+    const db = getFirestore(app);
     
-    console.log('projects-fallback: Returning empty projects array as fallback');
-    return NextResponse.json([]);
+    // Read from the projects collection
+    const projectsSnapshot = await getDocs(collection(db, 'projects'));
+    const projects = projectsSnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+    
+    console.log('projects-fallback: Successfully fetched projects:', projects.length);
+    return NextResponse.json(projects);
     
   } catch (error) {
     console.error('projects-fallback: Error:', error);
-    return NextResponse.json({ error: 'Fallback failed' }, { status: 500 });
+    
+    // If client-side Firebase also fails, return empty array
+    console.log('projects-fallback: Returning empty array due to error');
+    return NextResponse.json([]);
   }
 }

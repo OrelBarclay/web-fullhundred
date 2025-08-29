@@ -4,8 +4,10 @@ import type { Client, Project } from "@/server/db/schema";
 import { getStorageInstance } from "@/lib/firebase";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { v4 as uuid } from "uuid";
-import { createClient, getAllClients } from "@/app/actions/clients";
-import { createProject, getAllProjects } from "@/app/actions/projects";
+import { createClient } from "@/app/actions/clients";
+import { createProject } from "@/app/actions/projects";
+import { getDb } from "@/lib/firebase";
+import { collection, getDocs } from "firebase/firestore";
 
 type UploadType = "image" | "video" | "before" | "after";
 
@@ -53,25 +55,39 @@ export default function AdminPage() {
       setIsLoading(true);
       setError(null);
       
-      const [clientsResult, projectsResult] = await Promise.all([
-        getAllClients(),
-        getAllProjects()
-      ]);
+      // Use client-side Firebase to read from the database
+      const db = getDb();
       
-      if (clientsResult.success) {
-        setClients(clientsResult.clients || []);
-      } else {
-        console.error('Failed to load clients:', clientsResult.error);
+      // Fetch clients
+      try {
+        const clientsSnapshot = await getDocs(collection(db, 'clients'));
+        const clientsData = clientsSnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        })) as Client[];
+        setClients(clientsData);
+        console.log('Loaded clients:', clientsData.length);
+      } catch (clientError) {
+        console.error('Failed to load clients:', clientError);
         setClients([]);
       }
       
-      if (projectsResult.success) {
-        setProjects(projectsResult.projects || []);
-      } else {
-        console.error('Failed to load projects:', projectsResult.error);
+      // Fetch projects
+      try {
+        const projectsSnapshot = await getDocs(collection(db, 'projects'));
+        const projectsData = projectsSnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        })) as Project[];
+        setProjects(projectsData);
+        console.log('Loaded projects:', projectsData.length);
+      } catch (projectError) {
+        console.error('Failed to load projects:', projectError);
         setProjects([]);
       }
+      
     } catch (err) {
+      console.error('Failed to load data:', err);
       setError("Failed to load data");
       setClients([]);
       setProjects([]);

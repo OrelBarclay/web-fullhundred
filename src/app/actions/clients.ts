@@ -44,17 +44,17 @@ export async function createClient(formData: FormData) {
 export async function getAllClients() {
   try {
     console.log('getAllClients: Starting to fetch clients...');
-    const clients = await clientService.getAll();
-    console.log('getAllClients: Successfully fetched clients:', clients.length);
-    return { success: true, clients };
-  } catch (error) {
-    console.error('getAllClients: Error fetching clients:', error);
     
-    // Temporary fallback for development - try client-side Firebase
+    // Try server-side Firebase first
     try {
-      console.log('getAllClients: Trying client-side Firebase fallback...');
+      const clients = await clientService.getAll();
+      console.log('getAllClients: Successfully fetched clients from server:', clients.length);
+      return { success: true, clients };
+    } catch (serverError) {
+      console.log('getAllClients: Server-side failed, trying client-side fallback...', serverError);
       
-      // This is a temporary workaround - in production, fix the service account permissions
+      // Fallback: Use client-side Firebase
+      // This is a temporary workaround until Firebase Admin permissions are fixed
       const response = await fetch('/api/clients-fallback', { 
         method: 'GET',
         cache: 'no-store'
@@ -64,10 +64,12 @@ export async function getAllClients() {
         const fallbackClients = await response.json();
         console.log('getAllClients: Fallback successful, got clients:', fallbackClients.length);
         return { success: true, clients: fallbackClients };
+      } else {
+        throw new Error('Fallback API also failed');
       }
-    } catch (fallbackError) {
-      console.error('getAllClients: Fallback also failed:', fallbackError);
     }
+  } catch (error) {
+    console.error('getAllClients: Error fetching clients:', error);
     
     const errorMessage = error instanceof Error ? error.message : 'Failed to fetch clients';
     return { success: false, error: errorMessage, clients: [] };

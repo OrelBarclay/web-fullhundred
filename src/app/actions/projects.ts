@@ -79,17 +79,17 @@ export async function createProject(formData: FormData) {
 export async function getAllProjects() {
   try {
     console.log('getAllProjects: Starting to fetch projects...');
-    const projects = await projectService.getAll();
-    console.log('getAllProjects: Successfully fetched projects:', projects.length);
-    return { success: true, projects };
-  } catch (error) {
-    console.error('getAllProjects: Error fetching projects:', error);
     
-    // Temporary fallback for development - try client-side Firebase
+    // Try server-side Firebase first
     try {
-      console.log('getAllProjects: Trying client-side Firebase fallback...');
+      const projects = await projectService.getAll();
+      console.log('getAllProjects: Successfully fetched projects from server:', projects.length);
+      return { success: true, projects };
+    } catch (serverError) {
+      console.log('getAllProjects: Server-side failed, trying client-side fallback...', serverError);
       
-      // This is a temporary workaround - in production, fix the service account permissions
+      // Fallback: Use client-side Firebase
+      // This is a temporary workaround until Firebase Admin permissions are fixed
       const response = await fetch('/api/projects-fallback', { 
         method: 'GET',
         cache: 'no-store'
@@ -99,10 +99,12 @@ export async function getAllProjects() {
         const fallbackProjects = await response.json();
         console.log('getAllProjects: Fallback successful, got projects:', fallbackProjects.length);
         return { success: true, projects: fallbackProjects };
+      } else {
+        throw new Error('Fallback API also failed');
       }
-    } catch (fallbackError) {
-      console.error('getAllProjects: Fallback also failed:', fallbackError);
     }
+  } catch (error) {
+    console.error('getAllProjects: Error fetching projects:', error);
     
     const errorMessage = error instanceof Error ? error.message : 'Failed to fetch projects';
     return { success: false, error: errorMessage, projects: [] };
