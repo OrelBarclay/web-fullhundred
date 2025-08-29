@@ -1,30 +1,31 @@
 "use client";
-import { useState, useEffect } from "react";
-import { getAuthInstance, signOut } from "@/lib/firebase";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
-import type { User } from "firebase/auth";
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { getAuthInstance, signOut } from '@/lib/firebase';
+import type { User } from 'firebase/auth';
 
 export default function DashboardPage() {
-  const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [user, setUser] = useState<User | null>(null);
   const router = useRouter();
 
   useEffect(() => {
     const auth = getAuthInstance();
     const unsubscribe = auth.onAuthStateChanged((user) => {
       if (user) {
+        console.log('Dashboard: User authenticated:', user.email);
         setUser(user);
+        setIsLoading(false);
       } else {
-        router.push("/login");
+        console.log('Dashboard: No user, redirecting to login');
+        router.push('/login');
       }
-      setIsLoading(false);
     });
 
     return () => unsubscribe();
   }, [router]);
 
-  async function handleLogout() {
+  const handleLogout = async () => {
     try {
       await signOut(getAuthInstance());
       await fetch("/api/auth/logout", { method: "POST" });
@@ -32,64 +33,73 @@ export default function DashboardPage() {
     } catch (error) {
       console.error("Logout error:", error);
     }
-  }
+  };
 
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div>Loading...</div>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading dashboard...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
-            <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-            <div className="flex items-center space-x-4">
-              <span className="text-gray-700">Welcome, {user?.email}</span>
-              <button
-                onClick={handleLogout}
-                className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
-              >
-                Logout
-              </button>
-            </div>
+    <div className="min-h-screen bg-gray-50 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="bg-white shadow rounded-lg p-6">
+          <div className="flex justify-between items-center mb-6">
+            <h1 className="text-3xl font-bold text-gray-900">
+              Welcome to Your Dashboard
+            </h1>
+            <button
+              onClick={handleLogout}
+              className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition-colors"
+            >
+              Logout
+            </button>
           </div>
-        </div>
-      </header>
-
-      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="px-4 py-6 sm:px-0">
-          <div className="border-4 border-dashed border-gray-200 rounded-lg p-8">
-            <div className="text-center">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">
-                Welcome to Your Dashboard
-              </h2>
-              <p className="text-gray-600 mb-6">
-                This is where you can view your project updates, track progress, and manage your account.
-              </p>
-              <div className="space-y-4">
-                <Link
-                  href="/portfolio"
-                  className="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700"
-                >
-                  View Our Portfolio
-                </Link>
-                <br />
-                <Link
-                  href="/#quote"
-                  className="inline-block bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700"
-                >
-                  Request a Quote
-                </Link>
+          
+          <div className="bg-blue-50 border border-blue-200 rounded-md p-4 mb-6">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-blue-800">
+                  Authentication Status
+                </h3>
+                <div className="mt-2 text-sm text-blue-700">
+                  <p>✅ Logged in as: {user?.email}</p>
+                  <p>✅ User ID: {user?.uid}</p>
+                  <p>✅ This page loaded successfully!</p>
+                </div>
               </div>
             </div>
           </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Projects</h3>
+              <p className="text-gray-600">View and manage your projects</p>
+            </div>
+            
+            <div className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Profile</h3>
+              <p className="text-gray-600">Update your profile information</p>
+            </div>
+            
+            <div className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Settings</h3>
+              <p className="text-gray-600">Configure your account settings</p>
+            </div>
+          </div>
         </div>
-      </main>
+      </div>
     </div>
   );
 }

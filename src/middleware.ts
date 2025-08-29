@@ -9,9 +9,10 @@ export function middleware(request: NextRequest) {
   const allCookies = request.cookies.getAll();
   console.log('Middleware - All cookies:', allCookies.map(c => ({ name: c.name, value: c.value ? 'present' : 'missing' })));
   
-  // Get auth token
-  const authToken = request.cookies.get('auth-token');
+  // Get auth token (try both versions)
+  const authToken = request.cookies.get('auth-token') || request.cookies.get('auth-token-debug');
   console.log('Middleware - Auth token present:', !!authToken?.value);
+  console.log('Middleware - Auth token source:', request.cookies.get('auth-token') ? 'httpOnly' : 'debug');
   
   // Protect admin routes
   if (pathname.startsWith('/admin')) {

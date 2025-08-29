@@ -125,8 +125,17 @@ export async function POST(request: NextRequest) {
     // Set the session cookie with proper configuration
     response.cookies.set('auth-token', sessionCookie, {
       maxAge: 60 * 60 * 24 * 5 * 1000, // 5 days
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      httpOnly: false, // Allow client-side access for debugging
+      secure: false, // Allow HTTP for local development
+      sameSite: 'lax',
+      path: '/',
+    });
+    
+    // Also set a non-httpOnly version for debugging
+    response.cookies.set('auth-token-debug', sessionCookie, {
+      maxAge: 60 * 60 * 24 * 5 * 1000, // 5 days
+      httpOnly: false,
+      secure: false,
       sameSite: 'lax',
       path: '/',
     });

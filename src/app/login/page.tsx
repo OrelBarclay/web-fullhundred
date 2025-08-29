@@ -13,19 +13,46 @@ export default function LoginPage() {
   const checkUserRoleAndRedirect = useCallback(async (user: User) => {
     try {
       const idToken = await user.getIdToken();
+      console.log('Login: Got ID token, calling login API...');
+      
       const response = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ idToken }),
       });
 
+      console.log('Login: API response status:', response.status);
+      console.log('Login: API response headers:', Object.fromEntries(response.headers.entries()));
+
       if (response.ok) {
-        const { isAdmin } = await response.json();
+        const data = await response.json();
+        console.log('Login: API response data:', data);
+        
+        // Check if cookie was set
+        const cookies = document.cookie;
+        console.log('Login: Current cookies:', cookies);
+        
+        const { isAdmin } = data;
+        
+        // Wait a moment for the cookie to be set
+        console.log('Login: Waiting for cookie to be set...');
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // Check cookies again
+        const cookiesAfterDelay = document.cookie;
+        console.log('Login: Cookies after delay:', cookiesAfterDelay);
+        
         if (isAdmin) {
+          console.log('Login: Redirecting to admin...');
           router.push("/admin");
         } else {
+          console.log('Login: Redirecting to dashboard...');
           router.push("/dashboard");
         }
+      } else {
+        console.error('Login: API response not ok:', response.status);
+        const errorData = await response.text();
+        console.error('Login: Error response:', errorData);
       }
     } catch (err) {
       console.error("Error checking user role:", err);
