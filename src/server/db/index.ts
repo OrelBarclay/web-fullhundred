@@ -329,13 +329,59 @@ export const userService = {
     });
   },
 
+  async updateUid(oldId: string, newId: string): Promise<void> {
+    const db = getDb();
+    
+    // Get the old user document
+    const oldDocRef = doc(db, 'users', oldId);
+    const oldDocSnap = await getDoc(oldDocRef);
+    
+    if (oldDocSnap.exists()) {
+      const userData = oldDocSnap.data();
+      
+      // Create new document with new UID
+      const newDocRef = doc(db, 'users', newId);
+      await setDoc(newDocRef, {
+        ...userData,
+        updatedAt: new Date()
+      });
+      
+      // Delete the old document
+      await deleteDoc(oldDocRef);
+    }
+  },
+
   async updateLastLogin(id: string): Promise<void> {
     const db = getDb();
     const docRef = doc(db, 'users', id);
     await updateDoc(docRef, {
       lastLoginAt: new Date()
     });
+  },
+
+  async delete(id: string): Promise<void> {
+    const db = getDb();
+    const docRef = doc(db, 'users', id);
+    await deleteDoc(docRef);
   }
+};
+
+// Re-export types for convenience
+export type { 
+  Client, 
+  Project, 
+  Media, 
+  Lead, 
+  Milestone, 
+  Invoice, 
+  User,
+  ClientInput, 
+  ProjectInput, 
+  MediaInput, 
+  LeadInput, 
+  MilestoneInput, 
+  InvoiceInput,
+  UserInput
 };
 
 
