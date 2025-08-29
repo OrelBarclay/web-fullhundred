@@ -34,24 +34,32 @@ export default function ProfilePage() {
   useEffect(() => {
     const auth = getAuthInstance();
     const unsubscribe = auth.onAuthStateChanged(async (user) => {
+      console.log('Auth state changed:', user ? 'User logged in' : 'No user');
       if (user) {
         setUser(user);
+        console.log('Firebase user UID:', user.uid);
         // Fetch user profile from database
         try {
+          console.log('Fetching user profile for UID:', user.uid);
           const response = await fetch(`/api/users/${user.uid}`);
+          console.log('Profile API response status:', response.status);
           if (response.ok) {
             const userProfile = await response.json();
+            console.log('User profile fetched:', userProfile);
             setProfile(userProfile);
             setEditForm({
               displayName: userProfile.displayName || '',
               phone: userProfile.phone || '',
               address: userProfile.address || ''
             });
+          } else {
+            console.error('Profile API error:', response.status, response.statusText);
           }
         } catch (error) {
           console.error('Error fetching profile:', error);
         }
       } else {
+        console.log('No user, redirecting to login');
         router.push("/login");
       }
       setIsLoading(false);

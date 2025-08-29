@@ -17,11 +17,11 @@ export async function POST(request: NextRequest) {
     let user = await userService.getById(decodedToken.uid);
     
     if (!user) {
-      // Create new user in database
+      // Create new user in database with Firebase UID as the document ID
       const isAdmin = decodedToken.email === 'admin@fullhundred.com' || 
                      decodedToken.email?.endsWith('@fullhundred.com');
       
-      user = await userService.create({
+      user = await userService.createWithId(decodedToken.uid, {
         email: decodedToken.email || '',
         displayName: decodedToken.name || decodedToken.email?.split('@')[0] || '',
         photoURL: decodedToken.picture || '',

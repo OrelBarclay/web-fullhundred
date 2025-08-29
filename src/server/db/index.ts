@@ -10,7 +10,8 @@ import {
   query, 
   where, 
   orderBy,
-  Timestamp
+  Timestamp,
+  setDoc
 } from 'firebase/firestore';
 import type { 
   Client, 
@@ -304,6 +305,19 @@ export const userService = {
       lastLoginAt: now
     });
     return { id: docRef.id, ...data, createdAt: now, updatedAt: now, lastLoginAt: now } as User;
+  },
+
+  async createWithId(id: string, data: UserInput): Promise<User> {
+    const db = getDb();
+    const now = new Date();
+    const docRef = doc(db, 'users', id);
+    await setDoc(docRef, {
+      ...data,
+      createdAt: now,
+      updatedAt: now,
+      lastLoginAt: now
+    });
+    return { id, ...data, createdAt: now, updatedAt: now, lastLoginAt: now } as User;
   },
 
   async update(id: string, data: Partial<UserInput>): Promise<void> {

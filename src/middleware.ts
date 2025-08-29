@@ -25,9 +25,18 @@ export function middleware(request: NextRequest) {
     }
   }
   
+  // Protect profile routes
+  if (pathname.startsWith('/profile')) {
+    const token = request.cookies.get('auth-token')?.value;
+    
+    if (!token) {
+      return NextResponse.redirect(new URL('/login', request.url));
+    }
+  }
+  
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ['/admin/:path*', '/dashboard/:path*']
+  matcher: ['/admin/:path*', '/dashboard/:path*', '/profile/:path*']
 };
