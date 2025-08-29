@@ -9,6 +9,11 @@ NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_project_id
 NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
 NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=123456789
 NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id_here
+
+# Cloudinary
+CLOUDINARY_CLOUD_NAME=your_cloud_name
+CLOUDINARY_API_KEY=your_api_key
+CLOUDINARY_API_SECRET=your_api_secret
 ```
 
 ## Getting Firebase Config:
@@ -19,3 +24,9 @@ NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id_here
 4. Copy the config values from the Firebase SDK snippet
 5. Enable Firestore Database and Storage in your project
 6. Set up security rules for your collections
+
+## Getting Cloudinary Config:
+
+1. Go to [Cloudinary Console](https://cloudinary.com/console)
+2. Copy your cloud name, API key, and API secret
+3. Create an unsigned preset if needed for client-side signed/unsigned uploads (we use server-side here)

@@ -12,7 +12,7 @@ import {
   Timestamp 
 } from 'firebase/firestore';
 import { getDb } from '@/lib/firebase';
-import type { Client, Project, Media, Lead } from './schema';
+import type { Client, Project, Media, Lead, Milestone, Invoice } from './schema';
 
 // Helper to convert Firestore timestamps to Date objects
 const convertTimestamps = <T extends Record<string, unknown>>(obj: T): T => {
@@ -179,5 +179,55 @@ export const leadService = {
     await updateDoc(ref, { ...data, updatedAt: new Date() });
   }
 };
+
+// Milestone operations
+export const milestoneService = {
+  async getByProject(projectId: string): Promise<Milestone[]> {
+    const db = getDb();
+    const qy = query(collection(db, 'milestones'), where('projectId', '==', projectId), orderBy('dueDate', 'asc'));
+    const snapshot = await getDocs(qy);
+    return snapshot.docs.map(s => ({ id: s.id, ...convertTimestamps(s.data() as Record<string, unknown>) } as Milestone));
+  },
+  async create(data: Omit<Milestone, 'id'>): Promise<Milestone> {
+    const db = getDb();
+    const ref = await addDoc(collection(db, 'milestones'), data);
+    return { id: ref.id, ...data };
+  },
+  async update(id: string, data: Partial<Omit<Milestone, 'id'>>): Promise<void> {
+    const db = getDb();
+    const ref = fsDoc(db, 'milestones', id);
+    await updateDoc(ref, data);
+  },
+  async delete(id: string): Promise<void> {
+    const db = getDb();
+    const ref = fsDoc(db, 'milestones', id);
+    await deleteDoc(ref);
+  }
+} as const;
+
+// Invoice operations
+export const invoiceService = {
+  async getByProject(projectId: string): Promise<Invoice[]> {
+    const db = getDb();
+    const qy = query(collection(db, 'invoices'), where('projectId', '==', projectId), orderBy('issuedAt', 'desc'));
+    const snapshot = await getDocs(qy);
+    return snapshot.docs.map(s => ({ id: s.id, ...convertTimestamps(s.data() as Record<string, unknown>) } as Invoice));
+  },
+  async create(data: Omit<Invoice, 'id'>): Promise<Invoice> {
+    const db = getDb();
+    const ref = await addDoc(collection(db, 'invoices'), data);
+    return { id: ref.id, ...data };
+  },
+  async update(id: string, data: Partial<Omit<Invoice, 'id'>>): Promise<void> {
+    const db = getDb();
+    const ref = fsDoc(db, 'invoices', id);
+    await updateDoc(ref, data);
+  },
+  async delete(id: string): Promise<void> {
+    const db = getDb();
+    const ref = fsDoc(db, 'invoices', id);
+    await deleteDoc(ref);
+  }
+} as const;
 
 
