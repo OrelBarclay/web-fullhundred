@@ -4,6 +4,8 @@ import type { Client, Project } from "@/server/db/schema";
 import { getStorageInstance } from "@/lib/firebase";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { v4 as uuid } from "uuid";
+import { createClient, getAllClients } from "@/app/actions/clients";
+import { createProject, getAllProjects } from "@/app/actions/projects";
 
 type UploadType = "image" | "video" | "before" | "after";
 
@@ -15,7 +17,7 @@ export default function AdminPage() {
   const [clients, setClients] = useState<Client[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
   const [newClient, setNewClient] = useState({ name: "", email: "", phone: "" });
-  const [newProject, setNewProject] = useState({ clientId: "", title: "", description: "" });
+  const [newProject, setNewProject] = useState({ clientId: "", title: "", description: "", status: "planning" as const, startDate: "", endDate: "", budget: "" });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -50,15 +52,26 @@ export default function AdminPage() {
     try {
       setIsLoading(true);
       setError(null);
-      const [clientsRes, projectsRes] = await Promise.all([
-        fetch("/api/clients", { cache: "no-store" }),
-        fetch("/api/projects", { cache: "no-store" })
+      
+      const [clientsResult, projectsResult] = await Promise.all([
+        getAllClients(),
+        getAllProjects()
       ]);
-      const clientsJson = await clientsRes.json();
-      const projectsJson = await projectsRes.json();
-      setClients(Array.isArray(clientsJson) ? clientsJson : (Array.isArray(clientsJson?.clients) ? clientsJson.clients : []));
-      setProjects(Array.isArray(projectsJson) ? projectsJson : (Array.isArray(projectsJson?.projects) ? projectsJson.projects : []));
-    } catch {
+      
+      if (clientsResult.success) {
+        setClients(clientsResult.clients || []);
+      } else {
+        console.error('Failed to load clients:', clientsResult.error);
+        setClients([]);
+      }
+      
+      if (projectsResult.success) {
+        setProjects(projectsResult.projects || []);
+      } else {
+        console.error('Failed to load projects:', projectsResult.error);
+        setProjects([]);
+      }
+    } catch (err) {
       setError("Failed to load data");
       setClients([]);
       setProjects([]);
@@ -83,46 +96,60 @@ export default function AdminPage() {
     }
   }
 
-  async function createClient() {
+  async function handleCreateClient(e: React.FormEvent) {
+    e.preventDefault();
     if (!newClient.name.trim()) return;
     
     try {
-      const response = await fetch("/api/clients", { 
-        method: "POST", 
-        headers: { "Content-Type": "application/json" }, 
-        body: JSON.stringify(newClient) 
-      });
+      setError(null);
       
-      if (response.ok) {
-        const client = await response.json();
-        setClients(prev => [client, ...(Array.isArray(prev) ? prev : [])]);
+      // Create FormData for Server Action
+      const formData = new FormData();
+      formData.append('name', newClient.name);
+      if (newClient.email) formData.append('email', newClient.email);
+      if (newClient.phone) formData.append('phone', newClient.phone);
+      
+      const result = await createClient(formData);
+      
+      if (result.success) {
+        // Reload data to show the new client
+        await loadData();
         setNewClient({ name: "", email: "", phone: "" });
       } else {
-        setError("Failed to create client");
+        setError(result.error || "Failed to create client");
       }
-    } catch {
+    } catch (err) {
       setError("Failed to create client");
     }
   }
 
-  async function createProject() {
+  async function handleCreateProject(e: React.FormEvent) {
+    e.preventDefault();
     if (!newProject.title.trim() || !newProject.clientId) return;
     
     try {
-      const response = await fetch("/api/projects", { 
-        method: "POST", 
-        headers: { "Content-Type": "application/json" }, 
-        body: JSON.stringify(newProject) 
-      });
+      setError(null);
       
-      if (response.ok) {
-        const project = await response.json();
-        setProjects(prev => [project, ...(Array.isArray(prev) ? prev : [])]);
-        setNewProject({ clientId: "", title: "", description: "" });
+      // Create FormData for Server Action
+      const formData = new FormData();
+      formData.append('title', newProject.title);
+      formData.append('description', newProject.description);
+      formData.append('clientId', newProject.clientId);
+      formData.append('status', newProject.status);
+      if (newProject.startDate) formData.append('startDate', newProject.startDate);
+      if (newProject.endDate) formData.append('endDate', newProject.endDate);
+      if (newProject.budget) formData.append('budget', newProject.budget);
+      
+      const result = await createProject(formData);
+      
+      if (result.success) {
+        // Reload data to show the new project
+        await loadData();
+        setNewProject({ clientId: "", title: "", description: "", status: "planning", startDate: "", endDate: "", budget: "" });
       } else {
-        setError("Failed to create project");
+        setError(result.error || "Failed to create project");
       }
-    } catch {
+    } catch (err) {
       setError("Failed to create project");
     }
   }
@@ -221,7 +248,7 @@ export default function AdminPage() {
       <div className="grid md:grid-cols-2 gap-10">
         <div className="border rounded-lg p-4">
           <h2 className="font-medium mb-3">Create Client</h2>
-          <div className="grid gap-3">
+          <form onSubmit={handleCreateClient} className="grid gap-3">
             <input 
               className="border rounded px-3 py-2" 
               placeholder="Name *" 
@@ -243,13 +270,13 @@ export default function AdminPage() {
               onChange={e => setNewClient(v => ({ ...v, phone: e.target.value }))} 
             />
             <button 
+              type="submit"
               className="bg-black text-white rounded px-4 py-2 w-fit disabled:opacity-50" 
-              onClick={createClient}
               disabled={!newClient.name.trim()}
             >
               Save Client
             </button>
-          </div>
+          </form>
           <div className="mt-4">
             <h3 className="font-medium mb-2">Existing Clients ({Array.isArray(clients) ? clients.length : 0})</h3>
             <ul className="space-y-2">
@@ -266,7 +293,7 @@ export default function AdminPage() {
 
         <div className="border rounded-lg p-4">
           <h2 className="font-medium mb-3">Create Project</h2>
-          <div className="grid gap-3">
+          <form onSubmit={handleCreateProject} className="grid gap-3">
             <select 
               className="border rounded px-3 py-2" 
               value={newProject.clientId} 
@@ -291,13 +318,13 @@ export default function AdminPage() {
               onChange={e => setNewProject(v => ({ ...v, description: e.target.value }))} 
             />
             <button 
+              type="submit"
               className="bg-black text-white rounded px-4 py-2 w-fit disabled:opacity-50" 
-              onClick={createProject}
               disabled={!newProject.title.trim() || !newProject.clientId}
             >
               Save Project
             </button>
-          </div>
+          </form>
           <div className="mt-4">
             <h3 className="font-medium mb-2">Existing Projects ({Array.isArray(projects) ? projects.length : 0})</h3>
             <ul className="space-y-2">
