@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 export async function POST() {
   const response = NextResponse.json({ success: true });
   
-  // Clear the auth cookie
+  // Clear the session cookie
   response.cookies.set('auth-token', '', {
     maxAge: 0,
     httpOnly: true,
@@ -12,5 +12,21 @@ export async function POST() {
     path: '/',
   });
   
+  // Add CORS headers
+  response.headers.set('Access-Control-Allow-Origin', '*');
+  response.headers.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  
   return response;
+}
+
+export async function OPTIONS() {
+  return new NextResponse(null, {
+    status: 200,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    },
+  });
 }
