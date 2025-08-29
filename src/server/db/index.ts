@@ -1,18 +1,5 @@
-import { getDb } from '@/lib/firebase';
-import { 
-  collection, 
-  doc, 
-  getDocs, 
-  getDoc, 
-  addDoc, 
-  updateDoc, 
-  deleteDoc, 
-  query, 
-  where, 
-  orderBy,
-  Timestamp,
-  setDoc
-} from 'firebase/firestore';
+import { getFirestore } from 'firebase-admin/firestore';
+import { getFirebaseAdmin } from '@/lib/firebase-admin';
 import type { 
   Client, 
   Project, 
@@ -30,12 +17,17 @@ import type {
   UserInput
 } from './schema';
 
+// Helper function to get Firestore instance
+function getDb() {
+  return getFirestore(getFirebaseAdmin());
+}
+
 // Helper function to convert Firestore timestamps to Date objects
 function convertTimestamps<T extends Record<string, unknown>>(obj: T): T {
   const converted: Record<string, unknown> = { ...obj };
   Object.keys(converted).forEach((key) => {
-    if (converted[key] instanceof Timestamp) {
-      converted[key] = converted[key].toDate();
+    if (converted[key] && typeof converted[key] === 'object' && 'toDate' in converted[key]) {
+      converted[key] = (converted[key] as { toDate: () => Date }).toDate();
     }
   });
   return converted as T;
@@ -45,7 +37,7 @@ function convertTimestamps<T extends Record<string, unknown>>(obj: T): T {
 export const clientService = {
   async getAll(): Promise<Client[]> {
     const db = getDb();
-    const querySnapshot = await getDocs(collection(db, 'clients'));
+    const querySnapshot = await db.collection('clients').get();
     return querySnapshot.docs.map(doc => ({
       id: doc.id,
       ...convertTimestamps(doc.data())
@@ -54,10 +46,13 @@ export const clientService = {
 
   async getById(id: string): Promise<Client | null> {
     const db = getDb();
-    const docRef = doc(db, 'clients', id);
-    const docSnap = await getDoc(docRef);
-    if (docSnap.exists()) {
-      return { id: docSnap.id, ...convertTimestamps(docSnap.data()) } as Client;
+    const docRef = db.collection('clients').doc(id);
+    const docSnap = await docRef.get();
+    if (docSnap.exists) {
+      const data = docSnap.data();
+      if (data) {
+        return { id: docSnap.id, ...convertTimestamps(data) } as Client;
+      }
     }
     return null;
   },
@@ -65,7 +60,7 @@ export const clientService = {
   async create(data: ClientInput): Promise<Client> {
     const db = getDb();
     const now = new Date();
-    const docRef = await addDoc(collection(db, 'clients'), {
+    const docRef = await db.collection('clients').add({
       ...data,
       createdAt: now,
       updatedAt: now
@@ -75,8 +70,8 @@ export const clientService = {
 
   async update(id: string, data: Partial<ClientInput>): Promise<void> {
     const db = getDb();
-    const docRef = doc(db, 'clients', id);
-    await updateDoc(docRef, {
+    const docRef = db.collection('clients').doc(id);
+    await docRef.update({
       ...data,
       updatedAt: new Date()
     });
@@ -84,8 +79,8 @@ export const clientService = {
 
   async delete(id: string): Promise<void> {
     const db = getDb();
-    const docRef = doc(db, 'clients', id);
-    await deleteDoc(docRef);
+    const docRef = db.collection('clients').doc(id);
+    await docRef.delete();
   }
 };
 
@@ -93,7 +88,7 @@ export const clientService = {
 export const projectService = {
   async getAll(): Promise<Project[]> {
     const db = getDb();
-    const querySnapshot = await getDocs(collection(db, 'projects'));
+    const querySnapshot = await db.collection('projects').get();
     return querySnapshot.docs.map(doc => ({
       id: doc.id,
       ...convertTimestamps(doc.data())
@@ -102,10 +97,13 @@ export const projectService = {
 
   async getById(id: string): Promise<Project | null> {
     const db = getDb();
-    const docRef = doc(db, 'projects', id);
-    const docSnap = await getDoc(docRef);
-    if (docSnap.exists()) {
-      return { id: docSnap.id, ...convertTimestamps(docSnap.data()) } as Project;
+    const docRef = db.collection('projects').doc(id);
+    const docSnap = await docRef.get();
+    if (docSnap.exists) {
+      const data = docSnap.data();
+      if (data) {
+        return { id: docSnap.id, ...convertTimestamps(data) } as Project;
+      }
     }
     return null;
   },
@@ -113,7 +111,7 @@ export const projectService = {
   async create(data: ProjectInput): Promise<Project> {
     const db = getDb();
     const now = new Date();
-    const docRef = await addDoc(collection(db, 'projects'), {
+    const docRef = await db.collection('projects').add({
       ...data,
       createdAt: now,
       updatedAt: now
@@ -123,8 +121,8 @@ export const projectService = {
 
   async update(id: string, data: Partial<ProjectInput>): Promise<void> {
     const db = getDb();
-    const docRef = doc(db, 'projects', id);
-    await updateDoc(docRef, {
+    const docRef = db.collection('projects').doc(id);
+    await docRef.update({
       ...data,
       updatedAt: new Date()
     });
@@ -132,8 +130,8 @@ export const projectService = {
 
   async delete(id: string): Promise<void> {
     const db = getDb();
-    const docRef = doc(db, 'projects', id);
-    await deleteDoc(docRef);
+    const docRef = db.collection('projects').doc(id);
+    await docRef.delete();
   }
 };
 
@@ -141,7 +139,7 @@ export const projectService = {
 export const mediaService = {
   async getAll(): Promise<Media[]> {
     const db = getDb();
-    const querySnapshot = await getDocs(collection(db, 'media'));
+    const querySnapshot = await db.collection('media').get();
     return querySnapshot.docs.map(doc => ({
       id: doc.id,
       ...convertTimestamps(doc.data())
@@ -150,12 +148,8 @@ export const mediaService = {
 
   async getByProjectId(projectId: string): Promise<Media[]> {
     const db = getDb();
-    const q = query(
-      collection(db, 'media'), 
-      where('projectId', '==', projectId),
-      orderBy('order')
-    );
-    const querySnapshot = await getDocs(q);
+    const q = db.collection('media').where('projectId', '==', projectId).orderBy('order');
+    const querySnapshot = await q.get();
     return querySnapshot.docs.map(doc => ({
       id: doc.id,
       ...convertTimestamps(doc.data())
@@ -165,7 +159,7 @@ export const mediaService = {
   async create(data: MediaInput): Promise<Media> {
     const db = getDb();
     const now = new Date();
-    const docRef = await addDoc(collection(db, 'media'), {
+    const docRef = await db.collection('media').add({
       ...data,
       createdAt: now
     });
@@ -174,8 +168,8 @@ export const mediaService = {
 
   async delete(id: string): Promise<void> {
     const db = getDb();
-    const docRef = doc(db, 'media', id);
-    await deleteDoc(docRef);
+    const docRef = db.collection('media').doc(id);
+    await docRef.delete();
   }
 };
 
@@ -183,7 +177,7 @@ export const mediaService = {
 export const leadService = {
   async getAll(): Promise<Lead[]> {
     const db = getDb();
-    const querySnapshot = await getDocs(collection(db, 'leads'));
+    const querySnapshot = await db.collection('leads').get();
     return querySnapshot.docs.map(doc => ({
       id: doc.id,
       ...convertTimestamps(doc.data())
@@ -193,7 +187,7 @@ export const leadService = {
   async create(data: LeadInput): Promise<Lead> {
     const db = getDb();
     const now = new Date();
-    const docRef = await addDoc(collection(db, 'leads'), {
+    const docRef = await db.collection('leads').add({
       ...data,
       createdAt: now
     });
@@ -205,7 +199,7 @@ export const leadService = {
 export const milestoneService = {
   async getAll(): Promise<Milestone[]> {
     const db = getDb();
-    const querySnapshot = await getDocs(collection(db, 'milestones'));
+    const querySnapshot = await db.collection('milestones').get();
     return querySnapshot.docs.map(doc => ({
       id: doc.id,
       ...convertTimestamps(doc.data())
@@ -215,7 +209,7 @@ export const milestoneService = {
   async create(data: MilestoneInput): Promise<Milestone> {
     const db = getDb();
     const now = new Date();
-    const docRef = await addDoc(collection(db, 'milestones'), {
+    const docRef = await db.collection('milestones').add({
       ...data,
       completed: false,
       createdAt: now,
@@ -232,8 +226,8 @@ export const milestoneService = {
 
   async update(id: string, data: Partial<MilestoneInput>): Promise<void> {
     const db = getDb();
-    const docRef = doc(db, 'milestones', id);
-    await updateDoc(docRef, {
+    const docRef = db.collection('milestones').doc(id);
+    await docRef.update({
       ...data,
       updatedAt: new Date()
     });
@@ -244,7 +238,7 @@ export const milestoneService = {
 export const invoiceService = {
   async getAll(): Promise<Invoice[]> {
     const db = getDb();
-    const querySnapshot = await getDocs(collection(db, 'invoices'));
+    const querySnapshot = await db.collection('invoices').get();
     return querySnapshot.docs.map(doc => ({
       id: doc.id,
       ...convertTimestamps(doc.data())
@@ -254,7 +248,7 @@ export const invoiceService = {
   async create(data: InvoiceInput): Promise<Invoice> {
     const db = getDb();
     const now = new Date();
-    const docRef = await addDoc(collection(db, 'invoices'), {
+    const docRef = await db.collection('invoices').add({
       ...data,
       createdAt: now,
       updatedAt: now
@@ -264,8 +258,8 @@ export const invoiceService = {
 
   async update(id: string, data: Partial<InvoiceInput>): Promise<void> {
     const db = getDb();
-    const docRef = doc(db, 'invoices', id);
-    await updateDoc(docRef, {
+    const docRef = db.collection('invoices').doc(id);
+    await docRef.update({
       ...data,
       updatedAt: new Date()
     });
@@ -276,18 +270,21 @@ export const invoiceService = {
 export const userService = {
   async getById(id: string): Promise<User | null> {
     const db = getDb();
-    const docRef = doc(db, 'users', id);
-    const docSnap = await getDoc(docRef);
-    if (docSnap.exists()) {
-      return { id: docSnap.id, ...convertTimestamps(docSnap.data()) } as User;
+    const docRef = db.collection('users').doc(id);
+    const docSnap = await docRef.get();
+    if (docSnap.exists) {
+      const data = docSnap.data();
+      if (data) {
+        return { id: docSnap.id, ...convertTimestamps(data) } as User;
+      }
     }
     return null;
   },
 
   async getByEmail(email: string): Promise<User | null> {
     const db = getDb();
-    const q = query(collection(db, 'users'), where('email', '==', email));
-    const querySnapshot = await getDocs(q);
+    const q = db.collection('users').where('email', '==', email);
+    const querySnapshot = await q.get();
     if (!querySnapshot.empty) {
       const doc = querySnapshot.docs[0];
       return { id: doc.id, ...convertTimestamps(doc.data()) } as User;
@@ -298,7 +295,7 @@ export const userService = {
   async create(data: UserInput): Promise<User> {
     const db = getDb();
     const now = new Date();
-    const docRef = await addDoc(collection(db, 'users'), {
+    const docRef = await db.collection('users').add({
       ...data,
       createdAt: now,
       updatedAt: now,
@@ -310,8 +307,8 @@ export const userService = {
   async createWithId(id: string, data: UserInput): Promise<User> {
     const db = getDb();
     const now = new Date();
-    const docRef = doc(db, 'users', id);
-    await setDoc(docRef, {
+    const docRef = db.collection('users').doc(id);
+    await docRef.set({
       ...data,
       createdAt: now,
       updatedAt: now,
@@ -322,8 +319,8 @@ export const userService = {
 
   async update(id: string, data: Partial<UserInput>): Promise<void> {
     const db = getDb();
-    const docRef = doc(db, 'users', id);
-    await updateDoc(docRef, {
+    const docRef = db.collection('users').doc(id);
+    await docRef.update({
       ...data,
       updatedAt: new Date()
     });
@@ -333,36 +330,36 @@ export const userService = {
     const db = getDb();
     
     // Get the old user document
-    const oldDocRef = doc(db, 'users', oldId);
-    const oldDocSnap = await getDoc(oldDocRef);
+    const oldDocRef = db.collection('users').doc(oldId);
+    const oldDocSnap = await oldDocRef.get();
     
-    if (oldDocSnap.exists()) {
+    if (oldDocSnap.exists) {
       const userData = oldDocSnap.data();
       
       // Create new document with new UID
-      const newDocRef = doc(db, 'users', newId);
-      await setDoc(newDocRef, {
+      const newDocRef = db.collection('users').doc(newId);
+      await newDocRef.set({
         ...userData,
         updatedAt: new Date()
       });
       
       // Delete the old document
-      await deleteDoc(oldDocRef);
+      await oldDocRef.delete();
     }
   },
 
   async updateLastLogin(id: string): Promise<void> {
     const db = getDb();
-    const docRef = doc(db, 'users', id);
-    await updateDoc(docRef, {
+    const docRef = db.collection('users').doc(id);
+    await docRef.update({
       lastLoginAt: new Date()
     });
   },
 
   async delete(id: string): Promise<void> {
     const db = getDb();
-    const docRef = doc(db, 'users', id);
-    await deleteDoc(docRef);
+    const docRef = db.collection('users').doc(id);
+    await docRef.delete();
   }
 };
 

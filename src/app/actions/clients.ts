@@ -43,11 +43,14 @@ export async function createClient(formData: FormData) {
 
 export async function getAllClients() {
   try {
+    console.log('getAllClients: Starting to fetch clients...');
     const clients = await clientService.getAll();
+    console.log('getAllClients: Successfully fetched clients:', clients.length);
     return { success: true, clients };
   } catch (error) {
-    console.error('Error fetching clients:', error);
-    return { success: false, error: 'Failed to fetch clients', clients: [] };
+    console.error('getAllClients: Error fetching clients:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Failed to fetch clients';
+    return { success: false, error: errorMessage };
   }
 }
 

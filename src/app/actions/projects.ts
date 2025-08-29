@@ -78,11 +78,14 @@ export async function createProject(formData: FormData) {
 
 export async function getAllProjects() {
   try {
+    console.log('getAllProjects: Starting to fetch projects...');
     const projects = await projectService.getAll();
+    console.log('getAllProjects: Successfully fetched projects:', projects.length);
     return { success: true, projects };
   } catch (error) {
-    console.error('Error fetching projects:', error);
-    return { success: false, error: 'Failed to fetch projects', projects: [] };
+    console.error('getAllProjects: Error fetching projects:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Failed to fetch projects';
+    return { success: false, error: errorMessage };
   }
 }
 
