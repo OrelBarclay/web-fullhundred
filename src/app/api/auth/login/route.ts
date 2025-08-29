@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAdminAuth } from '@/lib/firebase-admin';
+import { userService } from '@/server/db';
 
 export async function POST(request: NextRequest) {
   try {
@@ -12,21 +13,37 @@ export async function POST(request: NextRequest) {
     // Verify the Firebase ID token
     const decodedToken = await getAdminAuth().verifyIdToken(idToken);
     
+    // Check if user exists in database
+    let user = await userService.getById(decodedToken.uid);
+    
+    if (!user) {
+      // Create new user in database
+      const isAdmin = decodedToken.email === 'admin@fullhundred.com' || 
+                     decodedToken.email?.endsWith('@fullhundred.com');
+      
+      user = await userService.create({
+        email: decodedToken.email || '',
+        displayName: decodedToken.name || decodedToken.email?.split('@')[0] || '',
+        photoURL: decodedToken.picture || '',
+        role: isAdmin ? 'admin' : 'user',
+      });
+    } else {
+      // Update last login time
+      await userService.updateLastLogin(decodedToken.uid);
+    }
+    
     // Create a session cookie
     const expiresIn = 60 * 60 * 24 * 5 * 1000; // 5 days
     const sessionCookie = await getAdminAuth().createSessionCookie(idToken, { expiresIn });
     
-    // Check if user is admin (you can customize this logic)
-    const isAdmin = decodedToken.email === 'admin@fullhundred.com' || 
-                   decodedToken.email?.endsWith('@fullhundred.com');
-    
     const response = NextResponse.json({ 
       success: true, 
-      isAdmin,
+      isAdmin: user.role === 'admin',
       user: {
-        uid: decodedToken.uid,
-        email: decodedToken.email,
-        name: decodedToken.name,
+        uid: user.id,
+        email: user.email,
+        name: user.displayName,
+        role: user.role,
       }
     });
     

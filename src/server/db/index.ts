@@ -1,233 +1,327 @@
+import { getDb } from '@/lib/firebase';
 import { 
   collection, 
-  doc as fsDoc, 
+  doc, 
   getDocs, 
   getDoc, 
   addDoc, 
   updateDoc, 
   deleteDoc, 
   query, 
-  orderBy, 
-  where,
-  Timestamp 
+  where, 
+  orderBy,
+  Timestamp
 } from 'firebase/firestore';
-import { getDb } from '@/lib/firebase';
-import type { Client, Project, Media, Lead, Milestone, Invoice } from './schema';
+import type { 
+  Client, 
+  Project, 
+  Media, 
+  Lead, 
+  Milestone, 
+  Invoice, 
+  User,
+  ClientInput, 
+  ProjectInput, 
+  MediaInput, 
+  LeadInput, 
+  MilestoneInput, 
+  InvoiceInput,
+  UserInput
+} from './schema';
 
-// Helper to convert Firestore timestamps to Date objects
-const convertTimestamps = <T extends Record<string, unknown>>(obj: T): T => {
+// Helper function to convert Firestore timestamps to Date objects
+function convertTimestamps<T extends Record<string, unknown>>(obj: T): T {
   const converted: Record<string, unknown> = { ...obj };
-  Object.keys(converted).forEach(key => {
-    const value = converted[key];
-    if (value instanceof Timestamp) {
-      converted[key] = value.toDate();
+  Object.keys(converted).forEach((key) => {
+    if (converted[key] instanceof Timestamp) {
+      converted[key] = converted[key].toDate();
     }
   });
   return converted as T;
-};
+}
 
-// Client operations
+// Client Service
 export const clientService = {
   async getAll(): Promise<Client[]> {
     const db = getDb();
-    const snapshot = await getDocs(collection(db, 'clients'));
-    return snapshot.docs.map(snap => ({
-      id: snap.id,
-      ...convertTimestamps(snap.data() as Record<string, unknown>)
-    } as Client));
+    const querySnapshot = await getDocs(collection(db, 'clients'));
+    return querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...convertTimestamps(doc.data())
+    })) as Client[];
   },
 
   async getById(id: string): Promise<Client | null> {
     const db = getDb();
-    const ref = fsDoc(db, 'clients', id);
-    const snap = await getDoc(ref);
-    if (!snap.exists()) return null;
-    return { id: snap.id, ...convertTimestamps(snap.data() as Record<string, unknown>) } as Client;
+    const docRef = doc(db, 'clients', id);
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      return { id: docSnap.id, ...convertTimestamps(docSnap.data()) } as Client;
+    }
+    return null;
   },
 
-  async create(data: Omit<Client, 'id' | 'createdAt' | 'updatedAt'>): Promise<Client> {
+  async create(data: ClientInput): Promise<Client> {
     const db = getDb();
     const now = new Date();
-    const ref = await addDoc(collection(db, 'clients'), {
+    const docRef = await addDoc(collection(db, 'clients'), {
       ...data,
       createdAt: now,
       updatedAt: now
     });
-    return { id: ref.id, ...data, createdAt: now, updatedAt: now };
+    return { id: docRef.id, ...data, createdAt: now, updatedAt: now } as Client;
   },
 
-  async update(id: string, data: Partial<Omit<Client, 'id' | 'createdAt'>>): Promise<void> {
+  async update(id: string, data: Partial<ClientInput>): Promise<void> {
     const db = getDb();
-    const ref = fsDoc(db, 'clients', id);
-    await updateDoc(ref, { ...data, updatedAt: new Date() });
+    const docRef = doc(db, 'clients', id);
+    await updateDoc(docRef, {
+      ...data,
+      updatedAt: new Date()
+    });
   },
 
   async delete(id: string): Promise<void> {
     const db = getDb();
-    const ref = fsDoc(db, 'clients', id);
-    await deleteDoc(ref);
+    const docRef = doc(db, 'clients', id);
+    await deleteDoc(docRef);
   }
 };
 
-// Project operations
+// Project Service
 export const projectService = {
   async getAll(): Promise<Project[]> {
     const db = getDb();
-    const snapshot = await getDocs(query(collection(db, 'projects'), orderBy('createdAt', 'desc')));
-    return snapshot.docs.map(snap => ({
-      id: snap.id,
-      ...convertTimestamps(snap.data() as Record<string, unknown>)
-    } as Project));
+    const querySnapshot = await getDocs(collection(db, 'projects'));
+    return querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...convertTimestamps(doc.data())
+    })) as Project[];
   },
 
   async getById(id: string): Promise<Project | null> {
     const db = getDb();
-    const ref = fsDoc(db, 'projects', id);
-    const snap = await getDoc(ref);
-    if (!snap.exists()) return null;
-    return { id: snap.id, ...convertTimestamps(snap.data() as Record<string, unknown>) } as Project;
+    const docRef = doc(db, 'projects', id);
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      return { id: docSnap.id, ...convertTimestamps(docSnap.data()) } as Project;
+    }
+    return null;
   },
 
-  async create(data: Omit<Project, 'id' | 'createdAt' | 'updatedAt'>): Promise<Project> {
+  async create(data: ProjectInput): Promise<Project> {
     const db = getDb();
     const now = new Date();
-    const ref = await addDoc(collection(db, 'projects'), {
+    const docRef = await addDoc(collection(db, 'projects'), {
       ...data,
       createdAt: now,
       updatedAt: now
     });
-    return { id: ref.id, ...data, createdAt: now, updatedAt: now };
+    return { id: docRef.id, ...data, createdAt: now, updatedAt: now } as Project;
   },
 
-  async update(id: string, data: Partial<Omit<Project, 'id' | 'createdAt'>>): Promise<void> {
+  async update(id: string, data: Partial<ProjectInput>): Promise<void> {
     const db = getDb();
-    const ref = fsDoc(db, 'projects', id);
-    await updateDoc(ref, { ...data, updatedAt: new Date() });
+    const docRef = doc(db, 'projects', id);
+    await updateDoc(docRef, {
+      ...data,
+      updatedAt: new Date()
+    });
   },
 
   async delete(id: string): Promise<void> {
     const db = getDb();
-    const ref = fsDoc(db, 'projects', id);
-    await deleteDoc(ref);
+    const docRef = doc(db, 'projects', id);
+    await deleteDoc(docRef);
   }
 };
 
-// Media operations
+// Media Service
 export const mediaService = {
   async getAll(): Promise<Media[]> {
     const db = getDb();
-    const snapshot = await getDocs(collection(db, 'media'));
-    return snapshot.docs.map(snap => ({
-      id: snap.id,
-      ...convertTimestamps(snap.data() as Record<string, unknown>)
-    } as Media));
+    const querySnapshot = await getDocs(collection(db, 'media'));
+    return querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...convertTimestamps(doc.data())
+    })) as Media[];
   },
 
   async getByProjectId(projectId: string): Promise<Media[]> {
     const db = getDb();
-    const q = query(collection(db, 'media'), where('projectId', '==', projectId));
-    const snapshot = await getDocs(q);
-    return snapshot.docs.map(snap => ({
-      id: snap.id,
-      ...convertTimestamps(snap.data() as Record<string, unknown>)
-    } as Media));
+    const q = query(
+      collection(db, 'media'), 
+      where('projectId', '==', projectId),
+      orderBy('order')
+    );
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...convertTimestamps(doc.data())
+    })) as Media[];
   },
 
-  async create(data: Omit<Media, 'id' | 'createdAt'>): Promise<Media> {
+  async create(data: MediaInput): Promise<Media> {
     const db = getDb();
     const now = new Date();
-    const ref = await addDoc(collection(db, 'media'), {
+    const docRef = await addDoc(collection(db, 'media'), {
       ...data,
       createdAt: now
     });
-    return { id: ref.id, ...data, createdAt: now };
+    return { id: docRef.id, ...data, createdAt: now } as Media;
   },
 
   async delete(id: string): Promise<void> {
     const db = getDb();
-    const ref = fsDoc(db, 'media', id);
-    await deleteDoc(ref);
+    const docRef = doc(db, 'media', id);
+    await deleteDoc(docRef);
   }
 };
 
-// Lead operations
+// Lead Service
 export const leadService = {
-  async create(data: Omit<Lead, 'id' | 'createdAt' | 'updatedAt' | 'status'>): Promise<Lead> {
+  async getAll(): Promise<Lead[]> {
+    const db = getDb();
+    const querySnapshot = await getDocs(collection(db, 'leads'));
+    return querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...convertTimestamps(doc.data())
+    })) as Lead[];
+  },
+
+  async create(data: LeadInput): Promise<Lead> {
     const db = getDb();
     const now = new Date();
-    const ref = await addDoc(collection(db, 'leads'), {
+    const docRef = await addDoc(collection(db, 'leads'), {
       ...data,
-      status: 'new' as const,
+      createdAt: now
+    });
+    return { id: docRef.id, ...data, createdAt: now } as Lead;
+  }
+};
+
+// Milestone Service
+export const milestoneService = {
+  async getAll(): Promise<Milestone[]> {
+    const db = getDb();
+    const querySnapshot = await getDocs(collection(db, 'milestones'));
+    return querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...convertTimestamps(doc.data())
+    })) as Milestone[];
+  },
+
+  async create(data: MilestoneInput): Promise<Milestone> {
+    const db = getDb();
+    const now = new Date();
+    const docRef = await addDoc(collection(db, 'milestones'), {
+      ...data,
+      completed: false,
       createdAt: now,
       updatedAt: now
     });
-    return { id: ref.id, ...data, status: 'new', createdAt: now, updatedAt: now };
+    return { 
+      id: docRef.id, 
+      ...data, 
+      completed: false, 
+      createdAt: now, 
+      updatedAt: now 
+    } as Milestone;
   },
 
-  async getAll(): Promise<Lead[]> {
+  async update(id: string, data: Partial<MilestoneInput>): Promise<void> {
     const db = getDb();
-    const snapshot = await getDocs(query(collection(db, 'leads'), orderBy('createdAt', 'desc')));
-    return snapshot.docs.map(snap => ({
-      id: snap.id,
-      ...convertTimestamps(snap.data() as Record<string, unknown>)
-    } as Lead));
-  },
-
-  async update(id: string, data: Partial<Omit<Lead, 'id' | 'createdAt'>>): Promise<void> {
-    const db = getDb();
-    const ref = fsDoc(db, 'leads', id);
-    await updateDoc(ref, { ...data, updatedAt: new Date() });
+    const docRef = doc(db, 'milestones', id);
+    await updateDoc(docRef, {
+      ...data,
+      updatedAt: new Date()
+    });
   }
 };
 
-// Milestone operations
-export const milestoneService = {
-  async getByProject(projectId: string): Promise<Milestone[]> {
-    const db = getDb();
-    const qy = query(collection(db, 'milestones'), where('projectId', '==', projectId), orderBy('dueDate', 'asc'));
-    const snapshot = await getDocs(qy);
-    return snapshot.docs.map(s => ({ id: s.id, ...convertTimestamps(s.data() as Record<string, unknown>) } as Milestone));
-  },
-  async create(data: Omit<Milestone, 'id'>): Promise<Milestone> {
-    const db = getDb();
-    const ref = await addDoc(collection(db, 'milestones'), data);
-    return { id: ref.id, ...data };
-  },
-  async update(id: string, data: Partial<Omit<Milestone, 'id'>>): Promise<void> {
-    const db = getDb();
-    const ref = fsDoc(db, 'milestones', id);
-    await updateDoc(ref, data);
-  },
-  async delete(id: string): Promise<void> {
-    const db = getDb();
-    const ref = fsDoc(db, 'milestones', id);
-    await deleteDoc(ref);
-  }
-} as const;
-
-// Invoice operations
+// Invoice Service
 export const invoiceService = {
-  async getByProject(projectId: string): Promise<Invoice[]> {
+  async getAll(): Promise<Invoice[]> {
     const db = getDb();
-    const qy = query(collection(db, 'invoices'), where('projectId', '==', projectId), orderBy('issuedAt', 'desc'));
-    const snapshot = await getDocs(qy);
-    return snapshot.docs.map(s => ({ id: s.id, ...convertTimestamps(s.data() as Record<string, unknown>) } as Invoice));
+    const querySnapshot = await getDocs(collection(db, 'invoices'));
+    return querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...convertTimestamps(doc.data())
+    })) as Invoice[];
   },
-  async create(data: Omit<Invoice, 'id'>): Promise<Invoice> {
+
+  async create(data: InvoiceInput): Promise<Invoice> {
     const db = getDb();
-    const ref = await addDoc(collection(db, 'invoices'), data);
-    return { id: ref.id, ...data };
+    const now = new Date();
+    const docRef = await addDoc(collection(db, 'invoices'), {
+      ...data,
+      createdAt: now,
+      updatedAt: now
+    });
+    return { id: docRef.id, ...data, createdAt: now, updatedAt: now } as Invoice;
   },
-  async update(id: string, data: Partial<Omit<Invoice, 'id'>>): Promise<void> {
+
+  async update(id: string, data: Partial<InvoiceInput>): Promise<void> {
     const db = getDb();
-    const ref = fsDoc(db, 'invoices', id);
-    await updateDoc(ref, data);
-  },
-  async delete(id: string): Promise<void> {
-    const db = getDb();
-    const ref = fsDoc(db, 'invoices', id);
-    await deleteDoc(ref);
+    const docRef = doc(db, 'invoices', id);
+    await updateDoc(docRef, {
+      ...data,
+      updatedAt: new Date()
+    });
   }
-} as const;
+};
+
+// User Service
+export const userService = {
+  async getById(id: string): Promise<User | null> {
+    const db = getDb();
+    const docRef = doc(db, 'users', id);
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      return { id: docSnap.id, ...convertTimestamps(docSnap.data()) } as User;
+    }
+    return null;
+  },
+
+  async getByEmail(email: string): Promise<User | null> {
+    const db = getDb();
+    const q = query(collection(db, 'users'), where('email', '==', email));
+    const querySnapshot = await getDocs(q);
+    if (!querySnapshot.empty) {
+      const doc = querySnapshot.docs[0];
+      return { id: doc.id, ...convertTimestamps(doc.data()) } as User;
+    }
+    return null;
+  },
+
+  async create(data: UserInput): Promise<User> {
+    const db = getDb();
+    const now = new Date();
+    const docRef = await addDoc(collection(db, 'users'), {
+      ...data,
+      createdAt: now,
+      updatedAt: now,
+      lastLoginAt: now
+    });
+    return { id: docRef.id, ...data, createdAt: now, updatedAt: now, lastLoginAt: now } as User;
+  },
+
+  async update(id: string, data: Partial<UserInput>): Promise<void> {
+    const db = getDb();
+    const docRef = doc(db, 'users', id);
+    await updateDoc(docRef, {
+      ...data,
+      updatedAt: new Date()
+    });
+  },
+
+  async updateLastLogin(id: string): Promise<void> {
+    const db = getDb();
+    const docRef = doc(db, 'users', id);
+    await updateDoc(docRef, {
+      lastLoginAt: new Date()
+    });
+  }
+};
 
 

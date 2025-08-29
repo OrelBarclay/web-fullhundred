@@ -56,6 +56,7 @@ export default function AuthProvider() {
         <>
           {user ? (
             <>
+              <Link href="/profile" className="hover:underline">Profile</Link>
               {isAdmin ? (
                 <Link href="/admin" className="hover:underline">Admin</Link>
               ) : (

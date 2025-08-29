@@ -22,8 +22,8 @@ export async function POST(request: Request) {
 
     const created = await clientService.create({
       name: body.name.trim(),
-      email: body.email?.trim() || null,
-      phone: body.phone?.trim() || null,
+      email: body.email?.trim() || undefined,
+      phone: body.phone?.trim() || undefined,
     });
 
     return NextResponse.json(created, { status: 201 });

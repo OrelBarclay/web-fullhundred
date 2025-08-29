@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { mediaService } from "@/server/db";
-import type { MediaInput } from "@/server/validation";
 
 export async function GET() {
   try {
@@ -13,14 +12,14 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const body: MediaInput = await request.json();
+    const body = await request.json();
     
     // Basic validation
     if (!body.projectId || body.projectId.trim().length === 0) {
       return NextResponse.json({ error: "Project ID is required" }, { status: 400 });
     }
-    if (!body.type) {
-      return NextResponse.json({ error: "Type is required" }, { status: 400 });
+    if (!body.type || !['image', 'video'].includes(body.type)) {
+      return NextResponse.json({ error: "Type must be 'image' or 'video'" }, { status: 400 });
     }
     if (!body.url || body.url.trim().length === 0) {
       return NextResponse.json({ error: "URL is required" }, { status: 400 });
@@ -30,7 +29,9 @@ export async function POST(request: Request) {
       projectId: body.projectId.trim(),
       type: body.type,
       url: body.url.trim(),
-      caption: body.caption?.trim() || null,
+      thumbnailUrl: body.thumbnailUrl,
+      altText: body.altText,
+      order: body.order || 0,
     });
 
     return NextResponse.json(created, { status: 201 });
