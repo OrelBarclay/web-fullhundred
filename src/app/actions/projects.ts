@@ -39,16 +39,29 @@ export async function createProject(formData: FormData) {
       throw new Error('Invalid budget amount');
     }
 
-    // Create project
-    const project = await projectService.create({
+    // Prepare project data, filtering out undefined values
+    const projectData: { 
+      title: string; 
+      description: string; 
+      clientId: string; 
+      status: 'planning' | 'in-progress' | 'completed' | 'on-hold';
+      startDate?: Date;
+      endDate?: Date;
+      budget?: number;
+    } = {
       title,
       description,
       clientId,
-      status,
-      startDate: startDateObj,
-      endDate: endDateObj,
-      budget: budgetNum
-    });
+      status
+    };
+
+    // Only add fields that have values
+    if (startDateObj) projectData.startDate = startDateObj;
+    if (endDateObj) projectData.endDate = endDateObj;
+    if (budgetNum !== undefined) projectData.budget = budgetNum;
+
+    // Create project
+    const project = await projectService.create(projectData);
 
     console.log('Project created successfully:', project.id);
     
@@ -109,16 +122,29 @@ export async function updateProject(id: string, formData: FormData) {
       throw new Error('Invalid budget amount');
     }
 
-    // Update project
-    await projectService.update(id, {
+    // Prepare update data, filtering out undefined values
+    const updateData: { 
+      title: string; 
+      description: string; 
+      clientId: string; 
+      status: 'planning' | 'in-progress' | 'completed' | 'on-hold';
+      startDate?: Date;
+      endDate?: Date;
+      budget?: number;
+    } = {
       title,
       description,
       clientId,
-      status,
-      startDate: startDateObj,
-      endDate: endDateObj,
-      budget: budgetNum
-    });
+      status
+    };
+
+    // Only add fields that have values
+    if (startDateObj) updateData.startDate = startDateObj;
+    if (endDateObj) updateData.endDate = endDateObj;
+    if (budgetNum !== undefined) updateData.budget = budgetNum;
+
+    // Update project
+    await projectService.update(id, updateData);
 
     console.log('Project updated successfully:', id);
     

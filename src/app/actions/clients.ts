@@ -15,13 +15,18 @@ export async function createClient(formData: FormData) {
       throw new Error('Name is required');
     }
 
+    // Prepare client data, filtering out undefined values
+    const clientData: { name: string; email?: string; phone?: string; address?: string } = {
+      name: name.trim()
+    };
+
+    // Only add fields that have values
+    if (email.trim()) clientData.email = email.trim();
+    if (phone.trim()) clientData.phone = phone.trim();
+    if (address.trim()) clientData.address = address.trim();
+
     // Create client
-    const client = await clientService.create({
-      name: name.trim(),
-      email: email.trim() || undefined,
-      phone: phone.trim() || undefined,
-      address: address.trim() || undefined
-    });
+    const client = await clientService.create(clientData);
 
     console.log('Client created successfully:', client.id);
     
@@ -58,13 +63,18 @@ export async function updateClient(id: string, formData: FormData) {
       throw new Error('Name is required');
     }
 
+    // Prepare update data, filtering out undefined values
+    const updateData: { name: string; email?: string; phone?: string; address?: string } = {
+      name: name.trim()
+    };
+
+    // Only add fields that have values
+    if (email.trim()) updateData.email = email.trim();
+    if (phone.trim()) updateData.phone = phone.trim();
+    if (address.trim()) updateData.address = address.trim();
+
     // Update client
-    await clientService.update(id, {
-      name: name.trim(),
-      email: email.trim() || undefined,
-      phone: phone.trim() || undefined,
-      address: address.trim() || undefined
-    });
+    await clientService.update(id, updateData);
 
     console.log('Client updated successfully:', id);
     
