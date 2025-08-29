@@ -23,6 +23,7 @@ export default function ProfilePage() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [editForm, setEditForm] = useState({
     displayName: '',
     phone: '',
@@ -43,6 +44,7 @@ export default function ProfilePage() {
           console.log('Fetching user profile for UID:', user.uid);
           const response = await fetch(`/api/users/${user.uid}`);
           console.log('Profile API response status:', response.status);
+          
           if (response.ok) {
             const userProfile = await response.json();
             console.log('User profile fetched:', userProfile);
@@ -52,11 +54,22 @@ export default function ProfilePage() {
               phone: userProfile.phone || '',
               address: userProfile.address || ''
             });
+            setError(null);
           } else {
-            console.error('Profile API error:', response.status, response.statusText);
+            const errorData = await response.json().catch(() => ({}));
+            console.error('Profile API error:', response.status, response.statusText, errorData);
+            
+            if (response.status === 401) {
+              setError('Authentication failed. Please log in again.');
+            } else if (response.status === 404) {
+              setError('User profile not found. This might be a new account.');
+            } else {
+              setError(`Failed to load profile: ${errorData.error || response.statusText}`);
+            }
           }
         } catch (error) {
           console.error('Error fetching profile:', error);
+          setError('Network error while loading profile. Please try again.');
         }
       } else {
         console.log('No user, redirecting to login');
@@ -109,10 +122,37 @@ export default function ProfilePage() {
     );
   }
 
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-red-600 text-xl mb-4">{error}</div>
+          <div className="space-x-4">
+            <button
+              onClick={() => window.location.reload()}
+              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+            >
+              Try Again
+            </button>
+            <button
+              onClick={() => router.push('/login')}
+              className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700"
+            >
+              Go to Login
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (!profile) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div>Profile not found</div>
+        <div className="text-center">
+          <div className="text-gray-600 text-xl mb-4">Loading profile...</div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+        </div>
       </div>
     );
   }
