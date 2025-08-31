@@ -35,6 +35,7 @@ export default function RootLayout({
             <nav className="flex items-center gap-6 text-sm">
               <Link href="/services" className="hover:underline">Services</Link>
               <Link href="/portfolio" className="hover:underline">View Our Work</Link>
+              <Link href="/contact" className="hover:underline">Contact</Link>
               <Link href="/#quote" className="hover:underline">Get a Free Quote</Link>
               <AuthProvider />
             </nav>
@@ -93,6 +94,11 @@ export default function RootLayout({
                   <li>
                     <Link href="/portfolio" className="text-gray-300 hover:text-white transition-colors">
                       Our Work
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href="/contact" className="text-gray-300 hover:text-white transition-colors">
+                      Contact
                     </Link>
                   </li>
                   <li>
