@@ -1,446 +1,635 @@
 "use client";
-import { useEffect, useState } from "react";
-import type { Client, Project } from "@/server/db/schema";
-import { getStorageInstance } from "@/lib/firebase";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { v4 as uuid } from "uuid";
-import { createClient } from "@/app/actions/clients";
-import { createProject } from "@/app/actions/projects";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { getAuthInstance, signOut } from "@/lib/firebase";
 import { getDb } from "@/lib/firebase";
-import { collection, getDocs } from "firebase/firestore";
+import { collection, getDocs, doc, updateDoc, deleteDoc } from "firebase/firestore";
+import type { User } from "firebase/auth";
 
-type UploadType = "image" | "video" | "before" | "after";
+interface Client {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  address: string;
+  createdAt: Date;
+  lastContact: Date;
+}
 
-type Milestone = { id: string; projectId: string; title: string; dueDate?: string | null; completedAt?: string | null };
+interface Project {
+  id: string;
+  title: string;
+  clientId: string;
+  clientName: string;
+  status: "planning" | "in-progress" | "completed" | "on-hold";
+  startDate: Date;
+  endDate: Date;
+  budget: number;
+  progress: number;
+}
 
-type Invoice = { id: string; projectId: string; amountCents: number; status: "unpaid" | "paid" | "overdue"; issuedAt: string; paidAt?: string | null };
+interface DashboardStats {
+  totalClients: number;
+  activeProjects: number;
+  completedProjects: number;
+  totalRevenue: number;
+  pendingQuotes: number;
+  upcomingDeadlines: number;
+}
 
-export default function AdminPage() {
+export default function AdminDashboard() {
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [stats, setStats] = useState<DashboardStats>({
+    totalClients: 0,
+    activeProjects: 0,
+    completedProjects: 0,
+    totalRevenue: 0,
+    pendingQuotes: 0,
+    upcomingDeadlines: 0
+  });
   const [clients, setClients] = useState<Client[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
-  const [newClient, setNewClient] = useState({ name: "", email: "", phone: "" });
-  const [newProject, setNewProject] = useState({ clientId: "", title: "", description: "", status: "planning" as const, startDate: "", endDate: "", budget: "" });
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  // Media upload state
-  const [uploadProjectId, setUploadProjectId] = useState("");
-  const [uploadType, setUploadType] = useState<UploadType>("image");
-  const [uploadFile, setUploadFile] = useState<File | null>(null);
-  const [isUploading, setIsUploading] = useState(false);
-
-  // Milestones / Invoices state
-  const [selectedProjectForMgmt, setSelectedProjectForMgmt] = useState("");
-  const [milestones, setMilestones] = useState<Milestone[]>([]);
-  const [invoices, setInvoices] = useState<Invoice[]>([]);
-  const [newMilestone, setNewMilestone] = useState({ title: "", dueDate: "" });
-  const [newInvoice, setNewInvoice] = useState({ amountCents: "", status: "unpaid", issuedAt: "" });
-  const [isMgmtLoading, setIsMgmtLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState<"overview" | "clients" | "projects" | "analytics">("overview");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterStatus, setFilterStatus] = useState<string>("all");
+  const router = useRouter();
 
   useEffect(() => {
-    loadData();
-  }, []);
+    const auth = getAuthInstance();
+    const unsubscribe = auth.onAuthStateChanged(async (user) => {
+      if (user) {
+        // Check if user is admin (you can implement your own admin check logic)
+        const isAdmin = user.email === "admin@fullhundred.com" || 
+                       user.email?.endsWith("@fullhundred.com");
+        
+        if (isAdmin) {
+          setUser(user);
+          await loadDashboardData();
+        } else {
+          router.push("/dashboard");
+        }
+      } else {
+        router.push("/login");
+      }
+      setIsLoading(false);
+    });
 
-  useEffect(() => {
-    if (selectedProjectForMgmt) {
-      loadMgmtData(selectedProjectForMgmt);
-    } else {
-      setMilestones([]);
-      setInvoices([]);
-    }
-  }, [selectedProjectForMgmt]);
+    return () => unsubscribe();
+  }, [router]);
 
-  async function loadData() {
+  const loadDashboardData = async () => {
     try {
-      setIsLoading(true);
-      setError(null);
-      
-      // Use client-side Firebase to read from the database
       const db = getDb();
       
-      // Fetch clients
-      try {
-        const clientsSnapshot = await getDocs(collection(db, 'clients'));
-        const clientsData = clientsSnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        })) as Client[];
-        setClients(clientsData);
-        console.log('Loaded clients:', clientsData.length);
-      } catch (clientError) {
-        console.error('Failed to load clients:', clientError);
-        setClients([]);
-      }
-      
-      // Fetch projects
-      try {
-        const projectsSnapshot = await getDocs(collection(db, 'projects'));
-        const projectsData = projectsSnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        })) as Project[];
-        setProjects(projectsData);
-        console.log('Loaded projects:', projectsData.length);
-      } catch (projectError) {
-        console.error('Failed to load projects:', projectError);
-        setProjects([]);
-      }
-      
-    } catch (err) {
-      console.error('Failed to load data:', err);
-      setError("Failed to load data");
-      setClients([]);
-      setProjects([]);
-    } finally {
-      setIsLoading(false);
-    }
-  }
+      // Load clients
+      const clientsSnapshot = await getDocs(collection(db, "clients"));
+      const clientsData = clientsSnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        createdAt: doc.data().createdAt?.toDate() || new Date(),
+        lastContact: doc.data().lastContact?.toDate() || new Date()
+      })) as Client[];
+      setClients(clientsData);
 
-  async function loadMgmtData(projectId: string) {
-    try {
-      setIsMgmtLoading(true);
-      const [msRes, invRes] = await Promise.all([
-        fetch(`/api/milestones?projectId=${encodeURIComponent(projectId)}`, { cache: "no-store" }),
-        fetch(`/api/invoices?projectId=${encodeURIComponent(projectId)}`, { cache: "no-store" })
-      ]);
-      const ms = await msRes.json();
-      const inv = await invRes.json();
-      setMilestones(Array.isArray(ms) ? ms : []);
-      setInvoices(Array.isArray(inv) ? inv : []);
-    } finally {
-      setIsMgmtLoading(false);
-    }
-  }
+      // Load projects
+      const projectsSnapshot = await getDocs(collection(db, "projects"));
+      const projectsData = projectsSnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        startDate: doc.data().startDate?.toDate() || new Date(),
+        endDate: doc.data().endDate?.toDate() || new Date()
+      })) as Project[];
+      setProjects(projectsData);
 
-  async function handleCreateClient(e: React.FormEvent) {
-    e.preventDefault();
-    if (!newClient.name.trim()) return;
-    
-    try {
-      setError(null);
+      // Calculate stats
+      const activeProjects = projectsData.filter(p => p.status === "in-progress").length;
+      const completedProjects = projectsData.filter(p => p.status === "completed").length;
+      const totalRevenue = projectsData
+        .filter(p => p.status === "completed")
+        .reduce((sum, p) => sum + (p.budget || 0), 0);
       
-      // Create FormData for Server Action
-      const formData = new FormData();
-      formData.append('name', newClient.name);
-      if (newClient.email) formData.append('email', newClient.email);
-      if (newClient.phone) formData.append('phone', newClient.phone);
-      
-      const result = await createClient(formData);
-      
-      if (result.success) {
-        // Reload data to show the new client
-        await loadData();
-        setNewClient({ name: "", email: "", phone: "" });
-      } else {
-        setError(result.error || "Failed to create client");
-      }
-    } catch (err) {
-      setError("Failed to create client");
-    }
-  }
-
-  async function handleCreateProject(e: React.FormEvent) {
-    e.preventDefault();
-    if (!newProject.title.trim() || !newProject.clientId) return;
-    
-    try {
-      setError(null);
-      
-      // Create FormData for Server Action
-      const formData = new FormData();
-      formData.append('title', newProject.title);
-      formData.append('description', newProject.description);
-      formData.append('clientId', newProject.clientId);
-      formData.append('status', newProject.status);
-      if (newProject.startDate) formData.append('startDate', newProject.startDate);
-      if (newProject.endDate) formData.append('endDate', newProject.endDate);
-      if (newProject.budget) formData.append('budget', newProject.budget);
-      
-      const result = await createProject(formData);
-      
-      if (result.success) {
-        // Reload data to show the new project
-        await loadData();
-        setNewProject({ clientId: "", title: "", description: "", status: "planning", startDate: "", endDate: "", budget: "" });
-      } else {
-        setError(result.error || "Failed to create project");
-      }
-    } catch (err) {
-      setError("Failed to create project");
-    }
-  }
-
-  async function handleUpload() {
-    if (!uploadProjectId || !uploadFile) return;
-    try {
-      setIsUploading(true);
-      setError(null);
-      const storage = getStorageInstance();
-      const ext = uploadFile.name.split(".").pop() || "bin";
-      const objectName = `projects/${uploadProjectId}/${uuid()}.${ext}`;
-      const storageRef = ref(storage, objectName);
-      await uploadBytes(storageRef, uploadFile);
-      const tempUrl = await getDownloadURL(storageRef);
-
-      // Optional: promote to Cloudinary for permanent optimized hosting
-      let finalUrl = tempUrl;
-      try {
-        const cldRes = await fetch("/api/cloudinary-upload", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ fileUrl: tempUrl, folder: `projects/${uploadProjectId}` })
-        });
-        if (cldRes.ok) {
-          const c = await cldRes.json();
-          finalUrl = c.url || tempUrl;
-        }
-      } catch {}
-
-      const res = await fetch("/api/media", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ projectId: uploadProjectId, type: uploadType, url: finalUrl })
+      setStats({
+        totalClients: clientsData.length,
+        activeProjects,
+        completedProjects,
+        totalRevenue,
+        pendingQuotes: projectsData.filter(p => p.status === "planning").length,
+        upcomingDeadlines: projectsData.filter(p => {
+          const endDate = new Date(p.endDate);
+          const today = new Date();
+          const diffTime = endDate.getTime() - today.getTime();
+          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+          return diffDays <= 7 && diffDays > 0;
+        }).length
       });
-      if (!res.ok) throw new Error("Failed to save media record");
 
-      // reset
-      setUploadFile(null);
-    } catch {
-      setError("Upload failed");
-    } finally {
-      setIsUploading(false);
+    } catch (error) {
+      console.error("Error loading dashboard data:", error);
     }
-  }
+  };
 
-  async function addMilestone() {
-    if (!selectedProjectForMgmt || !newMilestone.title.trim()) return;
-    const payload: { projectId: string; title: string; dueDate?: string } = {
-      projectId: selectedProjectForMgmt,
-      title: newMilestone.title.trim(),
-      ...(newMilestone.dueDate ? { dueDate: newMilestone.dueDate } : {}),
-    };
-    const res = await fetch("/api/milestones", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
-    if (res.ok) {
-      setNewMilestone({ title: "", dueDate: "" });
-      await loadMgmtData(selectedProjectForMgmt);
+  const handleLogout = async () => {
+    try {
+      await signOut(getAuthInstance());
+      await fetch("/api/auth/logout", { method: "POST" });
+      router.push("/");
+    } catch (error) {
+      console.error("Logout error:", error);
     }
-  }
+  };
 
-  async function addInvoice() {
-    if (!selectedProjectForMgmt || !newInvoice.amountCents) return;
-    const amount = parseInt(newInvoice.amountCents, 10);
-    if (Number.isNaN(amount)) return;
-    const payload: { projectId: string; amountCents: number; status: 'unpaid'|'paid'|'overdue'; issuedAt?: string } = {
-      projectId: selectedProjectForMgmt,
-      amountCents: amount,
-      status: newInvoice.status as 'unpaid'|'paid'|'overdue',
-      ...(newInvoice.issuedAt ? { issuedAt: newInvoice.issuedAt } : {}),
-    };
-    const res = await fetch("/api/invoices", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
-    if (res.ok) {
-      setNewInvoice({ amountCents: "", status: "unpaid", issuedAt: "" });
-      await loadMgmtData(selectedProjectForMgmt);
+  const updateProjectStatus = async (projectId: string, newStatus: string) => {
+    try {
+      const db = getDb();
+      const projectRef = doc(db, "projects", projectId);
+      await updateDoc(projectRef, { status: newStatus });
+      await loadDashboardData(); // Reload data
+    } catch (error) {
+      console.error("Error updating project status:", error);
     }
-  }
+  };
+
+  const deleteProject = async (projectId: string) => {
+    if (confirm("Are you sure you want to delete this project?")) {
+      try {
+        const db = getDb();
+        await deleteDoc(doc(db, "projects", projectId));
+        await loadDashboardData(); // Reload data
+      } catch (error) {
+        console.error("Error deleting project:", error);
+      }
+    }
+  };
+
+  const filteredProjects = projects.filter(project => {
+    const matchesSearch = project.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         project.clientName.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = filterStatus === "all" || project.status === filterStatus;
+    return matchesSearch && matchesStatus;
+  });
+
+  const filteredClients = clients.filter(client => 
+    client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    client.email.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   if (isLoading) {
     return (
-      <section className="mx-auto max-w-6xl px-6 py-12">
-        <div className="text-center">Loading...</div>
-      </section>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading admin dashboard...</p>
+        </div>
+      </div>
     );
   }
 
   return (
-    <section className="mx-auto max-w-6xl px-6 py-12 grid gap-12">
-      <div>
-        <h1 className="text-2xl font-semibold mb-4">Admin CMS</h1>
-        <p className="opacity-80">Manage clients and projects.</p>
-        {error && (
-          <p className="text-red-600 text-sm mt-2">{error}</p>
-        )}
-      </div>
-
-      <div className="grid md:grid-cols-2 gap-10">
-        <div className="border rounded-lg p-4">
-          <h2 className="font-medium mb-3">Create Client</h2>
-          <form onSubmit={handleCreateClient} className="grid gap-3">
-            <input 
-              className="border rounded px-3 py-2" 
-              placeholder="Name *" 
-              value={newClient.name} 
-              onChange={e => setNewClient(v => ({ ...v, name: e.target.value }))} 
-            />
-            <input 
-              className="border rounded px-3 py-2" 
-              placeholder="Email" 
-              type="email"
-              value={newClient.email} 
-              onChange={e => setNewClient(v => ({ ...v, email: e.target.value }))} 
-            />
-            <input 
-              className="border rounded px-3 py-2" 
-              placeholder="Phone" 
-              type="tel"
-              value={newClient.phone} 
-              onChange={e => setNewClient(v => ({ ...v, phone: e.target.value }))} 
-            />
-            <button 
-              type="submit"
-              className="bg-black text-white rounded px-4 py-2 w-fit disabled:opacity-50" 
-              disabled={!newClient.name.trim()}
-            >
-              Save Client
-            </button>
-          </form>
-          <div className="mt-4">
-            <h3 className="font-medium mb-2">Existing Clients ({Array.isArray(clients) ? clients.length : 0})</h3>
-            <ul className="space-y-2">
-              {(Array.isArray(clients) ? clients : []).map(client => (
-                <li key={client.id} className="text-sm p-2 bg-gray-50 rounded">
-                  <div className="font-medium">{client.name}</div>
-                  {client.email && <div className="text-gray-600">{client.email}</div>}
-                  {client.phone && <div className="text-gray-600">{client.phone}</div>}
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-
-        <div className="border rounded-lg p-4">
-          <h2 className="font-medium mb-3">Create Project</h2>
-          <form onSubmit={handleCreateProject} className="grid gap-3">
-            <select 
-              className="border rounded px-3 py-2" 
-              value={newProject.clientId} 
-              onChange={e => setNewProject(v => ({ ...v, clientId: e.target.value }))}
-            >
-              <option value="">Select client *</option>
-              {(Array.isArray(clients) ? clients : []).map(client => (
-                <option key={client.id} value={client.id}>{client.name}</option>
-              ))}
-            </select>
-            <input 
-              className="border rounded px-3 py-2" 
-              placeholder="Title *" 
-              value={newProject.title} 
-              onChange={e => setNewProject(v => ({ ...v, title: e.target.value }))} 
-            />
-            <textarea 
-              className="border rounded px-3 py-2" 
-              placeholder="Description" 
-              rows={3}
-              value={newProject.description} 
-              onChange={e => setNewProject(v => ({ ...v, description: e.target.value }))} 
-            />
-            <button 
-              type="submit"
-              className="bg-black text-white rounded px-4 py-2 w-fit disabled:opacity-50" 
-              disabled={!newProject.title.trim() || !newProject.clientId}
-            >
-              Save Project
-            </button>
-          </form>
-          <div className="mt-4">
-            <h3 className="font-medium mb-2">Existing Projects ({Array.isArray(projects) ? projects.length : 0})</h3>
-            <ul className="space-y-2">
-              {(Array.isArray(projects) ? projects : []).map(project => (
-                <li key={project.id} className="text-sm p-2 bg-gray-50 rounded">
-                  <div className="font-medium">{project.title}</div>
-                  <div className="text-gray-600">Client: {(Array.isArray(clients) ? clients : []).find(c => c.id === project.clientId)?.name || 'Unknown'}</div>
-                  {project.description && <div className="text-gray-600">{project.description}</div>}
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-      </div>
-
-      {/* Media upload */}
-      <div className="border rounded-lg p-4">
-        <h2 className="font-medium mb-3">Upload Media</h2>
-        <div className="grid md:grid-cols-4 gap-3 items-center">
-          <select className="border rounded px-3 py-2" value={uploadProjectId} onChange={e=>setUploadProjectId(e.target.value)}>
-            <option value="">Select project *</option>
-            {(Array.isArray(projects) ? projects : []).map(p => (
-              <option key={p.id} value={p.id}>{p.title}</option>
-            ))}
-          </select>
-          <select 
-            className="border rounded px-3 py-2" 
-            value={uploadType} 
-            onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setUploadType(e.target.value as UploadType)}
-          >
-            <option value="image">Image</option>
-            <option value="video">Video</option>
-            <option value="before">Before</option>
-            <option value="after">After</option>
-          </select>
-          <input type="file" className="border rounded px-3 py-2" onChange={e=>setUploadFile(e.target.files?.[0] || null)} />
-          <button onClick={handleUpload} disabled={!uploadProjectId || !uploadFile || isUploading} className="bg-black text-white rounded px-4 py-2 disabled:opacity-50">
-            {isUploading ? "Uploading…" : "Upload"}
-          </button>
-        </div>
-      </div>
-
-      {/* Milestones & Invoices */}
-      <div className="border rounded-lg p-4">
-        <h2 className="font-medium mb-3">Milestones & Invoices</h2>
-        <div className="grid md:grid-cols-3 gap-3 items-end">
-          <select className="border rounded px-3 py-2" value={selectedProjectForMgmt} onChange={e=>setSelectedProjectForMgmt(e.target.value)}>
-            <option value="">Select project</option>
-            {(Array.isArray(projects) ? projects : []).map(p => (
-              <option key={p.id} value={p.id}>{p.title}</option>
-            ))}
-          </select>
-          {isMgmtLoading && <div className="text-sm opacity-70">Loading…</div>}
-        </div>
-
-        {selectedProjectForMgmt && (
-          <div className="grid md:grid-cols-2 gap-6 mt-4">
-            {/* Milestones */}
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <header className="bg-white shadow-sm border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center py-4">
             <div>
-              <h3 className="font-medium mb-2">Milestones</h3>
-              <div className="grid gap-2 mb-3">
-                <input className="border rounded px-3 py-2" placeholder="Title" value={newMilestone.title} onChange={e=>setNewMilestone(v=>({...v, title: e.target.value}))} />
-                <input className="border rounded px-3 py-2" type="date" value={newMilestone.dueDate} onChange={e=>setNewMilestone(v=>({...v, dueDate: e.target.value}))} />
-                <button className="bg-black text-white rounded px-4 py-2 w-fit disabled:opacity-50" onClick={addMilestone} disabled={!newMilestone.title.trim()}>Add Milestone</button>
-              </div>
-              <ul className="space-y-2">
-                {milestones.map(m => (
-                  <li key={m.id} className="text-sm p-2 border rounded">
-                    <div className="font-medium">{m.title}</div>
-                    <div className="opacity-75">Due: {m.dueDate ? new Date(m.dueDate).toLocaleDateString() : '—'}</div>
-                  </li>
-                ))}
-              </ul>
+              <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
+              <p className="text-sm text-gray-600">Welcome back, {user?.email}</p>
             </div>
-
-            {/* Invoices */}
-            <div>
-              <h3 className="font-medium mb-2">Invoices</h3>
-              <div className="grid gap-2 mb-3">
-                <input className="border rounded px-3 py-2" placeholder="Amount (cents)" value={newInvoice.amountCents} onChange={e=>setNewInvoice(v=>({...v, amountCents: e.target.value}))} />
-                <select className="border rounded px-3 py-2" value={newInvoice.status} onChange={e=>setNewInvoice(v=>({...v, status: e.target.value}))}>
-                  <option value="unpaid">Unpaid</option>
-                  <option value="paid">Paid</option>
-                  <option value="overdue">Overdue</option>
-                </select>
-                <input className="border rounded px-3 py-2" type="date" value={newInvoice.issuedAt} onChange={e=>setNewInvoice(v=>({...v, issuedAt: e.target.value}))} />
-                <button className="bg-black text-white rounded px-4 py-2 w-fit disabled:opacity-50" onClick={addInvoice} disabled={!newInvoice.amountCents}>Add Invoice</button>
-              </div>
-              <ul className="space-y-2">
-                {invoices.map(inv => (
-                  <li key={inv.id} className="text-sm p-2 border rounded">
-                    <div className="font-medium">{(inv.amountCents/100).toLocaleString(undefined,{style:'currency',currency:'USD'})}</div>
-                    <div className="opacity-75">Status: {inv.status} · Issued: {inv.issuedAt ? new Date(inv.issuedAt).toLocaleDateString() : '—'}</div>
-                  </li>
-                ))}
-              </ul>
+            <div className="flex items-center space-x-4">
+              <button
+                onClick={() => router.push("/admin/manage")}
+                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                Manage Content
+              </button>
+              <button
+                onClick={handleLogout}
+                className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors"
+              >
+                Logout
+              </button>
             </div>
           </div>
+        </div>
+      </header>
+
+      {/* Navigation Tabs */}
+      <div className="bg-white border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <nav className="flex space-x-8">
+            {[
+              { id: "overview", label: "Overview" },
+              { id: "clients", label: "Clients" },
+              { id: "projects", label: "Projects" },
+              { id: "analytics", label: "Analytics" }
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id as "overview" | "clients" | "projects" | "analytics")}
+                className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === tab.id
+                    ? "border-blue-500 text-blue-600"
+                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </nav>
+        </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Overview Tab */}
+        {activeTab === "overview" && (
+          <div className="space-y-8">
+            {/* Stats Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="bg-white rounded-lg shadow p-6">
+                <div className="flex items-center">
+                  <div className="p-2 bg-blue-100 rounded-lg">
+                    <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0zM7 10a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+                    </svg>
+                  </div>
+                  <div className="ml-4">
+                    <p className="text-sm font-medium text-gray-600">Total Clients</p>
+                    <p className="text-2xl font-semibold text-gray-900">{stats.totalClients}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-lg shadow p-6">
+                <div className="flex items-center">
+                  <div className="p-2 bg-green-100 rounded-lg">
+                    <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <div className="ml-4">
+                    <p className="text-sm font-medium text-gray-600">Active Projects</p>
+                    <p className="text-2xl font-semibold text-gray-900">{stats.activeProjects}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-lg shadow p-6">
+                <div className="flex items-center">
+                  <div className="p-2 bg-purple-100 rounded-lg">
+                    <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                    </svg>
+                  </div>
+                  <div className="ml-4">
+                    <p className="text-sm font-medium text-gray-600">Total Revenue</p>
+                    <p className="text-2xl font-semibold text-gray-900">${stats.totalRevenue.toLocaleString()}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-lg shadow p-6">
+                <div className="flex items-center">
+                  <div className="p-2 bg-yellow-100 rounded-lg">
+                    <svg className="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                    </svg>
+                  </div>
+                  <div className="ml-4">
+                    <p className="text-sm font-medium text-gray-600">Pending Quotes</p>
+                    <p className="text-2xl font-semibold text-gray-900">{stats.pendingQuotes}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-lg shadow p-6">
+                <div className="flex items-center">
+                  <div className="p-2 bg-red-100 rounded-lg">
+                    <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <div className="ml-4">
+                    <p className="text-sm font-medium text-gray-600">Upcoming Deadlines</p>
+                    <p className="text-2xl font-semibold text-gray-900">{stats.upcomingDeadlines}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-lg shadow p-6">
+                <div className="flex items-center">
+                  <div className="p-2 bg-indigo-100 rounded-lg">
+                    <svg className="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <div className="ml-4">
+                    <p className="text-sm font-medium text-gray-600">Completed Projects</p>
+                    <p className="text-2xl font-semibold text-gray-900">{stats.completedProjects}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Recent Activity */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <div className="bg-white rounded-lg shadow">
+                <div className="px-6 py-4 border-b border-gray-200">
+                  <h3 className="text-lg font-medium text-gray-900">Recent Projects</h3>
+                </div>
+                <div className="p-6">
+                  {projects.slice(0, 5).map((project) => (
+                    <div key={project.id} className="flex items-center justify-between py-3 border-b border-gray-100 last:border-b-0">
+                      <div>
+                        <p className="font-medium text-gray-900">{project.title}</p>
+                        <p className="text-sm text-gray-600">{project.clientName}</p>
+                      </div>
+                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                        project.status === "completed" ? "bg-green-100 text-green-800" :
+                        project.status === "in-progress" ? "bg-blue-100 text-blue-800" :
+                        project.status === "planning" ? "bg-yellow-100 text-yellow-800" :
+                        "bg-gray-100 text-gray-800"
+                      }`}>
+                        {project.status.replace("-", " ")}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="bg-white rounded-lg shadow">
+                <div className="px-6 py-4 border-b border-gray-200">
+                  <h3 className="text-lg font-medium text-gray-900">Recent Clients</h3>
+                </div>
+                <div className="p-6">
+                  {clients.slice(0, 5).map((client) => (
+                    <div key={client.id} className="flex items-center justify-between py-3 border-b border-gray-100 last:border-b-0">
+                      <div>
+                        <p className="font-medium text-gray-900">{client.name}</p>
+                        <p className="text-sm text-gray-600">{client.email}</p>
+                      </div>
+                      <span className="text-sm text-gray-500">
+                        {client.createdAt.toLocaleDateString()}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Clients Tab */}
+        {activeTab === "clients" && (
+          <div className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h2 className="text-2xl font-bold text-gray-900">Client Management</h2>
+              <button
+                onClick={() => router.push("/admin/manage")}
+                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                Add New Client
+              </button>
+            </div>
+
+            <div className="bg-white rounded-lg shadow">
+              <div className="px-6 py-4 border-b border-gray-200">
+                <input
+                  type="text"
+                  placeholder="Search clients..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Client</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Projects</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Joined</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {filteredClients.map((client) => {
+                      const clientProjects = projects.filter(p => p.clientId === client.id);
+                      return (
+                        <tr key={client.id}>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div>
+                              <div className="text-sm font-medium text-gray-900">{client.name}</div>
+                              <div className="text-sm text-gray-500">{client.address}</div>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm text-gray-900">{client.email}</div>
+                            <div className="text-sm text-gray-500">{client.phone}</div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                              {clientProjects.length} projects
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {client.createdAt.toLocaleDateString()}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <button className="text-blue-600 hover:text-blue-900 mr-3">Edit</button>
+                            <button className="text-red-600 hover:text-red-900">Delete</button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Projects Tab */}
+        {activeTab === "projects" && (
+          <div className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h2 className="text-2xl font-bold text-gray-900">Project Management</h2>
+              <button
+                onClick={() => router.push("/admin/manage")}
+                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                Add New Project
+              </button>
+            </div>
+
+            <div className="flex space-x-4 mb-6">
+              <input
+                type="text"
+                placeholder="Search projects..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+              <select
+                value={filterStatus}
+                onChange={(e) => setFilterStatus(e.target.value)}
+                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="all">All Status</option>
+                <option value="planning">Planning</option>
+                <option value="in-progress">In Progress</option>
+                <option value="completed">Completed</option>
+                <option value="on-hold">On Hold</option>
+              </select>
+            </div>
+
+            <div className="bg-white rounded-lg shadow">
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Project</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Client</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Progress</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Budget</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Timeline</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {filteredProjects.map((project) => (
+                      <tr key={project.id}>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div>
+                            <div className="text-sm font-medium text-gray-900">{project.title}</div>
+                            <div className="text-sm text-gray-500">ID: {project.id}</div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {project.clientName}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <select
+                            value={project.status}
+                            onChange={(e) => updateProjectStatus(project.id, e.target.value)}
+                            className={`px-2 py-1 text-xs font-medium rounded-full border-0 ${
+                              project.status === "completed" ? "bg-green-100 text-green-800" :
+                              project.status === "in-progress" ? "bg-blue-100 text-blue-800" :
+                              project.status === "planning" ? "bg-yellow-100 text-yellow-800" :
+                              "bg-gray-100 text-gray-800"
+                            }`}
+                          >
+                            <option value="planning">Planning</option>
+                            <option value="in-progress">In Progress</option>
+                            <option value="completed">Completed</option>
+                            <option value="on-hold">On Hold</option>
+                          </select>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center">
+                            <div className="w-16 bg-gray-200 rounded-full h-2 mr-2">
+                              <div 
+                                className="bg-blue-600 h-2 rounded-full" 
+                                style={{ width: `${project.progress || 0}%` }}
+                              ></div>
+                            </div>
+                            <span className="text-sm text-gray-900">{project.progress || 0}%</span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          ${project.budget?.toLocaleString() || "0"}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          <div>{project.startDate.toLocaleDateString()}</div>
+                          <div>to {project.endDate.toLocaleDateString()}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                          <button className="text-blue-600 hover:text-blue-900 mr-3">Edit</button>
+                          <button 
+                            onClick={() => deleteProject(project.id)}
+                            className="text-red-600 hover:text-red-900"
+                          >
+                            Delete
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Analytics Tab */}
+        {activeTab === "analytics" && (
+          <div className="space-y-8">
+            <h2 className="text-2xl font-bold text-gray-900">Business Analytics</h2>
+            
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <div className="bg-white rounded-lg shadow p-6">
+                <h3 className="text-lg font-medium text-gray-900 mb-4">Project Status Distribution</h3>
+                <div className="space-y-3">
+                  {[
+                    { status: "Planning", count: projects.filter(p => p.status === "planning").length, color: "bg-yellow-500" },
+                    { status: "In Progress", count: projects.filter(p => p.status === "in-progress").length, color: "bg-blue-500" },
+                    { status: "Completed", count: projects.filter(p => p.status === "completed").length, color: "bg-green-500" },
+                    { status: "On Hold", count: projects.filter(p => p.status === "on-hold").length, color: "bg-gray-500" }
+                  ].map((item) => (
+                    <div key={item.status} className="flex items-center justify-between">
+                      <div className="flex items-center">
+                        <div className={`w-3 h-3 rounded-full ${item.color} mr-3`}></div>
+                        <span className="text-sm text-gray-600">{item.status}</span>
+                      </div>
+                      <span className="text-sm font-medium text-gray-900">{item.count}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="bg-white rounded-lg shadow p-6">
+                <h3 className="text-lg font-medium text-gray-900 mb-4">Revenue Overview</h3>
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">Total Revenue</span>
+                    <span className="text-lg font-semibold text-gray-900">${stats.totalRevenue.toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">Average Project Value</span>
+                    <span className="text-sm font-medium text-gray-900">
+                      ${stats.completedProjects > 0 ? Math.round(stats.totalRevenue / stats.completedProjects).toLocaleString() : "0"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">Completion Rate</span>
+                    <span className="text-sm font-medium text-gray-900">
+                      {projects.length > 0 ? Math.round((stats.completedProjects / projects.length) * 100) : 0}%
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-lg shadow p-6">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">Recent Activity Timeline</h3>
+              <div className="space-y-4">
+                {projects.slice(0, 10).map((project) => (
+                  <div key={project.id} className="flex items-center space-x-4">
+                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-gray-900">{project.title}</p>
+                      <p className="text-xs text-gray-500">
+                        Status changed to {project.status} • {project.startDate.toLocaleDateString()}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
         )}
       </div>
-    </section>
+    </div>
   );
 }
