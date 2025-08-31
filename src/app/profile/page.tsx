@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
-import { getAuthInstance, signOut } from "@/lib/firebase";
+import { getAuthInstance, signOut, getDb } from "@/lib/firebase";
+import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import type { User } from "firebase/auth";
@@ -39,15 +40,31 @@ export default function ProfilePage() {
       if (user) {
         setUser(user);
         console.log('Firebase user UID:', user.uid);
-        // Fetch user profile from database
+        
+        // Fetch user profile directly from database using client-side Firebase
         try {
           console.log('Fetching user profile for UID:', user.uid);
-          const response = await fetch(`/api/users/${user.uid}`);
-          console.log('Profile API response status:', response.status);
+          const db = getDb();
+          const userDocRef = doc(db, 'users', user.uid);
+          const userDoc = await getDoc(userDocRef);
           
-          if (response.ok) {
-            const userProfile = await response.json();
-            console.log('User profile fetched:', userProfile);
+          if (userDoc.exists()) {
+            const userData = userDoc.data();
+            console.log('User profile fetched from database:', userData);
+            
+            const userProfile: UserProfile = {
+              id: userDoc.id,
+              email: userData.email || user.email || '',
+              displayName: userData.displayName || user.displayName || '',
+              photoURL: userData.photoURL || user.photoURL || '',
+              role: userData.role || 'user',
+              phone: userData.phone || '',
+              address: userData.address || '',
+              createdAt: userData.createdAt?.toDate() || new Date(),
+              updatedAt: userData.updatedAt?.toDate() || new Date(),
+              lastLoginAt: userData.lastLoginAt?.toDate() || new Date()
+            };
+            
             setProfile(userProfile);
             setEditForm({
               displayName: userProfile.displayName || '',
@@ -56,20 +73,30 @@ export default function ProfilePage() {
             });
             setError(null);
           } else {
-            const errorData = await response.json().catch(() => ({}));
-            console.error('Profile API error:', response.status, response.statusText, errorData);
-            
-            if (response.status === 401) {
-              setError('Authentication failed. Please log in again.');
-            } else if (response.status === 404) {
-              setError('User profile not found. This might be a new account.');
-            } else {
-              setError(`Failed to load profile: ${errorData.error || response.statusText}`);
-            }
+            console.log('User document not found, creating basic profile');
+            // Create a basic profile from Firebase Auth user
+            const basicProfile: UserProfile = {
+              id: user.uid,
+              email: user.email || '',
+              displayName: user.displayName || '',
+              photoURL: user.photoURL || '',
+              role: 'user',
+              phone: '',
+              address: '',
+              createdAt: new Date(),
+              updatedAt: new Date(),
+              lastLoginAt: new Date()
+            };
+            setProfile(basicProfile);
+            setEditForm({
+              displayName: basicProfile.displayName || '',
+              phone: '',
+              address: ''
+            });
           }
         } catch (error) {
-          console.error('Error fetching profile:', error);
-          setError('Network error while loading profile. Please try again.');
+          console.error('Error fetching profile from database:', error);
+          setError('Failed to load profile from database. Please try again.');
         }
       } else {
         console.log('No user, redirecting to login');
@@ -86,14 +113,22 @@ export default function ProfilePage() {
     
     setIsSaving(true);
     try {
-      const response = await fetch(`/api/users/${profile.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(editForm),
+      const db = getDb();
+      const userDocRef = doc(db, 'users', profile.id);
+      await updateDoc(userDocRef, {
+        ...editForm,
+        updatedAt: new Date()
       });
-
-      if (response.ok) {
-        const updatedProfile = await response.json();
+      
+      // Get updated user data
+      const updatedDoc = await getDoc(userDocRef);
+      if (updatedDoc.exists()) {
+        const updatedData = updatedDoc.data();
+        const updatedProfile: UserProfile = {
+          ...profile,
+          ...editForm,
+          updatedAt: new Date()
+        };
         setProfile(updatedProfile);
         setIsEditing(false);
       }
