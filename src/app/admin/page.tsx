@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { getAuthInstance, signOut } from "@/lib/firebase";
 import { getDb } from "@/lib/firebase";
 import { collection, getDocs, doc, updateDoc, deleteDoc } from "firebase/firestore";
+import { isUserAdmin } from "@/lib/auth-utils";
 import type { User } from "firebase/auth";
 
 interface Client {
@@ -59,9 +60,8 @@ export default function AdminDashboard() {
     const auth = getAuthInstance();
     const unsubscribe = auth.onAuthStateChanged(async (user) => {
       if (user) {
-        // Check if user is admin (you can implement your own admin check logic)
-        const isAdmin = user.email === "admin@fullhundred.com" || 
-                       user.email?.endsWith("@fullhundred.com");
+        // Check if user is admin using custom claims
+        const isAdmin = await isUserAdmin();
         
         if (isAdmin) {
           setUser(user);
@@ -201,6 +201,12 @@ export default function AdminDashboard() {
                 className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
               >
                 Manage Content
+              </button>
+              <button
+                onClick={() => router.push("/admin/users")}
+                className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
+              >
+                Manage Users
               </button>
               <button
                 onClick={handleLogout}

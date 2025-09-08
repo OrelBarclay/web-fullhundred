@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { getAuthInstance } from "@/lib/firebase";
 import { getDb } from "@/lib/firebase";
 import { collection, getDocs, doc, addDoc, updateDoc, deleteDoc } from "firebase/firestore";
+import { isUserAdmin } from "@/lib/auth-utils";
 import type { User } from "firebase/auth";
 
 interface Client {
@@ -63,8 +64,8 @@ export default function ManageContent() {
     const auth = getAuthInstance();
     const unsubscribe = auth.onAuthStateChanged(async (user) => {
       if (user) {
-        const isAdmin = user.email === "admin@fullhundred.com" || 
-                       user.email?.endsWith("@fullhundred.com");
+        // Check if user is admin using custom claims
+        const isAdmin = await isUserAdmin();
         
         if (isAdmin) {
           setUser(user);
