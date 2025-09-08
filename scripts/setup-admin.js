@@ -7,9 +7,11 @@
  * You can get the user UID from the Firebase Console or by checking the users collection in Firestore.
  */
 
-const { initializeApp, cert } = require('firebase-admin/app');
-const { getAuth } = require('firebase-admin/auth');
-require('dotenv').config({ path: '.env.local' });
+import { initializeApp, cert } from 'firebase-admin/app';
+import { getAuth } from 'firebase-admin/auth';
+import dotenv from 'dotenv';
+
+dotenv.config({ path: '.env.local' });
 
 async function setupAdmin(uid) {
   try {

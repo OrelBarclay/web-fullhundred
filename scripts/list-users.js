@@ -5,9 +5,11 @@
  * Run this script with: node scripts/list-users.js
  */
 
-const { initializeApp, cert } = require('firebase-admin/app');
-const { getAuth } = require('firebase-admin/auth');
-require('dotenv').config({ path: '.env.local' });
+import { initializeApp, cert } from 'firebase-admin/app';
+import { getAuth } from 'firebase-admin/auth';
+import dotenv from 'dotenv';
+
+dotenv.config({ path: '.env.local' });
 
 async function listUsers() {
   try {

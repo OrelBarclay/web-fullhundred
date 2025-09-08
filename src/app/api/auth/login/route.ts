@@ -36,15 +36,14 @@ export async function POST(request: NextRequest) {
     // This is a temporary workaround until Firebase Admin permissions are fixed
     console.log('Skipping database operations due to Admin SDK permissions issue');
     
-    const isAdmin = decodedToken.email === 'admin@fullhundred.com' || 
-                   decodedToken.email?.endsWith('@fullhundred.com');
-    
+    // NOTE: Admin status will be checked via custom claims on the client side
+    // This temporary session doesn't determine admin status
     const user = {
       id: decodedToken.uid,
       email: decodedToken.email || '',
       displayName: decodedToken.name || decodedToken.email?.split('@')[0] || '',
       photoURL: decodedToken.picture || '',
-      role: isAdmin ? 'admin' : 'user',
+      role: 'user', // Default to user, custom claims will override this
       lastLoginAt: new Date()
     };
     
@@ -60,7 +59,7 @@ export async function POST(request: NextRequest) {
     
     const response = NextResponse.json({ 
       success: true, 
-      isAdmin: user.role === 'admin',
+      // Admin status will be determined by custom claims on client side
       user: {
         uid: user.id,
         email: user.email,
