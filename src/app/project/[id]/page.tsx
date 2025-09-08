@@ -17,7 +17,7 @@ export default function ProjectDetail() {
       try {
         const [pRes, mRes] = await Promise.all([
           fetch(`/api/projects/${params.id}`, { cache: "no-store" }),
-          fetch(`/api/media`, { cache: "no-store" })
+          fetch(`/api/media-fallback`, { cache: "no-store" })
         ]);
         if (pRes.status === 404) {
           setProject(null);
@@ -26,7 +26,18 @@ export default function ProjectDetail() {
         const pData = await pRes.json();
         const mAll = await mRes.json();
         setProject(pData);
-        setMedia(mAll.filter((m: Media) => m.projectId === params.id));
+        
+        // Ensure mAll is an array before filtering
+        if (Array.isArray(mAll)) {
+          setMedia(mAll.filter((m: Media) => m.projectId === params.id));
+        } else {
+          console.error("Media API returned non-array response:", mAll);
+          setMedia([]);
+        }
+      } catch (error) {
+        console.error("Error loading project data:", error);
+        setProject(null);
+        setMedia([]);
       } finally {
         setIsLoading(false);
       }
