@@ -6,10 +6,14 @@
     "dev": "next dev --turbopack --experimental-https",
     "build": "next build --turbopack",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "setup-admin": "node scripts/setup-admin.js",
+    "setup-admin-help": "node scripts/setup-admin-simple.js",
+    "list-users": "node scripts/list-users.js"
   },
   "dependencies": {
     "cloudinary": "^2.7.0",
+    "dotenv": "^17.2.2",
     "firebase": "^11.0.0",
     "firebase-admin": "^13.5.0",
     "next": "15.5.2",

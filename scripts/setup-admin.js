@@ -35,6 +35,16 @@ async function setupAdmin(uid) {
     
   } catch (error) {
     console.error('❌ Error setting admin claims:', error.message);
+    
+    if (error.code === 'auth/invalid-credential' || error.message.includes('invalid_grant')) {
+      console.log('\n🔧 Firebase Admin SDK credentials issue detected.');
+      console.log('Try using the alternative setup methods instead:');
+      console.log('   node scripts/setup-admin-simple.js');
+      console.log('\nOr use the Firebase Console method:');
+      console.log('1. Go to Firebase Console > Authentication > Users');
+      console.log('2. Find your user and add custom claims: {"admin": true, "role": "admin"}');
+    }
+    
     process.exit(1);
   }
 }
