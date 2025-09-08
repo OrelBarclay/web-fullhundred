@@ -20,7 +20,7 @@ export default function PortfolioPage() {
     async function load() {
       try {
         setError(null);
-        const res = await fetch("/api/projects", { cache: "no-store" });
+        const res = await fetch("/api/projects-fallback", { cache: "no-store" });
         const data = await res.json();
         if (Array.isArray(data)) setProjects(data);
         else if (Array.isArray(data?.projects)) setProjects(data.projects);
