@@ -13,8 +13,13 @@ export default function ServicesPage() {
         const response = await fetch("/api/services");
         if (response.ok) {
           const data = await response.json();
-          // Only show active services
-          const activeServices = data.filter((service: Service) => service.isActive);
+          // Convert Firestore timestamps to Date objects and filter active services
+          const servicesWithDates = data.map((service: Service) => ({
+            ...service,
+            createdAt: service.createdAt ? new Date(service.createdAt) : new Date(),
+            updatedAt: service.updatedAt ? new Date(service.updatedAt) : new Date()
+          }));
+          const activeServices = servicesWithDates.filter((service: Service) => service.isActive);
           setServices(activeServices);
         } else {
           console.error("Failed to fetch services");

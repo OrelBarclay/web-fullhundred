@@ -73,7 +73,13 @@ export default function ServicesManagement() {
       const response = await fetch("/api/services");
       if (response.ok) {
         const data = await response.json();
-        setServices(data);
+        // Convert Firestore timestamps to Date objects
+        const servicesWithDates = data.map((service: Service) => ({
+          ...service,
+          createdAt: service.createdAt ? new Date(service.createdAt) : new Date(),
+          updatedAt: service.updatedAt ? new Date(service.updatedAt) : new Date()
+        }));
+        setServices(servicesWithDates);
       } else {
         console.error("Failed to load services");
       }

@@ -13,11 +13,25 @@ export async function GET() {
     
     const services = snapshot.docs.map(doc => {
       const data = doc.data();
+      
+      // Helper function to safely convert Firestore timestamps to Date objects
+      const safeDate = (dateValue: unknown): Date => {
+        if (!dateValue) return new Date();
+        if (dateValue instanceof Date) return dateValue;
+        if (dateValue && typeof dateValue === 'object' && 'toDate' in dateValue && typeof (dateValue as { toDate: () => Date }).toDate === 'function') {
+          return (dateValue as { toDate: () => Date }).toDate();
+        }
+        if (typeof dateValue === 'string' || typeof dateValue === 'number') {
+          return new Date(dateValue);
+        }
+        return new Date();
+      };
+      
       return {
         id: doc.id,
         ...data,
-        createdAt: data.createdAt?.toDate() || new Date(),
-        updatedAt: data.updatedAt?.toDate() || new Date()
+        createdAt: safeDate(data.createdAt),
+        updatedAt: safeDate(data.updatedAt)
       };
     }) as Service[];
 
