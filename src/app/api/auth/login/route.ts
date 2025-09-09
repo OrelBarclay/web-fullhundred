@@ -75,11 +75,23 @@ export async function POST(request: NextRequest) {
     const user = userDataToStore;
     console.log('User stored/updated in Firestore:', user);
     
-    // Create a simple session token (skip Admin SDK for now)
-    // Include admin status in the token for middleware checking
-    const isAdminUser = decodedToken.email === 'coolbarclay@gmail.com';
+    // Check if user is admin using custom claims
+    // For now, we'll check the user's role in Firestore and custom claims
+    let isAdminUser = false;
+    
+    // Check if user has admin role in Firestore
+    if (user.role === 'admin' || user.isAdmin) {
+      isAdminUser = true;
+    }
+    
+    // Also check for temporary admin access (until custom claims are properly set)
+    if (decodedToken.email === 'coolbarclay@gmail.com') {
+      isAdminUser = true;
+    }
+    
+    // Create session token with admin status
     const sessionCookie = `session-${Date.now()}-${Math.random().toString(36).substr(2, 9)}-${isAdminUser ? 'admin' : 'user'}`;
-    console.log('Created simple session token:', sessionCookie);
+    console.log('Created session token with admin status:', isAdminUser);
     
     if (!user) {
       return NextResponse.json({ error: 'Failed to create or retrieve user' }, { status: 500 });
@@ -87,12 +99,13 @@ export async function POST(request: NextRequest) {
     
     const response = NextResponse.json({ 
       success: true, 
-      // Admin status will be determined by custom claims on client side
+      isAdmin: isAdminUser,
       user: {
         uid: user.uid,
         email: user.email,
         name: user.displayName,
         role: user.role,
+        isAdmin: isAdminUser
       }
     });
     

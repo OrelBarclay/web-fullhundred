@@ -49,9 +49,9 @@ export default function LoginPage() {
         const cookiesAfterDelay = document.cookie;
         console.log('Login: Cookies after delay:', cookiesAfterDelay);
         
-        // Check if user is admin using custom claims
-        const isAdmin = await isUserAdmin();
-        console.log('Login: User admin status:', isAdmin);
+        // Check if user is admin from API response
+        const { isAdmin } = data;
+        console.log('Login: User admin status from API:', isAdmin);
         
         if (isAdmin) {
           console.log('Login: Redirecting to admin dashboard...');

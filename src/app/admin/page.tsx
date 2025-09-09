@@ -60,9 +60,10 @@ export default function AdminDashboard() {
     const auth = getAuthInstance();
     const unsubscribe = auth.onAuthStateChanged(async (user) => {
       if (user) {
-        // Check if user is admin using custom claims
-        // TEMPORARY: Add your email here for admin access
-        const isAdmin = await isUserAdmin() || user.email === "coolbarclay@gmail.com";
+        // Check if user is admin using custom claims and session token
+        const isAdminFromClaims = await isUserAdmin();
+        const isAdminFromEmail = user.email === "coolbarclay@gmail.com";
+        const isAdmin = isAdminFromClaims || isAdminFromEmail;
         
         if (isAdmin) {
           setUser(user);

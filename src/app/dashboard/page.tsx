@@ -16,12 +16,20 @@ export default function DashboardPage() {
       if (user) {
         console.log('Dashboard: User authenticated:', user.email);
         
-        // Check if user is admin and redirect to admin dashboard
-        const isAdmin = await isUserAdmin();
-        if (isAdmin) {
-          console.log('Dashboard: User is admin, redirecting to admin dashboard');
-          router.push('/admin');
-          return;
+        // Check if user is admin by checking their role in Firestore
+        // This is a fallback check in case middleware didn't catch it
+        try {
+          const response = await fetch('/api/auth/me');
+          if (response.ok) {
+            const userData = await response.json();
+            if (userData.isAdmin) {
+              console.log('Dashboard: User is admin, redirecting to admin dashboard');
+              router.push('/admin');
+              return;
+            }
+          }
+        } catch (error) {
+          console.log('Dashboard: Could not check admin status, continuing with user dashboard');
         }
         
         setUser(user);
