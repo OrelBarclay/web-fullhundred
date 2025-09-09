@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { getAuthInstance } from "@/lib/firebase";
 import { getDb } from "@/lib/firebase";
-import { collection, getDocs } from "firebase/firestore";
+import { collection, getDocs, doc, updateDoc } from "firebase/firestore";
 import { isUserAdmin } from "@/lib/auth-utils";
 import type { User } from "firebase/auth";
 
