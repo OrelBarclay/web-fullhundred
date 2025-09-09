@@ -1,4 +1,5 @@
 "use client";
+import Image from "next/image";
 import { useState } from "react";
 
 export default function Home() {
@@ -47,7 +48,9 @@ export default function Home() {
             <a href="/portfolio" className="border px-5 py-3 rounded">View Our Work</a>
           </div>
         </div>
-        <div className="aspect-[16/10] rounded-lg bg-black/5" />
+        <div className="aspect-[16/10] rounded-lg bg-black/5">
+          <Image src="/images/hero.jpg" alt="Hero" className="w-full h-full object-cover rounded-lg" width={1000} height={1000} />
+        </div>
       </div>
 
       <div id="quote" className="border rounded-xl p-6 grid gap-4">

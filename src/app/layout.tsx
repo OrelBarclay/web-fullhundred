@@ -30,14 +30,23 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <header className="w-full border-b border-black/[.08] dark:border-white/[.12]">
-          <div className="mx-auto max-w-6xl px-6 py-4 flex items-center justify-between">
-            <Link href="/" className="text-lg font-semibold tracking-tight">Full Hundred</Link>
-            <nav className="flex items-center gap-6 text-sm">
+          <div className="mx-auto max-w-6xl px-4 sm:px-6 py-4">
+            <div className="flex items-center justify-between">
+              <Link href="/" className="text-lg font-semibold tracking-tight">Full Hundred</Link>
+              <nav className="flex items-center gap-2 sm:gap-4 lg:gap-6 text-sm">
+                <Link href="/services" className="hover:underline hidden sm:inline">Services</Link>
+                <Link href="/portfolio" className="hover:underline hidden sm:inline">View Our Work</Link>
+                <Link href="/contact" className="hover:underline hidden sm:inline">Contact</Link>
+                <Link href="/#quote" className="hover:underline hidden sm:inline">Get a Free Quote</Link>
+                <AuthProvider />
+              </nav>
+            </div>
+            {/* Mobile navigation */}
+            <nav className="flex items-center gap-4 text-sm mt-2 sm:hidden">
               <Link href="/services" className="hover:underline">Services</Link>
-              <Link href="/portfolio" className="hover:underline">View Our Work</Link>
+              <Link href="/portfolio" className="hover:underline">Portfolio</Link>
               <Link href="/contact" className="hover:underline">Contact</Link>
-              <Link href="/#quote" className="hover:underline">Get a Free Quote</Link>
-              <AuthProvider />
+              <Link href="/#quote" className="hover:underline">Quote</Link>
             </nav>
           </div>
         </header>
