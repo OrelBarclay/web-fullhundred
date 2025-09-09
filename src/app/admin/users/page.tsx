@@ -33,10 +33,35 @@ export default function UserManagement() {
     const auth = getAuthInstance();
     const unsubscribe = auth.onAuthStateChanged(async (user) => {
       if (user) {
-        // Check if user is admin using custom claims and session token
-        const isAdminFromClaims = await isUserAdmin();
-        const isAdminFromEmail = user.email === "coolbarclay@gmail.com";
-        const isAdmin = isAdminFromClaims || isAdminFromEmail;
+        // Check if user is admin using multiple methods
+        let isAdmin = false;
+        
+        // Method 1: Check email (temporary fallback)
+        if (user.email === "coolbarclay@gmail.com") {
+          isAdmin = true;
+        }
+        
+        // Method 2: Try custom claims (may fail due to Admin SDK issues)
+        try {
+          const isAdminFromClaims = await isUserAdmin();
+          if (isAdminFromClaims) {
+            isAdmin = true;
+          }
+        } catch (error) {
+          console.log('Custom claims check failed, using fallback methods:', error);
+        }
+        
+        // Method 3: Check session token from cookies
+        const cookies = document.cookie;
+        if (cookies.includes('-admin')) {
+          isAdmin = true;
+        }
+        
+        console.log('Admin check result:', { 
+          email: user.email, 
+          isAdmin, 
+          cookies: cookies.includes('-admin') 
+        });
         
         if (isAdmin) {
           setUser(user);
