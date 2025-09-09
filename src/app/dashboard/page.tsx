@@ -1,14 +1,90 @@
 "use client";
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { getAuthInstance, signOut } from '@/lib/firebase';
-import { isUserAdmin } from '@/lib/auth-utils';
 import type { User } from 'firebase/auth';
+import Link from 'next/link';
+
+interface Project {
+  id: string;
+  title: string;
+  description: string;
+  status: 'planning' | 'in-progress' | 'completed' | 'on-hold';
+  startDate: Date;
+  endDate: Date;
+  budget: number;
+  clientName: string;
+  beforeImages?: string[];
+  afterImages?: string[];
+}
+
+interface Client {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  address: string;
+  createdAt: Date;
+  lastContact: Date;
+}
 
 export default function DashboardPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState<User | null>(null);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [clients, setClients] = useState<Client[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterStatus, setFilterStatus] = useState<string>('all');
   const router = useRouter();
+
+  // Helper function to safely convert dates
+  const safeDate = (dateValue: unknown): Date => {
+    if (!dateValue) return new Date();
+    if (dateValue instanceof Date) return dateValue;
+    if (dateValue && typeof dateValue === 'object' && 'toDate' in dateValue && typeof (dateValue as { toDate: () => Date }).toDate === 'function') {
+      return (dateValue as { toDate: () => Date }).toDate();
+    }
+    if (typeof dateValue === 'string' || typeof dateValue === 'number') {
+      return new Date(dateValue);
+    }
+    return new Date();
+  };
+
+  const loadDashboardData = useCallback(async () => {
+    try {
+      // Load projects
+      const projectsRes = await fetch('/api/projects-fallback', { cache: 'no-store' });
+      if (projectsRes.ok) {
+        const projectsData = await projectsRes.json();
+        const processedProjects = (Array.isArray(projectsData) ? projectsData : []).map((project: unknown) => {
+          const p = project as Record<string, unknown>;
+          return {
+            ...p,
+            startDate: safeDate(p.startDate),
+            endDate: safeDate(p.endDate)
+          };
+        }) as Project[];
+        setProjects(processedProjects);
+      }
+
+      // Load clients
+      const clientsRes = await fetch('/api/clients-fallback', { cache: 'no-store' });
+      if (clientsRes.ok) {
+        const clientsData = await clientsRes.json();
+        const processedClients = (Array.isArray(clientsData) ? clientsData : []).map((client: unknown) => {
+          const c = client as Record<string, unknown>;
+          return {
+            ...c,
+            createdAt: safeDate(c.createdAt),
+            lastContact: safeDate(c.lastContact)
+          };
+        }) as Client[];
+        setClients(processedClients);
+      }
+    } catch (error) {
+      console.error('Error loading dashboard data:', error);
+    }
+  }, []);
 
   useEffect(() => {
     const auth = getAuthInstance();
@@ -33,6 +109,7 @@ export default function DashboardPage() {
         }
         
         setUser(user);
+        await loadDashboardData();
         setIsLoading(false);
       } else {
         console.log('Dashboard: No user, redirecting to login');
@@ -41,7 +118,37 @@ export default function DashboardPage() {
     });
 
     return () => unsubscribe();
-  }, [router]);
+  }, [router, loadDashboardData]);
+
+  // Filter projects based on search and status
+  const filteredProjects = projects.filter(project => {
+    const matchesSearch = project.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         project.clientName.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = filterStatus === 'all' || project.status === filterStatus;
+    return matchesSearch && matchesStatus;
+  });
+
+  // Calculate statistics
+  const stats = {
+    totalProjects: projects.length,
+    activeProjects: projects.filter(p => p.status === 'in-progress').length,
+    completedProjects: projects.filter(p => p.status === 'completed').length,
+    totalClients: clients.length,
+    totalBudget: projects.reduce((sum, p) => sum + (p.budget || 0), 0),
+    recentProjects: projects
+      .sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime())
+      .slice(0, 3)
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'completed': return 'bg-green-100 text-green-800';
+      case 'in-progress': return 'bg-blue-100 text-blue-800';
+      case 'planning': return 'bg-yellow-100 text-yellow-800';
+      case 'on-hold': return 'bg-red-100 text-red-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
 
   const handleLogout = async () => {
     try {
@@ -65,57 +172,184 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-white shadow rounded-lg p-6">
-          <div className="flex justify-between items-center mb-6">
-            <h1 className="text-3xl font-bold text-gray-900">
-              Welcome to Your Dashboard
-            </h1>
-            <button
-              onClick={handleLogout}
-              className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition-colors"
-            >
-              Logout
-            </button>
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <header className="bg-white shadow-sm border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center py-6">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+              <p className="text-sm text-gray-600">Welcome back, {user?.displayName || user?.email}</p>
+            </div>
+            <div className="flex items-center space-x-4">
+              <Link
+                href="/profile"
+                className="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors"
+              >
+                Profile
+              </Link>
+              <button
+                onClick={handleLogout}
+                className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors"
+              >
+                Logout
+              </button>
+            </div>
           </div>
-          
-          <div className="bg-blue-50 border border-blue-200 rounded-md p-4 mb-6">
-            <div className="flex">
+        </div>
+      </header>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="bg-white rounded-lg shadow p-6">
+            <div className="flex items-center">
               <div className="flex-shrink-0">
-                <svg className="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <div className="ml-3">
-                <h3 className="text-sm font-medium text-blue-800">
-                  Authentication Status
-                </h3>
-                <div className="mt-2 text-sm text-blue-700">
-                  <p>✅ Logged in as: {user?.email}</p>
-                  <p>✅ User ID: {user?.uid}</p>
-                  <p>✅ This page loaded successfully!</p>
+                <div className="w-8 h-8 bg-blue-500 rounded-md flex items-center justify-center">
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                  </svg>
                 </div>
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-500">Total Projects</p>
+                <p className="text-2xl font-semibold text-gray-900">{stats.totalProjects}</p>
               </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Projects</h3>
-              <p className="text-gray-600">View and manage your projects</p>
-            </div>
-            
-            <div className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Profile</h3>
-              <p className="text-gray-600">Update your profile information</p>
-            </div>
-            
-            <div className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Settings</h3>
-              <p className="text-gray-600">Configure your account settings</p>
+          <div className="bg-white rounded-lg shadow p-6">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <div className="w-8 h-8 bg-green-500 rounded-md flex items-center justify-center">
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-500">Completed</p>
+                <p className="text-2xl font-semibold text-gray-900">{stats.completedProjects}</p>
+              </div>
             </div>
           </div>
+
+          <div className="bg-white rounded-lg shadow p-6">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <div className="w-8 h-8 bg-yellow-500 rounded-md flex items-center justify-center">
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-500">Active</p>
+                <p className="text-2xl font-semibold text-gray-900">{stats.activeProjects}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg shadow p-6">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <div className="w-8 h-8 bg-purple-500 rounded-md flex items-center justify-center">
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                </div>
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-500">Total Clients</p>
+                <p className="text-2xl font-semibold text-gray-900">{stats.totalClients}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Search and Filter */}
+        <div className="bg-white rounded-lg shadow mb-8 p-6">
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex-1">
+              <input
+                type="text"
+                placeholder="Search projects..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+            <div className="sm:w-48">
+              <select
+                value={filterStatus}
+                onChange={(e) => setFilterStatus(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="all">All Status</option>
+                <option value="planning">Planning</option>
+                <option value="in-progress">In Progress</option>
+                <option value="completed">Completed</option>
+                <option value="on-hold">On Hold</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        {/* Projects Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+          {filteredProjects.length === 0 ? (
+            <div className="col-span-full text-center py-12">
+              <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+              </svg>
+              <h3 className="mt-2 text-sm font-medium text-gray-900">No projects found</h3>
+              <p className="mt-1 text-sm text-gray-500">
+                {searchTerm || filterStatus !== 'all' 
+                  ? 'Try adjusting your search or filter criteria.' 
+                  : 'Get started by creating your first project.'}
+              </p>
+            </div>
+          ) : (
+            filteredProjects.map((project) => (
+              <div key={project.id} className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow">
+                <div className="p-6">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex-1">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-1">{project.title}</h3>
+                      <p className="text-sm text-gray-600">{project.clientName}</p>
+                    </div>
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(project.status)}`}>
+                      {project.status.replace('-', ' ')}
+                    </span>
+                  </div>
+                  
+                  <p className="text-sm text-gray-600 mb-4 line-clamp-2">{project.description}</p>
+                  
+                  <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
+                    <span>Budget: ${project.budget?.toLocaleString() || '0'}</span>
+                    <span>{project.startDate.toLocaleDateString()}</span>
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <Link
+                      href={`/project/${project.id}`}
+                      className="text-blue-600 hover:text-blue-800 font-medium text-sm"
+                    >
+                      View Details →
+                    </Link>
+                    {project.beforeImages && project.beforeImages.length > 0 && (
+                      <div className="flex items-center text-xs text-gray-500">
+                        <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        {project.beforeImages.length + (project.afterImages?.length || 0)} photos
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
         </div>
       </div>
     </div>
