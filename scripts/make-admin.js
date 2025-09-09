@@ -15,7 +15,7 @@ async function makeUserAdmin(uid) {
   try {
     console.log(`🔧 Making user ${uid} an admin...`);
     
-    const response = await fetch('http://localhost:3001/api/admin/set-claims', {
+    const response = await fetch('http://localhost:3000/api/admin/set-claims', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
