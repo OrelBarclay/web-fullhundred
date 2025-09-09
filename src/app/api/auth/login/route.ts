@@ -76,7 +76,9 @@ export async function POST(request: NextRequest) {
     console.log('User stored/updated in Firestore:', user);
     
     // Create a simple session token (skip Admin SDK for now)
-    const sessionCookie = 'session-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+    // Include admin status in the token for middleware checking
+    const isAdminUser = decodedToken.email === 'coolbarclay@gmail.com';
+    const sessionCookie = `session-${Date.now()}-${Math.random().toString(36).substr(2, 9)}-${isAdminUser ? 'admin' : 'user'}`;
     console.log('Created simple session token:', sessionCookie);
     
     if (!user) {

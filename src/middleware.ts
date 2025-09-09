@@ -28,6 +28,15 @@ export function middleware(request: NextRequest) {
       console.log('Middleware - Redirecting to login (dashboard route)');
       return NextResponse.redirect(new URL('/login', request.url));
     }
+    
+    // Check if user is admin and redirect to admin dashboard
+    // Check if the session token contains 'admin' (set by login API)
+    const isAdmin = authToken.value.includes('-admin');
+    
+    if (isAdmin) {
+      console.log('Middleware - User is admin, redirecting to admin dashboard');
+      return NextResponse.redirect(new URL('/admin', request.url));
+    }
   }
   
   // Protect profile routes
