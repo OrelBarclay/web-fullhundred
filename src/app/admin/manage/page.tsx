@@ -109,22 +109,28 @@ export default function ManageContent() {
       
       // Load clients
       const clientsSnapshot = await getDocs(collection(db, "clients"));
-      const clientsData = clientsSnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        createdAt: doc.data().createdAt?.toDate() || new Date(),
-        lastContact: doc.data().lastContact?.toDate() || new Date()
-      })) as Client[];
+      const clientsData = clientsSnapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          ...data,
+          createdAt: data.createdAt?.toDate ? data.createdAt.toDate() : (data.createdAt || new Date()),
+          lastContact: data.lastContact?.toDate ? data.lastContact.toDate() : (data.lastContact || new Date())
+        };
+      }) as Client[];
       setClients(clientsData);
 
       // Load projects
       const projectsSnapshot = await getDocs(collection(db, "projects"));
-      const projectsData = projectsSnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        startDate: doc.data().startDate?.toDate() || new Date(),
-        endDate: doc.data().endDate?.toDate() || new Date()
-      })) as Project[];
+      const projectsData = projectsSnapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          ...data,
+          startDate: data.startDate?.toDate ? data.startDate.toDate() : (data.startDate || new Date()),
+          endDate: data.endDate?.toDate ? data.endDate.toDate() : (data.endDate || new Date())
+        };
+      }) as Project[];
       setProjects(projectsData);
     } catch (error) {
       console.error("Error loading data:", error);
