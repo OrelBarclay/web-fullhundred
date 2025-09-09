@@ -34,4 +34,11 @@ export const getAuthInstance = (): Auth => getAuth(getFirebaseApp());
 export const getStorageInstance = (): FirebaseStorage => getStorage(getFirebaseApp());
 
 // Re-export auth functions for convenience
-export { signInWithPopup, GoogleAuthProvider, signOut } from 'firebase/auth';
+export { 
+  signInWithPopup, 
+  GoogleAuthProvider, 
+  FacebookAuthProvider,
+  TwitterAuthProvider,
+  GithubAuthProvider,
+  signOut 
+} from 'firebase/auth';

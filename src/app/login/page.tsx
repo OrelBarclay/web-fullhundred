@@ -83,7 +83,7 @@ export default function LoginPage() {
     return () => unsubscribe();
   }, [checkUserRoleAndRedirect]);
 
-  async function handleSocialSignIn(provider: any, providerName: string) {
+  async function handleSocialSignIn(provider: GoogleAuthProvider | FacebookAuthProvider | TwitterAuthProvider | GithubAuthProvider, providerName: string) {
     try {
       setIsLoading(true);
       setError(null);
