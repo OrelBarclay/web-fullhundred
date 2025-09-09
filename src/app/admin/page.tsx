@@ -118,8 +118,10 @@ export default function AdminDashboard() {
 
       // Load projects
       const projectsSnapshot = await getDocs(collection(db, "projects"));
+      console.log('Projects snapshot:', projectsSnapshot.docs.length, 'documents');
       const projectsData = projectsSnapshot.docs.map(doc => {
         const data = doc.data();
+        console.log('Project data:', doc.id, data);
         return {
           id: doc.id,
           ...data,
@@ -127,6 +129,7 @@ export default function AdminDashboard() {
           endDate: data.endDate?.toDate ? data.endDate.toDate() : (data.endDate || new Date())
         };
       }) as Project[];
+      console.log('Processed projects:', projectsData);
       setProjects(projectsData);
 
       // Calculate stats
@@ -195,6 +198,11 @@ export default function AdminDashboard() {
     const matchesStatus = filterStatus === "all" || project.status === filterStatus;
     return matchesSearch && matchesStatus;
   });
+
+  console.log('Projects state:', projects);
+  console.log('Filtered projects:', filteredProjects);
+  console.log('Search term:', searchTerm);
+  console.log('Filter status:', filterStatus);
 
   const filteredClients = clients.filter(client => 
     client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -531,63 +539,90 @@ export default function AdminDashboard() {
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {filteredProjects.map((project) => (
-                      <tr key={project.id}>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div>
-                            <div className="text-sm font-medium text-gray-900">{project.title}</div>
-                            <div className="text-sm text-gray-500">ID: {project.id}</div>
+                    {filteredProjects.length === 0 ? (
+                      <tr>
+                        <td colSpan={7} className="px-6 py-12 text-center text-gray-500">
+                          <div className="flex flex-col items-center">
+                            <svg className="w-12 h-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                            <p className="text-lg font-medium text-gray-900 mb-2">No projects found</p>
+                            <p className="text-sm text-gray-500 mb-4">
+                              {projects.length === 0 
+                                ? "You haven't created any projects yet. Click 'Add New Project' to get started."
+                                : "No projects match your current search or filter criteria."
+                              }
+                            </p>
+                            {projects.length === 0 && (
+                              <button
+                                onClick={() => router.push("/admin/manage")}
+                                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                              >
+                                Create Your First Project
+                              </button>
+                            )}
                           </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {project.clientName}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <select
-                            value={project.status}
-                            onChange={(e) => updateProjectStatus(project.id, e.target.value)}
-                            className={`px-2 py-1 text-xs font-medium rounded-full border-0 ${
-                              project.status === "completed" ? "bg-green-100 text-green-800" :
-                              project.status === "in-progress" ? "bg-blue-100 text-blue-800" :
-                              project.status === "planning" ? "bg-yellow-100 text-yellow-800" :
-                              "bg-gray-100 text-gray-800"
-                            }`}
-                          >
-                            <option value="planning">Planning</option>
-                            <option value="in-progress">In Progress</option>
-                            <option value="completed">Completed</option>
-                            <option value="on-hold">On Hold</option>
-                          </select>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center">
-                            <div className="w-16 bg-gray-200 rounded-full h-2 mr-2">
-                              <div 
-                                className="bg-blue-600 h-2 rounded-full" 
-                                style={{ width: `${project.progress || 0}%` }}
-                              ></div>
-                            </div>
-                            <span className="text-sm text-gray-900">{project.progress || 0}%</span>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          ${project.budget?.toLocaleString() || "0"}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          <div>{project.startDate.toLocaleDateString()}</div>
-                          <div>to {project.endDate.toLocaleDateString()}</div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                          <button className="text-blue-600 hover:text-blue-900 mr-3">Edit</button>
-                          <button 
-                            onClick={() => deleteProject(project.id)}
-                            className="text-red-600 hover:text-red-900"
-                          >
-                            Delete
-                          </button>
                         </td>
                       </tr>
-                    ))}
+                    ) : (
+                      filteredProjects.map((project) => (
+                        <tr key={project.id}>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div>
+                              <div className="text-sm font-medium text-gray-900">{project.title}</div>
+                              <div className="text-sm text-gray-500">ID: {project.id}</div>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {project.clientName}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <select
+                              value={project.status}
+                              onChange={(e) => updateProjectStatus(project.id, e.target.value)}
+                              className={`px-2 py-1 text-xs font-medium rounded-full border-0 ${
+                                project.status === "completed" ? "bg-green-100 text-green-800" :
+                                project.status === "in-progress" ? "bg-blue-100 text-blue-800" :
+                                project.status === "planning" ? "bg-yellow-100 text-yellow-800" :
+                                "bg-gray-100 text-gray-800"
+                              }`}
+                            >
+                              <option value="planning">Planning</option>
+                              <option value="in-progress">In Progress</option>
+                              <option value="completed">Completed</option>
+                              <option value="on-hold">On Hold</option>
+                            </select>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="flex items-center">
+                              <div className="w-16 bg-gray-200 rounded-full h-2 mr-2">
+                                <div 
+                                  className="bg-blue-600 h-2 rounded-full" 
+                                  style={{ width: `${project.progress || 0}%` }}
+                                ></div>
+                              </div>
+                              <span className="text-sm text-gray-900">{project.progress || 0}%</span>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            ${project.budget?.toLocaleString() || "0"}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            <div>{project.startDate.toLocaleDateString()}</div>
+                            <div>to {project.endDate.toLocaleDateString()}</div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <button className="text-blue-600 hover:text-blue-900 mr-3">Edit</button>
+                            <button 
+                              onClick={() => deleteProject(project.id)}
+                              className="text-red-600 hover:text-red-900"
+                            >
+                              Delete
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    )}
                   </tbody>
                 </table>
               </div>
