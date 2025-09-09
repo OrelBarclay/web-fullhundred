@@ -215,6 +215,106 @@ export default function AdminDashboard() {
     router.push(`/admin/manage?editProject=${project.id}`);
   };
 
+  const uploadExistingServices = async () => {
+    if (confirm("This will upload the hardcoded services to the database. Continue?")) {
+      const hardcodedServices = [
+        {
+          title: "Kitchen Remodeling",
+          description: "Transform your kitchen into the heart of your home with our expert remodeling services. We handle everything from concept to completion.",
+          features: [
+            "Custom cabinetry and storage solutions",
+            "Countertop installation and replacement",
+            "Appliance integration and upgrades",
+            "Lighting design and installation",
+            "Flooring and backsplash options"
+          ],
+          iconColor: "blue",
+          iconPath: "M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4",
+          isActive: true,
+          order: 1
+        },
+        {
+          title: "Bathroom Renovation",
+          description: "Create your dream bathroom with our comprehensive renovation services. We specialize in both aesthetic and functional improvements.",
+          features: [
+            "Full bathroom remodeling and design",
+            "Shower and tub installation",
+            "Vanity and fixture upgrades",
+            "Tile work and flooring",
+            "Plumbing and electrical updates"
+          ],
+          iconColor: "green",
+          iconPath: "M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z",
+          isActive: true,
+          order: 2
+        },
+        {
+          title: "Home Additions",
+          description: "Expand your living space with our home addition services. We seamlessly integrate new spaces with your existing home design.",
+          features: [
+            "Room additions and extensions",
+            "Second story additions",
+            "Sunroom and porch construction",
+            "Garage conversions",
+            "Basement finishing"
+          ],
+          iconColor: "purple",
+          iconPath: "M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4",
+          isActive: true,
+          order: 3
+        },
+        {
+          title: "Custom Carpentry",
+          description: "Add unique character to your home with our custom carpentry services. From built-ins to decorative elements, we bring your vision to life.",
+          features: [
+            "Custom built-in furniture",
+            "Crown molding and trim work",
+            "Wainscoting and paneling",
+            "Custom doors and windows",
+            "Decorative woodwork"
+          ],
+          iconColor: "orange",
+          iconPath: "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z",
+          isActive: true,
+          order: 4
+        },
+        {
+          title: "Project Management",
+          description: "Let us handle the complexity of your renovation project. Our experienced project managers ensure smooth execution from start to finish.",
+          features: [
+            "Comprehensive project planning",
+            "Timeline management and coordination",
+            "Subcontractor coordination",
+            "Quality control and inspections",
+            "Communication and updates"
+          ],
+          iconColor: "red",
+          iconPath: "M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01",
+          isActive: true,
+          order: 5
+        }
+      ];
+
+      try {
+        for (const service of hardcodedServices) {
+          await fetch("/api/services", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(service),
+          });
+        }
+        alert("Services uploaded successfully! You can now manage them in the Services section.");
+        // Optionally reload dashboard data
+        await loadDashboardData();
+      } catch (error) {
+        console.error("Error uploading services:", error);
+        alert("Failed to upload services. Please try again.");
+      }
+    }
+  };
+
   const handleLogout = async () => {
     try {
       await signOut(getAuthInstance());
@@ -286,6 +386,12 @@ export default function AdminDashboard() {
                 className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors"
               >
                 Manage Services
+              </button>
+              <button
+                onClick={uploadExistingServices}
+                className="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition-colors"
+              >
+                Upload Services
               </button>
               <button
                 onClick={() => router.push("/admin/users")}
