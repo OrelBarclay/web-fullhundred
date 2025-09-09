@@ -44,18 +44,23 @@ export default function Logo() {
   // Don't render until mounted to avoid hydration mismatch
   if (!mounted) {
     return (
-      <div className="w-[100px] h-[40px] bg-gray-200 rounded animate-pulse" />
+      <div className="w-[80px] sm:w-[100px] h-[32px] sm:h-[40px] bg-gray-200 rounded animate-pulse" />
     );
   }
 
   return (
-    <Image
-      src={isDark ? "/images/logo-dark.png" : "/images/logo-light.png"}
-      alt="Full Hundred Logo"
-      width={100}
-      height={40}
-      className="h-auto"
-      priority
-    />
+    <div className="flex items-center gap-1 sm:gap-2">
+      <Image
+        src={isDark ? "/images/logo-dark.png" : "/images/logo-light.png"}
+        alt="Full Hundred Logo"
+        width={60}
+        height={24}
+        className="w-[60px] h-[24px] sm:w-[80px] sm:h-[32px] lg:w-[100px] lg:h-[40px]"
+        priority
+      />
+      <span className="text-sm sm:text-base lg:text-lg font-semibold text-gray-900 dark:text-white hidden sm:inline">
+        Full Hundred
+      </span>
+    </div>
   );
 }

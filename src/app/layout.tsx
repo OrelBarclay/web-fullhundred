@@ -33,7 +33,7 @@ export default function RootLayout({
         <header className="w-full border-b border-black/[.08] dark:border-white/[.12]">
           <div className="mx-auto max-w-6xl px-4 sm:px-6 py-4">
             <div className="flex items-center justify-between">
-              <Link href="/" className="text-lg font-semibold tracking-tight">
+              <Link href="/" className="flex items-center">
                 <Logo />
               </Link>
               <nav className="flex items-center gap-2 sm:gap-4 lg:gap-6 text-sm">
