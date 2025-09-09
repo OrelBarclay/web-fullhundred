@@ -12,7 +12,8 @@
     "setup-admin-help": "node scripts/setup-admin-simple.js",
     "list-users": "node scripts/list-users.js",
     "make-admin": "node scripts/smart-admin.js",
-    "admin-help": "node scripts/direct-admin.js"
+    "admin-help": "node scripts/direct-admin.js",
+    "user-info": "node scripts/user-info.js"
   },
   "dependencies": {
     "cloudinary": "^2.7.0",
