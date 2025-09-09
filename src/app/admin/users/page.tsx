@@ -31,7 +31,8 @@ export default function UserManagement() {
     const unsubscribe = auth.onAuthStateChanged(async (user) => {
       if (user) {
         // Check if user is admin using custom claims
-        const isAdmin = await isUserAdmin();
+        // TEMPORARY: Add your email here for admin access
+        const isAdmin = await isUserAdmin() || user.email === "coolbarclay@gmail.com";
         
         if (isAdmin) {
           setUser(user);
