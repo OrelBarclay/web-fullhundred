@@ -15,10 +15,18 @@ export default function LoginPage() {
       const idToken = await user.getIdToken();
       console.log('Login: Got ID token, calling login API...');
       
+      // Prepare user data to send to the API
+      const userData = {
+        uid: user.uid,
+        email: user.email,
+        displayName: user.displayName,
+        photoURL: user.photoURL
+      };
+      
       const response = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ idToken }),
+        body: JSON.stringify({ idToken, user: userData }),
       });
 
       console.log('Login: API response status:', response.status);

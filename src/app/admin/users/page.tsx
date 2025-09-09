@@ -9,12 +9,15 @@ import type { User } from "firebase/auth";
 
 interface UserData {
   id: string;
+  uid?: string;
   email: string;
   displayName?: string;
+  photoURL?: string;
   role?: string;
   isAdmin?: boolean;
   createdAt: Date;
-  lastSignIn: Date;
+  lastLoginAt: Date;
+  updatedAt: Date;
 }
 
 export default function UserManagement() {
@@ -53,13 +56,18 @@ export default function UserManagement() {
     try {
       const db = getDb();
       const usersSnapshot = await getDocs(collection(db, "users"));
-      const usersData = usersSnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        createdAt: doc.data().createdAt?.toDate() || new Date(),
-        lastSignIn: doc.data().lastSignIn?.toDate() || new Date()
-      })) as UserData[];
+      const usersData = usersSnapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          ...data,
+          createdAt: data.createdAt?.toDate ? data.createdAt.toDate() : (data.createdAt || new Date()),
+          lastLoginAt: data.lastLoginAt?.toDate ? data.lastLoginAt.toDate() : (data.lastLoginAt || new Date()),
+          updatedAt: data.updatedAt?.toDate ? data.updatedAt.toDate() : (data.updatedAt || new Date())
+        };
+      }) as UserData[];
       setUsers(usersData);
+      console.log('Loaded users:', usersData);
     } catch (error) {
       console.error("Error loading users:", error);
     }
@@ -149,7 +157,7 @@ export default function UserManagement() {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Joined</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Sign In</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Login</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
@@ -173,7 +181,7 @@ export default function UserManagement() {
                       {userData.createdAt.toLocaleDateString()}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {userData.lastSignIn.toLocaleDateString()}
+                      {userData.lastLoginAt.toLocaleDateString()}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <button 

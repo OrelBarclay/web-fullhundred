@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getFirebaseApp } from '@/lib/firebase';
+import { getFirestore, doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
 
 export async function POST(request: NextRequest) {
   // Handle CORS preflight
@@ -14,40 +16,63 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const { idToken } = await request.json();
+    const { idToken, user: userData } = await request.json();
     
     if (!idToken) {
       return NextResponse.json({ error: 'ID token required' }, { status: 400 });
     }
 
-    // For now, skip Admin SDK verification and create a simple decoded token
+    // For now, skip Admin SDK verification and use the user data from the client
     // This is a temporary workaround until Firebase Admin permissions are fixed
     console.log('Skipping Admin SDK verification due to permissions issue');
     
+    if (!userData || !userData.uid) {
+      return NextResponse.json({ error: 'User data required' }, { status: 400 });
+    }
+
     const decodedToken = {
-      uid: 'temp-uid-' + Date.now(),
-      email: 'temp@example.com',
-      name: 'Temporary User',
-      picture: ''
+      uid: userData.uid,
+      email: userData.email,
+      name: userData.displayName,
+      picture: userData.photoURL
     };
-    console.log('Using temporary token verification');
+    console.log('Using client-provided user data:', decodedToken);
     
-    // For now, skip database operations and create a simple user object
-    // This is a temporary workaround until Firebase Admin permissions are fixed
-    console.log('Skipping database operations due to Admin SDK permissions issue');
+    // Store/update user in Firestore
+    console.log('Storing user data in Firestore...');
     
-    // NOTE: Admin status will be checked via custom claims on the client side
-    // This temporary session doesn't determine admin status
-    const user = {
-      id: decodedToken.uid,
+    const app = getFirebaseApp();
+    const db = getFirestore(app);
+    
+    const userRef = doc(db, 'users', decodedToken.uid);
+    const userDoc = await getDoc(userRef);
+    
+    const now = new Date();
+    const userDataToStore = {
+      uid: decodedToken.uid,
       email: decodedToken.email || '',
       displayName: decodedToken.name || decodedToken.email?.split('@')[0] || '',
       photoURL: decodedToken.picture || '',
       role: 'user', // Default to user, custom claims will override this
-      lastLoginAt: new Date()
+      lastLoginAt: now,
+      updatedAt: now,
+      createdAt: userDoc.exists() ? userDoc.data()?.createdAt : now
     };
     
-    console.log('Created temporary user object:', user);
+    // If user doesn't exist, set createdAt; if they do, keep existing createdAt
+    if (!userDoc.exists()) {
+      userDataToStore.createdAt = now;
+      console.log('Creating new user:', userDataToStore);
+    } else {
+      const existingData = userDoc.data();
+      userDataToStore.createdAt = existingData?.createdAt || now;
+      console.log('Updating existing user:', userDataToStore);
+    }
+    
+    await setDoc(userRef, userDataToStore, { merge: true });
+    
+    const user = userDataToStore;
+    console.log('User stored/updated in Firestore:', user);
     
     // Create a simple session token (skip Admin SDK for now)
     const sessionCookie = 'session-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
