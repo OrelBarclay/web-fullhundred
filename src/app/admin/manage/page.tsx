@@ -176,6 +176,29 @@ export default function ManageContent() {
     }
   };
 
+  // Helper function to upload files to Cloudinary
+  const uploadFilesToCloudinary = async (files: File[], folder: string) => {
+    const uploadPromises = files.map(async (file) => {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('folder', folder);
+      
+      const response = await fetch('/api/cloudinary-upload', {
+        method: 'POST',
+        body: formData,
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Failed to upload ${file.name}`);
+      }
+      
+      const data = await response.json();
+      return data.secure_url;
+    });
+    
+    return Promise.all(uploadPromises);
+  };
+
   const handleProjectSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!projectForm.title.trim() || !projectForm.clientId) return;
@@ -185,26 +208,79 @@ export default function ManageContent() {
       const db = getDb();
       const selectedClient = clients.find(c => c.id === projectForm.clientId);
       
+      // Upload media files to Cloudinary
+      const projectId = editingProject?.id || `temp-${Date.now()}`;
+      const mediaUrls = {
+        beforeImages: [] as string[],
+        afterImages: [] as string[],
+        beforeVideos: [] as string[],
+        afterVideos: [] as string[]
+      };
+
+      try {
+        if (projectForm.beforeImages.length > 0) {
+          console.log('Uploading before images...');
+          mediaUrls.beforeImages = await uploadFilesToCloudinary(
+            projectForm.beforeImages, 
+            `projects/${projectId}/before/images`
+          );
+        }
+        
+        if (projectForm.afterImages.length > 0) {
+          console.log('Uploading after images...');
+          mediaUrls.afterImages = await uploadFilesToCloudinary(
+            projectForm.afterImages, 
+            `projects/${projectId}/after/images`
+          );
+        }
+        
+        if (projectForm.beforeVideos.length > 0) {
+          console.log('Uploading before videos...');
+          mediaUrls.beforeVideos = await uploadFilesToCloudinary(
+            projectForm.beforeVideos, 
+            `projects/${projectId}/before/videos`
+          );
+        }
+        
+        if (projectForm.afterVideos.length > 0) {
+          console.log('Uploading after videos...');
+          mediaUrls.afterVideos = await uploadFilesToCloudinary(
+            projectForm.afterVideos, 
+            `projects/${projectId}/after/videos`
+          );
+        }
+      } catch (uploadError) {
+        console.error('Error uploading media files:', uploadError);
+        alert('Error uploading media files. Please try again.');
+        return;
+      }
+
+      // Prepare project data without File objects
+      const projectData = {
+        title: projectForm.title,
+        description: projectForm.description,
+        clientId: projectForm.clientId,
+        status: projectForm.status,
+        budget: parseFloat(projectForm.budget) || 0,
+        progress: parseInt(projectForm.progress) || 0,
+        clientName: selectedClient?.name || "",
+        startDate: projectForm.startDate ? new Date(projectForm.startDate) : new Date(),
+        endDate: projectForm.endDate ? new Date(projectForm.endDate) : new Date(),
+        ...mediaUrls
+      };
+      
       if (editingProject) {
         // Update existing project
         const projectRef = doc(db, "projects", editingProject.id);
         await updateDoc(projectRef, {
-          ...projectForm,
-          budget: parseFloat(projectForm.budget) || 0,
-          progress: parseInt(projectForm.progress) || 0,
-          clientName: selectedClient?.name || "",
+          ...projectData,
           updatedAt: new Date()
         });
         setEditingProject(null);
       } else {
         // Create new project
         await addDoc(collection(db, "projects"), {
-          ...projectForm,
-          budget: parseFloat(projectForm.budget) || 0,
-          progress: parseInt(projectForm.progress) || 0,
-          clientName: selectedClient?.name || "",
-          startDate: projectForm.startDate ? new Date(projectForm.startDate) : new Date(),
-          endDate: projectForm.endDate ? new Date(projectForm.endDate) : new Date(),
+          ...projectData,
           createdAt: new Date()
         });
       }
@@ -835,7 +911,7 @@ export default function ManageContent() {
                     disabled={isSubmitting}
                     className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
                   >
-                    {isSubmitting ? "Saving..." : editingProject ? "Update Project" : "Add Project"}
+                    {isSubmitting ? "Uploading media and saving..." : editingProject ? "Update Project" : "Add Project"}
                   </button>
                   
                   {editingProject && (
