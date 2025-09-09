@@ -23,15 +23,29 @@ export default function ProjectDetail() {
   useEffect(() => {
     async function load() {
       try {
-        // Load the project with embedded media fields
-        const pRes = await fetch(`/api/projects/${params.id}`, { cache: "no-store" });
-        if (pRes.status === 404) {
-          setProject(null);
-          return;
+        // Try the fallback API first since Admin SDK might be failing
+        const pRes = await fetch(`/api/projects-fallback`, { cache: "no-store" });
+        if (pRes.ok) {
+          const projects = await pRes.json();
+          const projectData = Array.isArray(projects) ? projects.find(p => p.id === params.id) : null;
+          if (projectData) {
+            console.log('Project data from fallback API:', projectData);
+            setProject(projectData as Project);
+          } else {
+            setProject(null);
+            return;
+          }
+        } else {
+          // Fallback to individual project API
+          const pRes = await fetch(`/api/projects/${params.id}`, { cache: "no-store" });
+          if (pRes.status === 404) {
+            setProject(null);
+            return;
+          }
+          const pData = await pRes.json();
+          console.log('Project data from API:', pData);
+          setProject(pData as Project);
         }
-        const pData = await pRes.json();
-        console.log('Project data from API:', pData);
-        setProject(pData as Project);
 
         // Fallback: load separate media collection if present
         const mRes = await fetch(`/api/media-fallback`, { cache: "no-store" }).catch(() => null);
