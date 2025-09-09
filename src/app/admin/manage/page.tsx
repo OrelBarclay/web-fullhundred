@@ -45,6 +45,19 @@ export default function ManageContent() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
 
+  // Helper function to safely convert dates
+  const safeDate = (dateValue: unknown): Date => {
+    if (!dateValue) return new Date();
+    if (dateValue instanceof Date) return dateValue;
+    if (dateValue && typeof dateValue === 'object' && 'toDate' in dateValue && typeof (dateValue as { toDate: () => Date }).toDate === 'function') {
+      return (dateValue as { toDate: () => Date }).toDate();
+    }
+    if (typeof dateValue === 'string' || typeof dateValue === 'number') {
+      return new Date(dateValue);
+    }
+    return new Date();
+  };
+
   // Form states
   const [clientForm, setClientForm] = useState({
     name: "",
@@ -122,8 +135,8 @@ export default function ManageContent() {
         return {
           id: doc.id,
           ...data,
-          createdAt: data.createdAt?.toDate ? data.createdAt.toDate() : (data.createdAt || new Date()),
-          lastContact: data.lastContact?.toDate ? data.lastContact.toDate() : (data.lastContact || new Date())
+          createdAt: safeDate(data.createdAt),
+          lastContact: safeDate(data.lastContact)
         };
       }) as Client[];
       setClients(clientsData);
@@ -135,8 +148,8 @@ export default function ManageContent() {
         return {
           id: doc.id,
           ...data,
-          startDate: data.startDate?.toDate ? data.startDate.toDate() : (data.startDate || new Date()),
-          endDate: data.endDate?.toDate ? data.endDate.toDate() : (data.endDate || new Date())
+          startDate: safeDate(data.startDate),
+          endDate: safeDate(data.endDate)
         };
       }) as Project[];
       setProjects(projectsData);
@@ -336,8 +349,8 @@ export default function ManageContent() {
       description: project.description,
       clientId: project.clientId,
       status: project.status,
-      startDate: project.startDate.toISOString().split('T')[0],
-      endDate: project.endDate.toISOString().split('T')[0],
+      startDate: safeDate(project.startDate).toISOString().split('T')[0],
+      endDate: safeDate(project.endDate).toISOString().split('T')[0],
       budget: project.budget?.toString() || "",
       progress: project.progress?.toString() || "0",
       beforeImages: [],
