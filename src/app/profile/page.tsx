@@ -35,27 +35,22 @@ export default function ProfilePage() {
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
-  const [imageLoadError, setImageLoadError] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
     const auth = getAuthInstance();
     const unsubscribe = auth.onAuthStateChanged(async (user) => {
-      console.log('Auth state changed:', user ? 'User logged in' : 'No user');
       if (user) {
         setUser(user);
-        console.log('Firebase user UID:', user.uid);
         
         // Fetch user profile directly from database using client-side Firebase
         try {
-          console.log('Fetching user profile for UID:', user.uid);
           const db = getDb();
           const userDocRef = doc(db, 'users', user.uid);
           const userDoc = await getDoc(userDocRef);
           
           if (userDoc.exists()) {
             const userData = userDoc.data();
-            console.log('User profile fetched from database:', userData);
             
             // Prioritize database photoURL, but fallback to Firebase Auth user photoURL
             const photoURL = userData.photoURL || user.photoURL || '';
@@ -73,11 +68,6 @@ export default function ProfilePage() {
               lastLoginAt: userData.lastLoginAt?.toDate() || new Date()
             };
             
-            console.log('Profile photoURL sources:', {
-              userDataPhotoURL: userData.photoURL,
-              userPhotoURL: user.photoURL,
-              finalPhotoURL: userProfile.photoURL
-            });
             
             setProfile(userProfile);
             setEditForm({
@@ -88,7 +78,6 @@ export default function ProfilePage() {
             });
             setError(null);
           } else {
-            console.log('User document not found, creating basic profile');
             // Create a basic profile from Firebase Auth user
             const basicProfile: UserProfile = {
               id: user.uid,
@@ -103,10 +92,6 @@ export default function ProfilePage() {
               lastLoginAt: new Date()
             };
             
-            console.log('Basic profile photoURL:', {
-              userPhotoURL: user.photoURL,
-              basicProfilePhotoURL: basicProfile.photoURL
-            });
             setProfile(basicProfile);
             setEditForm({
               displayName: basicProfile.displayName || '',
@@ -120,7 +105,6 @@ export default function ProfilePage() {
           setError('Failed to load profile from database. Please try again.');
         }
       } else {
-        console.log('No user, redirecting to login');
         router.push("/login");
       }
       setIsLoading(false);
@@ -129,15 +113,6 @@ export default function ProfilePage() {
     return () => unsubscribe();
   }, [router]);
 
-  const testImageUrl = async (url: string): Promise<boolean> => {
-    try {
-      const response = await fetch(url, { method: 'HEAD' });
-      return response.ok;
-    } catch (error) {
-      console.log('Image URL test failed:', error);
-      return false;
-    }
-  };
 
   const handleImageSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -196,7 +171,6 @@ export default function ProfilePage() {
         setIsUploadingImage(true);
         try {
           photoURL = await uploadImageToCloudinary(selectedImage);
-          console.log('Image uploaded successfully:', photoURL);
         } catch (error) {
           console.error('Error uploading image:', error);
           setError('Failed to upload image. Please try again.');
@@ -321,68 +295,34 @@ export default function ProfilePage() {
             <div className="px-6 py-4 border-b border-gray-200">
               <div className="flex items-center space-x-4">
                 <div className="flex-shrink-0">
-                  {(() => {
-                    const imageUrl = imagePreview || profile.photoURL;
-                    console.log('Rendering profile image:', {
-                      imagePreview,
-                      profilePhotoURL: profile.photoURL,
-                      finalImageUrl: imageUrl,
-                      hasImage: !!imageUrl,
-                      imageLoadError
-                    });
-                    
-                    if (imageUrl && !imageLoadError) {
-                      return (
-                        <div className="h-20 w-20 rounded-full border-2 border-gray-200 overflow-hidden relative">
-                          <img
-                            className="h-full w-full object-cover"
-                            src={imageUrl}
-                            alt={profile.displayName || profile.email}
-                            onLoad={() => {
-                              console.log('Image loaded successfully:', imageUrl);
-                              setImageLoadError(false);
-                            }}
-                            onError={(e) => {
-                              console.log('Image failed to load:', imageUrl, e);
-                              setImageLoadError(true);
-                            }}
-                            style={{
-                              display: 'block',
-                              width: '100%',
-                              height: '100%',
-                              objectFit: 'cover'
-                            }}
-                          />
-                          {/* Loading indicator */}
-                          <div className="absolute inset-0 bg-gray-100 flex items-center justify-center">
-                            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
-                          </div>
-                        </div>
-                      );
-                    } else {
-                      return (
-                        <div className="h-20 w-20 rounded-full bg-gray-300 flex items-center justify-center border-2 border-gray-200 relative group">
-                          <span className="text-2xl font-medium text-gray-600">
-                            {profile.displayName?.[0]?.toUpperCase() || profile.email[0].toUpperCase()}
-                          </span>
-                          {imageLoadError && (
-                            <button
-                              onClick={() => {
-                                setImageLoadError(false);
-                                console.log('Retrying image load for:', imageUrl);
-                              }}
-                              className="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                              title="Retry loading image"
-                            >
-                              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                              </svg>
-                            </button>
-                          )}
-                        </div>
-                      );
-                    }
-                  })()}
+                  {imagePreview || profile.photoURL ? (
+                    <img
+                      className="h-20 w-20 rounded-full object-cover border-2 border-gray-200"
+                      src={imagePreview || profile.photoURL}
+                      alt={profile.displayName || profile.email}
+                      onError={(e) => {
+                        // Fallback to initials if image fails to load
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = 'none';
+                        const parent = target.parentElement;
+                        if (parent) {
+                          parent.innerHTML = `
+                            <div class="h-20 w-20 rounded-full bg-gray-300 flex items-center justify-center border-2 border-gray-200">
+                              <span class="text-2xl font-medium text-gray-600">
+                                ${profile.displayName?.[0]?.toUpperCase() || profile.email[0].toUpperCase()}
+                              </span>
+                            </div>
+                          `;
+                        }
+                      }}
+                    />
+                  ) : (
+                    <div className="h-20 w-20 rounded-full bg-gray-300 flex items-center justify-center border-2 border-gray-200">
+                      <span className="text-2xl font-medium text-gray-600">
+                        {profile.displayName?.[0]?.toUpperCase() || profile.email[0].toUpperCase()}
+                      </span>
+                    </div>
+                  )}
                 </div>
                 <div>
                   <h2 className="text-2xl font-bold text-gray-900">
@@ -396,50 +336,6 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            {/* Debug Info - Remove in production */}
-            {process.env.NODE_ENV === 'development' && (
-              <div className="px-6 py-4 bg-blue-50 border-l-4 border-blue-400">
-                <div className="text-sm">
-                  <p className="font-medium text-blue-800">Debug Info:</p>
-                  <p className="text-blue-700">PhotoURL: {profile.photoURL || 'None'}</p>
-                  <p className="text-blue-700">Image Preview: {imagePreview || 'None'}</p>
-                  <p className="text-blue-700">User Email: {user?.email || 'None'}</p>
-                  <p className="text-blue-700">User PhotoURL: {user?.photoURL || 'None'}</p>
-                  <p className="text-blue-700">Image Load Error: {imageLoadError ? 'Yes' : 'No'}</p>
-                  <div className="mt-2">
-                    <input
-                      type="text"
-                      placeholder="Test image URL"
-                      className="text-xs px-2 py-1 border rounded"
-                      onKeyPress={(e) => {
-                        if (e.key === 'Enter') {
-                          const url = (e.target as HTMLInputElement).value;
-                          if (url) {
-                            console.log('Testing image URL:', url);
-                            setProfile(prev => prev ? { ...prev, photoURL: url } : null);
-                            setImageLoadError(false);
-                          }
-                        }
-                      }}
-                    />
-                    <button
-                      onClick={() => {
-                        const input = document.querySelector('input[placeholder="Test image URL"]') as HTMLInputElement;
-                        const url = input?.value;
-                        if (url) {
-                          console.log('Testing image URL:', url);
-                          setProfile(prev => prev ? { ...prev, photoURL: url } : null);
-                          setImageLoadError(false);
-                        }
-                      }}
-                      className="ml-2 text-xs bg-blue-500 text-white px-2 py-1 rounded"
-                    >
-                      Test
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
 
             {/* Error Display */}
             {error && (
