@@ -1,8 +1,41 @@
+"use client";
 import Link from "next/link";
+import { useState, useEffect } from "react";
+import { Service } from "@/server/db/schema";
 
 export default function ServicesPage() {
-  const services = [
+  const [services, setServices] = useState<Service[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchServices = async () => {
+      try {
+        const response = await fetch("/api/services");
+        if (response.ok) {
+          const data = await response.json();
+          // Only show active services
+          const activeServices = data.filter((service: Service) => service.isActive);
+          setServices(activeServices);
+        } else {
+          console.error("Failed to fetch services");
+          // Fallback to hardcoded services if API fails
+          setServices(getHardcodedServices());
+        }
+      } catch (error) {
+        console.error("Error fetching services:", error);
+        // Fallback to hardcoded services if API fails
+        setServices(getHardcodedServices());
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchServices();
+  }, []);
+
+  const getHardcodedServices = (): Service[] => [
     {
+      id: "hardcoded-1",
       title: "Kitchen Remodeling",
       description: "Transform your kitchen into the heart of your home with our expert remodeling services. We handle everything from concept to completion.",
       features: [
@@ -12,13 +45,15 @@ export default function ServicesPage() {
         "Lighting design and installation",
         "Flooring and backsplash options"
       ],
-      icon: (
-        <svg className="w-12 h-12 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-        </svg>
-      )
+      iconColor: "blue",
+      iconPath: "M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4",
+      isActive: true,
+      order: 1,
+      createdAt: new Date(),
+      updatedAt: new Date()
     },
     {
+      id: "hardcoded-2",
       title: "Bathroom Renovation",
       description: "Create your dream bathroom with our comprehensive renovation services. We specialize in both aesthetic and functional improvements.",
       features: [
@@ -28,13 +63,15 @@ export default function ServicesPage() {
         "Tile work and flooring",
         "Plumbing and electrical updates"
       ],
-      icon: (
-        <svg className="w-12 h-12 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" />
-        </svg>
-      )
+      iconColor: "green",
+      iconPath: "M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z",
+      isActive: true,
+      order: 2,
+      createdAt: new Date(),
+      updatedAt: new Date()
     },
     {
+      id: "hardcoded-3",
       title: "Home Additions",
       description: "Expand your living space with our home addition services. We seamlessly integrate new spaces with your existing home design.",
       features: [
@@ -44,13 +81,15 @@ export default function ServicesPage() {
         "Garage conversions",
         "Basement finishing"
       ],
-      icon: (
-        <svg className="w-12 h-12 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-        </svg>
-      )
+      iconColor: "purple",
+      iconPath: "M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4",
+      isActive: true,
+      order: 3,
+      createdAt: new Date(),
+      updatedAt: new Date()
     },
     {
+      id: "hardcoded-4",
       title: "Custom Carpentry",
       description: "Add unique character to your home with our custom carpentry services. From built-ins to decorative elements, we bring your vision to life.",
       features: [
@@ -60,13 +99,15 @@ export default function ServicesPage() {
         "Custom doors and windows",
         "Decorative woodwork"
       ],
-      icon: (
-        <svg className="w-12 h-12 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-      )
+      iconColor: "orange",
+      iconPath: "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z",
+      isActive: true,
+      order: 4,
+      createdAt: new Date(),
+      updatedAt: new Date()
     },
     {
+      id: "hardcoded-5",
       title: "Project Management",
       description: "Let us handle the complexity of your renovation project. Our experienced project managers ensure smooth execution from start to finish.",
       features: [
@@ -76,13 +117,34 @@ export default function ServicesPage() {
         "Quality control and inspections",
         "Communication and updates"
       ],
-      icon: (
-        <svg className="w-12 h-12 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-        </svg>
-      )
+      iconColor: "red",
+      iconPath: "M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01",
+      isActive: true,
+      order: 5,
+      createdAt: new Date(),
+      updatedAt: new Date()
     }
   ];
+
+  const getIconComponent = (service: Service) => {
+    const colorClass = `text-${service.iconColor}-600`;
+    return (
+      <svg className={`w-12 h-12 ${colorClass}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={service.iconPath} />
+      </svg>
+    );
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading services...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -104,11 +166,11 @@ export default function ServicesPage() {
       {/* Services Grid */}
       <div className="max-w-7xl mx-auto px-6 py-16">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {services.map((service, index) => (
-            <div key={index} className="bg-white rounded-lg shadow-lg p-8 hover:shadow-xl transition-shadow duration-300">
+          {services.map((service) => (
+            <div key={service.id} className="bg-white rounded-lg shadow-lg p-8 hover:shadow-xl transition-shadow duration-300">
               <div className="flex items-start space-x-4 mb-6">
                 <div className="flex-shrink-0">
-                  {service.icon}
+                  {getIconComponent(service)}
                 </div>
                 <div>
                   <h3 className="text-2xl font-bold text-gray-900 mb-2">

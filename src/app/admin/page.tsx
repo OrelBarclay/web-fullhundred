@@ -282,6 +282,12 @@ export default function AdminDashboard() {
                 Manage Content
               </button>
               <button
+                onClick={() => router.push("/admin/services")}
+                className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors"
+              >
+                Manage Services
+              </button>
+              <button
                 onClick={() => router.push("/admin/users")}
                 className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
               >

@@ -87,6 +87,19 @@ export interface Invoice {
   updatedAt: Date;
 }
 
+export interface Service {
+  id: string;
+  title: string;
+  description: string;
+  features: string[];
+  iconColor: string;
+  iconPath: string;
+  isActive: boolean;
+  order: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 export interface User {
   id: string;
   email: string;
@@ -139,6 +152,16 @@ export interface LeadInput {
   customQuote?: boolean;
   estimate?: QuoteEstimate;
   timestamp?: string;
+}
+
+export interface ServiceInput {
+  title: string;
+  description: string;
+  features: string[];
+  iconColor: string;
+  iconPath: string;
+  isActive?: boolean;
+  order?: number;
 }
 
 export interface MilestoneInput {
