@@ -28,6 +28,10 @@ interface Project {
   endDate: Date;
   budget: number;
   progress: number;
+  beforeImages?: string[];
+  afterImages?: string[];
+  beforeVideos?: string[];
+  afterVideos?: string[];
 }
 
 export default function ManageContent() {
@@ -266,8 +270,15 @@ export default function ManageContent() {
         clientName: selectedClient?.name || "",
         startDate: projectForm.startDate ? new Date(projectForm.startDate) : new Date(),
         endDate: projectForm.endDate ? new Date(projectForm.endDate) : new Date(),
-        ...mediaUrls
+        // Only include media URLs, not File objects
+        beforeImages: mediaUrls.beforeImages,
+        afterImages: mediaUrls.afterImages,
+        beforeVideos: mediaUrls.beforeVideos,
+        afterVideos: mediaUrls.afterVideos
       };
+
+      console.log('Project data being saved:', projectData);
+      console.log('Media URLs:', mediaUrls);
       
       if (editingProject) {
         // Update existing project
