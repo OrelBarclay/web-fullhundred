@@ -28,9 +28,13 @@ export default function ProfilePage() {
   const [editForm, setEditForm] = useState({
     displayName: '',
     phone: '',
-    address: ''
+    address: '',
+    photoURL: ''
   });
   const [isSaving, setIsSaving] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -69,7 +73,8 @@ export default function ProfilePage() {
             setEditForm({
               displayName: userProfile.displayName || '',
               phone: userProfile.phone || '',
-              address: userProfile.address || ''
+              address: userProfile.address || '',
+              photoURL: userProfile.photoURL || ''
             });
             setError(null);
           } else {
@@ -91,7 +96,8 @@ export default function ProfilePage() {
             setEditForm({
               displayName: basicProfile.displayName || '',
               phone: '',
-              address: ''
+              address: '',
+              photoURL: basicProfile.photoURL || ''
             });
           }
         } catch (error) {
@@ -108,32 +114,99 @@ export default function ProfilePage() {
     return () => unsubscribe();
   }, [router]);
 
+  const handleImageSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        setError('Please select a valid image file');
+        return;
+      }
+      
+      // Validate file size (5MB max)
+      if (file.size > 5 * 1024 * 1024) {
+        setError('Image size must be less than 5MB');
+        return;
+      }
+      
+      setSelectedImage(file);
+      
+      // Create preview
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setImagePreview(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+      setError(null);
+    }
+  };
+
+  const uploadImageToCloudinary = async (file: File): Promise<string> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('folder', 'profile-images');
+    
+    const response = await fetch('/api/cloudinary-upload', {
+      method: 'POST',
+      body: formData,
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to upload image');
+    }
+    
+    const result = await response.json();
+    return result.secure_url;
+  };
+
   async function handleSaveProfile() {
     if (!profile) return;
     
     setIsSaving(true);
     try {
+      let photoURL = editForm.photoURL;
+      
+      // Upload new image if selected
+      if (selectedImage) {
+        setIsUploadingImage(true);
+        try {
+          photoURL = await uploadImageToCloudinary(selectedImage);
+          console.log('Image uploaded successfully:', photoURL);
+        } catch (error) {
+          console.error('Error uploading image:', error);
+          setError('Failed to upload image. Please try again.');
+          setIsUploadingImage(false);
+          setIsSaving(false);
+          return;
+        }
+        setIsUploadingImage(false);
+      }
+      
       const db = getDb();
       const userDocRef = doc(db, 'users', profile.id);
       await updateDoc(userDocRef, {
         ...editForm,
+        photoURL,
         updatedAt: new Date()
       });
       
-      // Get updated user data
-      const updatedDoc = await getDoc(userDocRef);
-      if (updatedDoc.exists()) {
-        const updatedData = updatedDoc.data();
-        const updatedProfile: UserProfile = {
-          ...profile,
-          ...editForm,
-          updatedAt: new Date()
-        };
-        setProfile(updatedProfile);
-        setIsEditing(false);
-      }
+      // Update profile state
+      const updatedProfile: UserProfile = {
+        ...profile,
+        ...editForm,
+        photoURL,
+        updatedAt: new Date()
+      };
+      setProfile(updatedProfile);
+      
+      // Reset form and image states
+      setSelectedImage(null);
+      setImagePreview(null);
+      setIsEditing(false);
+      setError(null);
     } catch (error) {
       console.error('Error updating profile:', error);
+      setError('Failed to update profile. Please try again.');
     } finally {
       setIsSaving(false);
     }
@@ -223,14 +296,30 @@ export default function ProfilePage() {
             <div className="px-6 py-4 border-b border-gray-200">
               <div className="flex items-center space-x-4">
                 <div className="flex-shrink-0">
-                  {profile.photoURL ? (
+                  {imagePreview || profile.photoURL ? (
                     <img
-                      className="h-16 w-16 rounded-full"
-                      src={profile.photoURL}
+                      className="h-20 w-20 rounded-full object-cover border-2 border-gray-200"
+                      src={imagePreview || profile.photoURL}
                       alt={profile.displayName || profile.email}
+                      onError={(e) => {
+                        console.log('Image failed to load:', e);
+                        // Fallback to initials if image fails to load
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = 'none';
+                        const parent = target.parentElement;
+                        if (parent) {
+                          parent.innerHTML = `
+                            <div class="h-20 w-20 rounded-full bg-gray-300 flex items-center justify-center border-2 border-gray-200">
+                              <span class="text-2xl font-medium text-gray-600">
+                                ${profile.displayName?.[0]?.toUpperCase() || profile.email[0].toUpperCase()}
+                              </span>
+                            </div>
+                          `;
+                        }
+                      }}
                     />
                   ) : (
-                    <div className="h-16 w-16 rounded-full bg-gray-300 flex items-center justify-center">
+                    <div className="h-20 w-20 rounded-full bg-gray-300 flex items-center justify-center border-2 border-gray-200">
                       <span className="text-2xl font-medium text-gray-600">
                         {profile.displayName?.[0]?.toUpperCase() || profile.email[0].toUpperCase()}
                       </span>
@@ -249,10 +338,61 @@ export default function ProfilePage() {
               </div>
             </div>
 
+            {/* Error Display */}
+            {error && (
+              <div className="px-6 py-4 bg-red-50 border-l-4 border-red-400">
+                <div className="flex">
+                  <div className="flex-shrink-0">
+                    <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <div className="ml-3">
+                    <p className="text-sm text-red-700">{error}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Profile Form */}
             <div className="px-6 py-4">
               {isEditing ? (
                 <div className="space-y-4">
+                  {/* Profile Image Upload */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Profile Picture
+                    </label>
+                    <div className="flex items-center space-x-4">
+                      <div className="flex-shrink-0">
+                        {imagePreview || profile.photoURL ? (
+                          <img
+                            className="h-16 w-16 rounded-full object-cover border-2 border-gray-200"
+                            src={imagePreview || profile.photoURL}
+                            alt="Profile preview"
+                          />
+                        ) : (
+                          <div className="h-16 w-16 rounded-full bg-gray-300 flex items-center justify-center border-2 border-gray-200">
+                            <span className="text-lg font-medium text-gray-600">
+                              {profile.displayName?.[0]?.toUpperCase() || profile.email[0].toUpperCase()}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleImageSelect}
+                          className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                        />
+                        <p className="mt-1 text-xs text-gray-500">
+                          PNG, JPG, GIF up to 5MB
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  
                   <div>
                     <label className="block text-sm font-medium text-gray-700">
                       Display Name
@@ -292,14 +432,38 @@ export default function ProfilePage() {
                   <div className="flex space-x-3">
                     <button
                       onClick={handleSaveProfile}
-                      disabled={isSaving}
-                      className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50"
+                      disabled={isSaving || isUploadingImage}
+                      className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50 flex items-center"
                     >
-                      {isSaving ? 'Saving...' : 'Save Changes'}
+                      {isUploadingImage ? (
+                        <>
+                          <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          Uploading...
+                        </>
+                      ) : isSaving ? (
+                        <>
+                          <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          Saving...
+                        </>
+                      ) : (
+                        'Save Changes'
+                      )}
                     </button>
                     <button
-                      onClick={() => setIsEditing(false)}
-                      className="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400"
+                      onClick={() => {
+                        setIsEditing(false);
+                        setSelectedImage(null);
+                        setImagePreview(null);
+                        setError(null);
+                      }}
+                      disabled={isSaving || isUploadingImage}
+                      className="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400 disabled:opacity-50"
                     >
                       Cancel
                     </button>
