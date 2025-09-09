@@ -5,6 +5,7 @@ import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import type { User } from "firebase/auth";
+import Image from "next/image";
 
 interface UserProfile {
   id: string;
@@ -365,10 +366,12 @@ export default function ProfilePage() {
                     <div className="flex items-center space-x-4">
                       <div className="flex-shrink-0">
                         {imagePreview || profile.photoURL ? (
-                          <img
+                          <Image
                             className="h-16 w-16 rounded-full object-cover border-2 border-gray-200"
-                            src={imagePreview || profile.photoURL}
+                            src={imagePreview || profile.photoURL || ''}
                             alt="Profile preview"
+                            width={64}
+                            height={64}
                           />
                         ) : (
                           <div className="h-16 w-16 rounded-full bg-gray-300 flex items-center justify-center border-2 border-gray-200">

@@ -1,6 +1,13 @@
 
 
 // Firebase Firestore data structures
+export interface QuoteEstimate {
+  minPrice: number;
+  maxPrice: number;
+  timeline: string;
+  complexity: string;
+}
+
 export interface Client {
   id: string;
   name: string;
@@ -48,6 +55,10 @@ export interface Lead {
   description: string;
   budget?: string;
   timeline?: string;
+  projectSize?: string;
+  customQuote?: boolean;
+  estimate?: QuoteEstimate;
+  timestamp?: string;
   createdAt: Date;
 }
 
@@ -124,6 +135,10 @@ export interface LeadInput {
   description: string;
   budget?: string;
   timeline?: string;
+  projectSize?: string;
+  customQuote?: boolean;
+  estimate?: QuoteEstimate;
+  timestamp?: string;
 }
 
 export interface MilestoneInput {

@@ -15,8 +15,8 @@ export async function POST(request: Request) {
     if (!body.projectType || body.projectType.trim().length === 0) {
       return NextResponse.json({ error: "Project type is required" }, { status: 400 });
     }
-    if (!body.description || body.description.trim().length === 0) {
-      return NextResponse.json({ error: "Description is required" }, { status: 400 });
+    if (!body.projectDetails || body.projectDetails.trim().length === 0) {
+      return NextResponse.json({ error: "Project details are required" }, { status: 400 });
     }
 
     const created = await leadService.create({
@@ -24,9 +24,14 @@ export async function POST(request: Request) {
       email: body.email.trim(),
       phone: body.phone?.trim() || undefined,
       projectType: body.projectType.trim(),
-      description: body.description.trim(),
+      description: body.projectDetails.trim(),
       budget: body.budget,
       timeline: body.timeline,
+      // Additional quote-specific fields
+      projectSize: body.projectSize,
+      customQuote: body.customQuote || false,
+      estimate: body.estimate,
+      timestamp: body.timestamp
     });
 
     return NextResponse.json(created, { status: 201 });
