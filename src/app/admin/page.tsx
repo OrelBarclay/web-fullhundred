@@ -107,11 +107,25 @@ export default function AdminDashboard() {
       const clientsSnapshot = await getDocs(collection(db, "clients"));
       const clientsData = clientsSnapshot.docs.map(doc => {
         const data = doc.data();
+        
+        // Helper function to safely convert to Date
+        const safeDate = (dateValue: unknown): Date => {
+          if (!dateValue) return new Date();
+          if (dateValue instanceof Date) return dateValue;
+          if (dateValue && typeof dateValue === 'object' && 'toDate' in dateValue && typeof (dateValue as { toDate: () => Date }).toDate === 'function') {
+            return (dateValue as { toDate: () => Date }).toDate();
+          }
+          if (typeof dateValue === 'string' || typeof dateValue === 'number') {
+            return new Date(dateValue);
+          }
+          return new Date();
+        };
+        
         return {
           id: doc.id,
           ...data,
-          createdAt: data.createdAt?.toDate ? data.createdAt.toDate() : (data.createdAt || new Date()),
-          lastContact: data.lastContact?.toDate ? data.lastContact.toDate() : (data.lastContact || new Date())
+          createdAt: safeDate(data.createdAt),
+          lastContact: safeDate(data.lastContact)
         };
       }) as Client[];
       setClients(clientsData);
@@ -122,11 +136,33 @@ export default function AdminDashboard() {
       const projectsData = projectsSnapshot.docs.map(doc => {
         const data = doc.data();
         console.log('Project data:', doc.id, data);
+        console.log('Start date type:', typeof data.startDate, data.startDate);
+        console.log('End date type:', typeof data.endDate, data.endDate);
+        
+        // Helper function to safely convert to Date
+        const safeDate = (dateValue: unknown): Date => {
+          if (!dateValue) return new Date();
+          if (dateValue instanceof Date) return dateValue;
+          if (dateValue && typeof dateValue === 'object' && 'toDate' in dateValue && typeof (dateValue as { toDate: () => Date }).toDate === 'function') {
+            return (dateValue as { toDate: () => Date }).toDate();
+          }
+          if (typeof dateValue === 'string' || typeof dateValue === 'number') {
+            return new Date(dateValue);
+          }
+          return new Date();
+        };
+        
+        const startDate = safeDate(data.startDate);
+        const endDate = safeDate(data.endDate);
+        
+        console.log('Converted start date:', startDate, 'is Date:', startDate instanceof Date);
+        console.log('Converted end date:', endDate, 'is Date:', endDate instanceof Date);
+        
         return {
           id: doc.id,
           ...data,
-          startDate: data.startDate?.toDate ? data.startDate.toDate() : (data.startDate || new Date()),
-          endDate: data.endDate?.toDate ? data.endDate.toDate() : (data.endDate || new Date())
+          startDate,
+          endDate
         };
       }) as Project[];
       console.log('Processed projects:', projectsData);
