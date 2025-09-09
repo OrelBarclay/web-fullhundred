@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from "react";
 import { getAuthInstance, signInWithPopup, GoogleAuthProvider } from "@/lib/firebase";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { isUserAdmin } from "@/lib/auth-utils";
 import type { User } from "firebase/auth";
 
 export default function LoginPage() {
@@ -40,8 +41,6 @@ export default function LoginPage() {
         const cookies = document.cookie;
         console.log('Login: Current cookies:', cookies);
         
-        const { isAdmin } = data;
-        
         // Wait a moment for the cookie to be set
         console.log('Login: Waiting for cookie to be set...');
         await new Promise(resolve => setTimeout(resolve, 1000));
@@ -50,11 +49,15 @@ export default function LoginPage() {
         const cookiesAfterDelay = document.cookie;
         console.log('Login: Cookies after delay:', cookiesAfterDelay);
         
+        // Check if user is admin using custom claims
+        const isAdmin = await isUserAdmin();
+        console.log('Login: User admin status:', isAdmin);
+        
         if (isAdmin) {
-          console.log('Login: Redirecting to admin...');
+          console.log('Login: Redirecting to admin dashboard...');
           router.push("/admin");
         } else {
-          console.log('Login: Redirecting to dashboard...');
+          console.log('Login: Redirecting to user dashboard...');
           router.push("/dashboard");
         }
       } else {

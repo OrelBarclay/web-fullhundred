@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getFirebaseApp } from '@/lib/firebase';
 import { getFirestore, doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
+import { isUserAdmin } from '@/lib/auth-utils';
 
 export async function POST(request: NextRequest) {
   // Handle CORS preflight
@@ -86,7 +87,7 @@ export async function POST(request: NextRequest) {
       success: true, 
       // Admin status will be determined by custom claims on client side
       user: {
-        uid: user.id,
+        uid: user.uid,
         email: user.email,
         name: user.displayName,
         role: user.role,

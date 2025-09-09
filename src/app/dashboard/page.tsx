@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { getAuthInstance, signOut } from '@/lib/firebase';
+import { isUserAdmin } from '@/lib/auth-utils';
 import type { User } from 'firebase/auth';
 
 export default function DashboardPage() {
@@ -11,9 +12,18 @@ export default function DashboardPage() {
 
   useEffect(() => {
     const auth = getAuthInstance();
-    const unsubscribe = auth.onAuthStateChanged((user) => {
+    const unsubscribe = auth.onAuthStateChanged(async (user) => {
       if (user) {
         console.log('Dashboard: User authenticated:', user.email);
+        
+        // Check if user is admin and redirect to admin dashboard
+        const isAdmin = await isUserAdmin();
+        if (isAdmin) {
+          console.log('Dashboard: User is admin, redirecting to admin dashboard');
+          router.push('/admin');
+          return;
+        }
+        
         setUser(user);
         setIsLoading(false);
       } else {
