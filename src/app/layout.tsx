@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Link from "next/link";
 import AuthProvider from "@/components/AuthProvider";
+import Logo from "@/components/Logo";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -32,7 +33,9 @@ export default function RootLayout({
         <header className="w-full border-b border-black/[.08] dark:border-white/[.12]">
           <div className="mx-auto max-w-6xl px-4 sm:px-6 py-4">
             <div className="flex items-center justify-between">
-              <Link href="/" className="text-lg font-semibold tracking-tight">Full Hundred</Link>
+              <Link href="/" className="text-lg font-semibold tracking-tight">
+                <Logo />
+              </Link>
               <nav className="flex items-center gap-2 sm:gap-4 lg:gap-6 text-sm">
                 <Link href="/services" className="hover:underline hidden sm:inline">Services</Link>
                 <Link href="/portfolio" className="hover:underline hidden sm:inline">View Our Work</Link>
