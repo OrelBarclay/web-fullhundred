@@ -57,7 +57,11 @@ export default function ManageContent() {
     startDate: "",
     endDate: "",
     budget: "",
-    progress: "0"
+    progress: "0",
+    beforeImages: [] as File[],
+    afterImages: [] as File[],
+    beforeVideos: [] as File[],
+    afterVideos: [] as File[]
   });
 
   useEffect(() => {
@@ -214,7 +218,11 @@ export default function ManageContent() {
         startDate: "",
         endDate: "",
         budget: "",
-        progress: "0"
+        progress: "0",
+        beforeImages: [],
+        afterImages: [],
+        beforeVideos: [],
+        afterVideos: []
       });
       await loadData();
     } catch (error) {
@@ -244,7 +252,11 @@ export default function ManageContent() {
       startDate: project.startDate.toISOString().split('T')[0],
       endDate: project.endDate.toISOString().split('T')[0],
       budget: project.budget?.toString() || "",
-      progress: project.progress?.toString() || "0"
+      progress: project.progress?.toString() || "0",
+      beforeImages: [],
+      afterImages: [],
+      beforeVideos: [],
+      afterVideos: []
     });
   };
 
@@ -292,7 +304,11 @@ export default function ManageContent() {
       startDate: "",
       endDate: "",
       budget: "",
-      progress: "0"
+      progress: "0",
+      beforeImages: [],
+      afterImages: [],
+      beforeVideos: [],
+      afterVideos: []
     });
   };
 
@@ -600,6 +616,217 @@ export default function ManageContent() {
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="Project description..."
                   />
+                </div>
+
+                {/* Media Upload Section */}
+                <div className="border-t pt-6">
+                  <h3 className="text-lg font-medium text-gray-900 mb-4">Project Media</h3>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Before Images */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Before Images</label>
+                      <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
+                        <input
+                          type="file"
+                          multiple
+                          accept="image/*"
+                          onChange={(e) => {
+                            const files = Array.from(e.target.files || []);
+                            setProjectForm(prev => ({ ...prev, beforeImages: [...prev.beforeImages, ...files] }));
+                          }}
+                          className="hidden"
+                          id="before-images"
+                        />
+                        <label
+                          htmlFor="before-images"
+                          className="cursor-pointer flex flex-col items-center justify-center py-4"
+                        >
+                          <svg className="w-8 h-8 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                          <span className="text-sm text-gray-600">Click to upload before images</span>
+                        </label>
+                        {projectForm.beforeImages.length > 0 && (
+                          <div className="mt-2">
+                            <p className="text-xs text-gray-500 mb-2">{projectForm.beforeImages.length} file(s) selected</p>
+                            <div className="flex flex-wrap gap-2">
+                              {projectForm.beforeImages.map((file, index) => (
+                                <div key={index} className="flex items-center bg-blue-50 px-2 py-1 rounded text-xs">
+                                  <span className="truncate max-w-20">{file.name}</span>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setProjectForm(prev => ({
+                                        ...prev,
+                                        beforeImages: prev.beforeImages.filter((_, i) => i !== index)
+                                      }));
+                                    }}
+                                    className="ml-1 text-red-500 hover:text-red-700"
+                                  >
+                                    ×
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* After Images */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">After Images</label>
+                      <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
+                        <input
+                          type="file"
+                          multiple
+                          accept="image/*"
+                          onChange={(e) => {
+                            const files = Array.from(e.target.files || []);
+                            setProjectForm(prev => ({ ...prev, afterImages: [...prev.afterImages, ...files] }));
+                          }}
+                          className="hidden"
+                          id="after-images"
+                        />
+                        <label
+                          htmlFor="after-images"
+                          className="cursor-pointer flex flex-col items-center justify-center py-4"
+                        >
+                          <svg className="w-8 h-8 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                          <span className="text-sm text-gray-600">Click to upload after images</span>
+                        </label>
+                        {projectForm.afterImages.length > 0 && (
+                          <div className="mt-2">
+                            <p className="text-xs text-gray-500 mb-2">{projectForm.afterImages.length} file(s) selected</p>
+                            <div className="flex flex-wrap gap-2">
+                              {projectForm.afterImages.map((file, index) => (
+                                <div key={index} className="flex items-center bg-green-50 px-2 py-1 rounded text-xs">
+                                  <span className="truncate max-w-20">{file.name}</span>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setProjectForm(prev => ({
+                                        ...prev,
+                                        afterImages: prev.afterImages.filter((_, i) => i !== index)
+                                      }));
+                                    }}
+                                    className="ml-1 text-red-500 hover:text-red-700"
+                                  >
+                                    ×
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Before Videos */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Before Videos</label>
+                      <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
+                        <input
+                          type="file"
+                          multiple
+                          accept="video/*"
+                          onChange={(e) => {
+                            const files = Array.from(e.target.files || []);
+                            setProjectForm(prev => ({ ...prev, beforeVideos: [...prev.beforeVideos, ...files] }));
+                          }}
+                          className="hidden"
+                          id="before-videos"
+                        />
+                        <label
+                          htmlFor="before-videos"
+                          className="cursor-pointer flex flex-col items-center justify-center py-4"
+                        >
+                          <svg className="w-8 h-8 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                          </svg>
+                          <span className="text-sm text-gray-600">Click to upload before videos</span>
+                        </label>
+                        {projectForm.beforeVideos.length > 0 && (
+                          <div className="mt-2">
+                            <p className="text-xs text-gray-500 mb-2">{projectForm.beforeVideos.length} file(s) selected</p>
+                            <div className="flex flex-wrap gap-2">
+                              {projectForm.beforeVideos.map((file, index) => (
+                                <div key={index} className="flex items-center bg-blue-50 px-2 py-1 rounded text-xs">
+                                  <span className="truncate max-w-20">{file.name}</span>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setProjectForm(prev => ({
+                                        ...prev,
+                                        beforeVideos: prev.beforeVideos.filter((_, i) => i !== index)
+                                      }));
+                                    }}
+                                    className="ml-1 text-red-500 hover:text-red-700"
+                                  >
+                                    ×
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* After Videos */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">After Videos</label>
+                      <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
+                        <input
+                          type="file"
+                          multiple
+                          accept="video/*"
+                          onChange={(e) => {
+                            const files = Array.from(e.target.files || []);
+                            setProjectForm(prev => ({ ...prev, afterVideos: [...prev.afterVideos, ...files] }));
+                          }}
+                          className="hidden"
+                          id="after-videos"
+                        />
+                        <label
+                          htmlFor="after-videos"
+                          className="cursor-pointer flex flex-col items-center justify-center py-4"
+                        >
+                          <svg className="w-8 h-8 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                          </svg>
+                          <span className="text-sm text-gray-600">Click to upload after videos</span>
+                        </label>
+                        {projectForm.afterVideos.length > 0 && (
+                          <div className="mt-2">
+                            <p className="text-xs text-gray-500 mb-2">{projectForm.afterVideos.length} file(s) selected</p>
+                            <div className="flex flex-wrap gap-2">
+                              {projectForm.afterVideos.map((file, index) => (
+                                <div key={index} className="flex items-center bg-green-50 px-2 py-1 rounded text-xs">
+                                  <span className="truncate max-w-20">{file.name}</span>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setProjectForm(prev => ({
+                                        ...prev,
+                                        afterVideos: prev.afterVideos.filter((_, i) => i !== index)
+                                      }));
+                                    }}
+                                    className="ml-1 text-red-500 hover:text-red-700"
+                                  >
+                                    ×
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
                 </div>
                 
                 <div className="flex space-x-3">
