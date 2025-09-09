@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { getAuthInstance } from "@/lib/firebase";
 import { getDb } from "@/lib/firebase";
-import { collection, getDocs, doc, updateDoc } from "firebase/firestore";
+import { collection, getDocs } from "firebase/firestore";
 import { isUserAdmin } from "@/lib/auth-utils";
 import type { User } from "firebase/auth";
 
@@ -69,6 +69,12 @@ export default function UserManagement() {
       }) as UserData[];
       setUsers(usersData);
       console.log('Loaded users:', usersData);
+      console.log('User details:', usersData.map(u => ({
+        email: u.email,
+        role: u.role,
+        isAdmin: u.isAdmin,
+        uid: u.uid
+      })));
     } catch (error) {
       console.error("Error loading users:", error);
     }
@@ -92,6 +98,15 @@ export default function UserManagement() {
       });
 
       if (response.ok) {
+        // Update Firestore document
+        const db = getDb();
+        const userRef = doc(db, 'users', userId);
+        await updateDoc(userRef, {
+          role: role,
+          isAdmin: role === "admin",
+          updatedAt: new Date()
+        });
+        
         // Update local state
         setUsers(prev => prev.map(u => 
           u.id === userId 
@@ -173,9 +188,9 @@ export default function UserManagement() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        userData.isAdmin ? "bg-red-100 text-red-800" : "bg-blue-100 text-blue-800"
+                        (userData.role === 'admin' || userData.isAdmin) ? "bg-red-100 text-red-800" : "bg-blue-100 text-blue-800"
                       }`}>
-                        {userData.role || "user"}
+                        {userData.role === 'admin' || userData.isAdmin ? 'admin' : (userData.role || "user")}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">

@@ -55,18 +55,21 @@ export async function POST(request: NextRequest) {
       displayName: decodedToken.name || decodedToken.email?.split('@')[0] || '',
       photoURL: decodedToken.picture || '',
       role: 'user', // Default to user, custom claims will override this
+      isAdmin: false, // Default to false, will be updated based on role
       lastLoginAt: now,
       updatedAt: now,
       createdAt: userDoc.exists() ? userDoc.data()?.createdAt : now
     };
     
-    // If user doesn't exist, set createdAt; if they do, keep existing createdAt
+    // If user doesn't exist, set createdAt; if they do, keep existing createdAt and role
     if (!userDoc.exists()) {
       userDataToStore.createdAt = now;
       console.log('Creating new user:', userDataToStore);
     } else {
       const existingData = userDoc.data();
       userDataToStore.createdAt = existingData?.createdAt || now;
+      userDataToStore.role = existingData?.role || 'user';
+      userDataToStore.isAdmin = existingData?.isAdmin || false;
       console.log('Updating existing user:', userDataToStore);
     }
     
