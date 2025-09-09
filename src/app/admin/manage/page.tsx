@@ -1,6 +1,6 @@
 "use client";
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { getAuthInstance } from "@/lib/firebase";
 import { getDb } from "@/lib/firebase";
 import { collection, getDocs, doc, addDoc, updateDoc, deleteDoc } from "firebase/firestore";
@@ -34,7 +34,7 @@ interface Project {
   afterVideos?: string[];
 }
 
-export default function ManageContent() {
+function ManageContentWithSearchParams() {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [clients, setClients] = useState<Client[]>([]);
@@ -44,6 +44,7 @@ export default function ManageContent() {
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   // Helper function to safely convert dates
   const safeDate = (dateValue: unknown): Date => {
@@ -123,6 +124,20 @@ export default function ManageContent() {
 
     return () => unsubscribe();
   }, [router]);
+
+  // Handle editProject query parameter
+  useEffect(() => {
+    const editProjectId = searchParams.get('editProject');
+    if (editProjectId && projects.length > 0) {
+      const projectToEdit = projects.find(p => p.id === editProjectId);
+      if (projectToEdit) {
+        editProject(projectToEdit);
+        setActiveTab("projects");
+        // Clear the query parameter
+        router.replace('/admin/manage');
+      }
+    }
+  }, [searchParams, projects, router]);
 
   const loadData = async () => {
     try {
@@ -1028,5 +1043,13 @@ export default function ManageContent() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function ManageContent() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <ManageContentWithSearchParams />
+    </Suspense>
   );
 }

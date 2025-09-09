@@ -195,6 +195,26 @@ export default function AdminDashboard() {
     }
   };
 
+  const deleteProject = async (projectId: string) => {
+    if (confirm("Are you sure you want to delete this project?")) {
+      try {
+        const db = getDb();
+        await deleteDoc(doc(db, "projects", projectId));
+        // Reload data to update the UI
+        await loadDashboardData();
+        console.log("Project deleted successfully");
+      } catch (error) {
+        console.error("Error deleting project:", error);
+        alert("Failed to delete project. Please try again.");
+      }
+    }
+  };
+
+  const editProject = (project: Project) => {
+    // Navigate to the manage page with the project ID
+    router.push(`/admin/manage?editProject=${project.id}`);
+  };
+
   const handleLogout = async () => {
     try {
       await signOut(getAuthInstance());
@@ -213,18 +233,6 @@ export default function AdminDashboard() {
       await loadDashboardData(); // Reload data
     } catch (error) {
       console.error("Error updating project status:", error);
-    }
-  };
-
-  const deleteProject = async (projectId: string) => {
-    if (confirm("Are you sure you want to delete this project?")) {
-      try {
-        const db = getDb();
-        await deleteDoc(doc(db, "projects", projectId));
-        await loadDashboardData(); // Reload data
-      } catch (error) {
-        console.error("Error deleting project:", error);
-      }
     }
   };
 
@@ -648,7 +656,12 @@ export default function AdminDashboard() {
                             <div>to {project.endDate.toLocaleDateString()}</div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <button className="text-blue-600 hover:text-blue-900 mr-3">Edit</button>
+                            <button 
+                              onClick={() => editProject(project)}
+                              className="text-blue-600 hover:text-blue-900 mr-3"
+                            >
+                              Edit
+                            </button>
                             <button 
                               onClick={() => deleteProject(project.id)}
                               className="text-red-600 hover:text-red-900"
