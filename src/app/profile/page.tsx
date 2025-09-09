@@ -56,11 +56,14 @@ export default function ProfilePage() {
             const userData = userDoc.data();
             console.log('User profile fetched from database:', userData);
             
+            // Prioritize database photoURL, but fallback to Firebase Auth user photoURL
+            const photoURL = userData.photoURL || user.photoURL || '';
+            
             const userProfile: UserProfile = {
               id: userDoc.id,
               email: userData.email || user.email || '',
               displayName: userData.displayName || user.displayName || '',
-              photoURL: userData.photoURL || user.photoURL || '',
+              photoURL: photoURL,
               role: userData.role || 'user',
               phone: userData.phone || '',
               address: userData.address || '',
@@ -68,6 +71,12 @@ export default function ProfilePage() {
               updatedAt: userData.updatedAt?.toDate() || new Date(),
               lastLoginAt: userData.lastLoginAt?.toDate() || new Date()
             };
+            
+            console.log('Profile photoURL sources:', {
+              userDataPhotoURL: userData.photoURL,
+              userPhotoURL: user.photoURL,
+              finalPhotoURL: userProfile.photoURL
+            });
             
             setProfile(userProfile);
             setEditForm({
@@ -92,6 +101,11 @@ export default function ProfilePage() {
               updatedAt: new Date(),
               lastLoginAt: new Date()
             };
+            
+            console.log('Basic profile photoURL:', {
+              userPhotoURL: user.photoURL,
+              basicProfilePhotoURL: basicProfile.photoURL
+            });
             setProfile(basicProfile);
             setEditForm({
               displayName: basicProfile.displayName || '',
@@ -296,35 +310,50 @@ export default function ProfilePage() {
             <div className="px-6 py-4 border-b border-gray-200">
               <div className="flex items-center space-x-4">
                 <div className="flex-shrink-0">
-                  {imagePreview || profile.photoURL ? (
-                    <img
-                      className="h-20 w-20 rounded-full object-cover border-2 border-gray-200"
-                      src={imagePreview || profile.photoURL}
-                      alt={profile.displayName || profile.email}
-                      onError={(e) => {
-                        console.log('Image failed to load:', e);
-                        // Fallback to initials if image fails to load
-                        const target = e.target as HTMLImageElement;
-                        target.style.display = 'none';
-                        const parent = target.parentElement;
-                        if (parent) {
-                          parent.innerHTML = `
-                            <div class="h-20 w-20 rounded-full bg-gray-300 flex items-center justify-center border-2 border-gray-200">
-                              <span class="text-2xl font-medium text-gray-600">
-                                ${profile.displayName?.[0]?.toUpperCase() || profile.email[0].toUpperCase()}
-                              </span>
-                            </div>
-                          `;
-                        }
-                      }}
-                    />
-                  ) : (
-                    <div className="h-20 w-20 rounded-full bg-gray-300 flex items-center justify-center border-2 border-gray-200">
-                      <span className="text-2xl font-medium text-gray-600">
-                        {profile.displayName?.[0]?.toUpperCase() || profile.email[0].toUpperCase()}
-                      </span>
-                    </div>
-                  )}
+                  {(() => {
+                    const imageUrl = imagePreview || profile.photoURL;
+                    console.log('Rendering profile image:', {
+                      imagePreview,
+                      profilePhotoURL: profile.photoURL,
+                      finalImageUrl: imageUrl,
+                      hasImage: !!imageUrl
+                    });
+                    
+                    if (imageUrl) {
+                      return (
+                        <img
+                          className="h-20 w-20 rounded-full object-cover border-2 border-gray-200"
+                          src={imageUrl}
+                          alt={profile.displayName || profile.email}
+                          onLoad={() => console.log('Image loaded successfully:', imageUrl)}
+                          onError={(e) => {
+                            console.log('Image failed to load:', imageUrl, e);
+                            // Fallback to initials if image fails to load
+                            const target = e.target as HTMLImageElement;
+                            target.style.display = 'none';
+                            const parent = target.parentElement;
+                            if (parent) {
+                              parent.innerHTML = `
+                                <div class="h-20 w-20 rounded-full bg-gray-300 flex items-center justify-center border-2 border-gray-200">
+                                  <span class="text-2xl font-medium text-gray-600">
+                                    ${profile.displayName?.[0]?.toUpperCase() || profile.email[0].toUpperCase()}
+                                  </span>
+                                </div>
+                              `;
+                            }
+                          }}
+                        />
+                      );
+                    } else {
+                      return (
+                        <div className="h-20 w-20 rounded-full bg-gray-300 flex items-center justify-center border-2 border-gray-200">
+                          <span className="text-2xl font-medium text-gray-600">
+                            {profile.displayName?.[0]?.toUpperCase() || profile.email[0].toUpperCase()}
+                          </span>
+                        </div>
+                      );
+                    }
+                  })()}
                 </div>
                 <div>
                   <h2 className="text-2xl font-bold text-gray-900">
@@ -337,6 +366,19 @@ export default function ProfilePage() {
                 </div>
               </div>
             </div>
+
+            {/* Debug Info - Remove in production */}
+            {process.env.NODE_ENV === 'development' && (
+              <div className="px-6 py-4 bg-blue-50 border-l-4 border-blue-400">
+                <div className="text-sm">
+                  <p className="font-medium text-blue-800">Debug Info:</p>
+                  <p className="text-blue-700">PhotoURL: {profile.photoURL || 'None'}</p>
+                  <p className="text-blue-700">Image Preview: {imagePreview || 'None'}</p>
+                  <p className="text-blue-700">User Email: {user?.email || 'None'}</p>
+                  <p className="text-blue-700">User PhotoURL: {user?.photoURL || 'None'}</p>
+                </div>
+              </div>
+            )}
 
             {/* Error Display */}
             {error && (
