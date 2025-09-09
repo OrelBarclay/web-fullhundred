@@ -20,6 +20,10 @@ export interface Project {
   startDate?: Date;
   endDate?: Date;
   budget?: number;
+  beforeImages?: string[];
+  afterImages?: string[];
+  beforeVideos?: string[];
+  afterVideos?: string[];
   createdAt: Date;
   updatedAt: Date;
 }

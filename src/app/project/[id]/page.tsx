@@ -2,42 +2,53 @@
 import { useEffect, useState } from "react";
 import { notFound, useParams } from "next/navigation";
 
-type Project = { id: string; title: string; description?: string | null };
+type Project = {
+  id: string;
+  title: string;
+  description?: string | null;
+  beforeImages?: string[];
+  afterImages?: string[];
+  beforeVideos?: string[];
+  afterVideos?: string[];
+};
 
 type Media = { id: string; projectId: string; type: "image" | "video" | "before" | "after"; url: string; caption?: string | null };
 
 export default function ProjectDetail() {
   const params = useParams<{ id: string }>();
   const [project, setProject] = useState<Project | null>(null);
-  const [media, setMedia] = useState<Media[]>([]);
+  const [fallbackMedia, setFallbackMedia] = useState<Media[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     async function load() {
       try {
-        const [pRes, mRes] = await Promise.all([
-          fetch(`/api/projects/${params.id}`, { cache: "no-store" }),
-          fetch(`/api/media-fallback`, { cache: "no-store" })
-        ]);
+        // Load the project with embedded media fields
+        const pRes = await fetch(`/api/projects/${params.id}`, { cache: "no-store" });
         if (pRes.status === 404) {
           setProject(null);
           return;
         }
         const pData = await pRes.json();
-        const mAll = await mRes.json();
-        setProject(pData);
-        
-        // Ensure mAll is an array before filtering
-        if (Array.isArray(mAll)) {
-          setMedia(mAll.filter((m: Media) => m.projectId === params.id));
+        console.log('Project data from API:', pData);
+        setProject(pData as Project);
+
+        // Fallback: load separate media collection if present
+        const mRes = await fetch(`/api/media-fallback`, { cache: "no-store" }).catch(() => null);
+        if (mRes && mRes.ok) {
+          const mAll = await mRes.json();
+          if (Array.isArray(mAll)) {
+            setFallbackMedia(mAll.filter((m: Media) => m.projectId === params.id));
+          } else {
+            setFallbackMedia([]);
+          }
         } else {
-          console.error("Media API returned non-array response:", mAll);
-          setMedia([]);
+          setFallbackMedia([]);
         }
       } catch (error) {
         console.error("Error loading project data:", error);
         setProject(null);
-        setMedia([]);
+        setFallbackMedia([]);
       } finally {
         setIsLoading(false);
       }
@@ -46,6 +57,28 @@ export default function ProjectDetail() {
   }, [params.id]);
 
   if (!isLoading && !project) return notFound();
+
+  const images: string[] = [
+    ...(project?.beforeImages || []),
+    ...(project?.afterImages || [])
+  ];
+  const videos: string[] = [
+    ...(project?.beforeVideos || []),
+    ...(project?.afterVideos || [])
+  ];
+
+  // If no embedded media, attempt to use fallback media list
+  const hasEmbedded = images.length > 0 || videos.length > 0;
+  
+  console.log('Project media arrays:', {
+    beforeImages: project?.beforeImages,
+    afterImages: project?.afterImages,
+    beforeVideos: project?.beforeVideos,
+    afterVideos: project?.afterVideos,
+    images,
+    videos,
+    hasEmbedded
+  });
 
   return (
     <section className="mx-auto max-w-5xl px-6 py-12">
@@ -57,18 +90,33 @@ export default function ProjectDetail() {
           {project?.description ? (
             <p className="opacity-80 mb-8">{project.description}</p>
           ) : null}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {media.map((item) => (
-              <figure key={item.id} className="border rounded-lg overflow-hidden">
-                {item.type === "video" ? (
-                  <video src={item.url} controls className="w-full" />
-                ) : (
-                  <img src={item.url} alt={item.caption ?? project?.title ?? ""} className="w-full" />
-                )}
-                {item.caption ? <figcaption className="p-2 text-sm opacity-75">{item.caption}</figcaption> : null}
-              </figure>
-            ))}
-          </div>
+
+          {hasEmbedded ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {images.map((url, idx) => (
+                <figure key={`img-${idx}`} className="border rounded-lg overflow-hidden">
+                  <img src={url} alt={project?.title || ''} className="w-full" />
+                </figure>
+              ))}
+              {videos.map((url, idx) => (
+                <figure key={`vid-${idx}`} className="border rounded-lg overflow-hidden">
+                  <video src={url} controls className="w-full" />
+                </figure>
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {fallbackMedia.map((item) => (
+                <figure key={item.id} className="border rounded-lg overflow-hidden">
+                  {item.type === "video" ? (
+                    <video src={item.url} controls className="w-full" />
+                  ) : (
+                    <img src={item.url} alt={project?.title || ''} className="w-full" />
+                  )}
+                </figure>
+              ))}
+            </div>
+          )}
         </>
       )}
     </section>
