@@ -44,21 +44,21 @@ export default function Logo() {
   // Don't render until mounted to avoid hydration mismatch
   if (!mounted) {
     return (
-      <div className="w-[80px] sm:w-[100px] h-[32px] sm:h-[40px] bg-gray-200 rounded animate-pulse" />
+      <div className="w-[100px] sm:w-[120px] h-[40px] sm:h-[48px] bg-gray-200 rounded animate-pulse" />
     );
   }
 
   return (
-    <div className="flex items-center gap-1 sm:gap-2">
+    <div className="flex items-center gap-2 sm:gap-3">
       <Image
         src={isDark ? "/images/logo-dark.png" : "/images/logo-light.png"}
         alt="Full Hundred Logo"
-        width={60}
-        height={24}
-        className="w-[60px] h-[24px] sm:w-[80px] sm:h-[32px] lg:w-[100px] lg:h-[40px]"
+        width={120}
+        height={48}
+        className="w-[80px] h-[32px] sm:w-[100px] sm:h-[40px] lg:w-[120px] lg:h-[48px]"
         priority
       />
-      <span className="text-sm sm:text-base lg:text-lg font-semibold text-gray-900 dark:text-white hidden sm:inline">
+      <span className="text-base sm:text-lg lg:text-xl font-semibold text-gray-900 dark:text-white hidden sm:inline">
         Full Hundred
       </span>
     </div>
