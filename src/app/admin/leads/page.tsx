@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { getAuthInstance } from "@/lib/firebase";
-import { isUserAdmin, getUserCustomClaims } from "@/lib/auth-utils";
+// Admin check handled by middleware
 import type { User } from "firebase/auth";
 
 interface Lead {
@@ -41,27 +41,8 @@ export default function LeadsManagement() {
     const unsubscribe = auth.onAuthStateChanged(async (user) => {
       if (user) {
         console.log("User authenticated:", user.email);
-        
-        // Debug custom claims
-        try {
-          const claims = await getUserCustomClaims();
-          console.log("Custom claims:", claims);
-          
-          const isAdmin = await isUserAdmin();
-          console.log("Is admin from claims:", isAdmin);
-          
-          if (isAdmin) {
-            console.log("Admin access granted via custom claims");
-            setUser(user);
-            await loadLeads();
-          } else {
-            console.log("Not admin, redirecting to dashboard");
-            router.push("/dashboard");
-          }
-        } catch (error) {
-          console.error("Error checking admin status:", error);
-          router.push("/dashboard");
-        }
+        setUser(user);
+        await loadLeads();
       } else {
         console.log("No user, redirecting to login");
         router.push("/login");
