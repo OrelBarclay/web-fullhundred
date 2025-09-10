@@ -1,11 +1,6 @@
 import { NextResponse } from "next/server";
-
-// Read leads from the file-based storage
-import { readFile, writeFile, mkdir } from 'fs/promises';
-import { join } from 'path';
-
-const DATA_DIR = join(process.cwd(), 'data');
-const LEADS_FILE = join(DATA_DIR, 'leads.json');
+import { getDb } from "@/lib/firebase";
+import { collection, getDocs, addDoc, doc, updateDoc, query, orderBy } from "firebase/firestore";
 
 interface Lead {
   id: string;
@@ -26,49 +21,65 @@ interface Lead {
   lastContacted?: Date;
 }
 
-// Ensure data directory exists
-async function ensureDataDir() {
-  try {
-    await mkdir(DATA_DIR, { recursive: true });
-  } catch (error) {
-    // Directory might already exist
-  }
-}
-
-// Read leads from file
+// Read leads from Firestore
 async function readLeads(): Promise<Lead[]> {
   try {
-    await ensureDataDir();
-    const data = await readFile(LEADS_FILE, 'utf-8');
-    const leads = JSON.parse(data);
-    // Convert date strings back to Date objects
-    return leads.map((lead: Lead) => ({
-      ...lead,
-      createdAt: new Date(lead.createdAt),
-      lastContacted: lead.lastContacted ? new Date(lead.lastContacted) : undefined
-    }));
+    const db = getDb();
+    const leadsRef = collection(db, 'leads');
+    const q = query(leadsRef, orderBy('createdAt', 'desc'));
+    const querySnapshot = await getDocs(q);
+    
+    const leads: Lead[] = [];
+    querySnapshot.forEach((doc) => {
+      const data = doc.data();
+      leads.push({
+        id: doc.id,
+        ...data,
+        createdAt: data.createdAt?.toDate() || new Date(),
+        lastContacted: data.lastContacted?.toDate() || undefined
+      } as Lead);
+    });
+    
+    return leads;
   } catch (error) {
-    // File doesn't exist yet, return empty array
+    console.error('Error reading leads from Firestore:', error);
     return [];
   }
 }
 
-// Write leads to file
-async function writeLeads(leads: Lead[]): Promise<void> {
+// Add lead to Firestore
+async function addLead(leadData: Omit<Lead, 'id'>): Promise<string> {
   try {
-    await ensureDataDir();
-    await writeFile(LEADS_FILE, JSON.stringify(leads, null, 2));
+    const db = getDb();
+    const leadsRef = collection(db, 'leads');
+    const docRef = await addDoc(leadsRef, {
+      ...leadData,
+      createdAt: leadData.createdAt || new Date()
+    });
+    return docRef.id;
   } catch (error) {
-    console.error('Error writing leads file:', error);
+    console.error('Error adding lead to Firestore:', error);
+    throw error;
+  }
+}
+
+// Update lead in Firestore
+async function updateLead(leadId: string, updates: Partial<Lead>): Promise<void> {
+  try {
+    const db = getDb();
+    const leadRef = doc(db, 'leads', leadId);
+    await updateDoc(leadRef, updates);
+  } catch (error) {
+    console.error('Error updating lead in Firestore:', error);
     throw error;
   }
 }
 
 export async function GET() {
   try {
+    console.log("Fetching leads from Firestore...");
     const leads = await readLeads();
-    // Sort by creation date (newest first)
-    leads.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    console.log(`Found ${leads.length} leads in database`);
     return NextResponse.json(leads);
   } catch (error) {
     console.error("Error reading leads:", error);
@@ -100,12 +111,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Project details are required" }, { status: 400 });
     }
 
-    console.log("Validation passed, proceeding with database operation");
+    console.log("Validation passed, proceeding with Firestore operation");
     
     const now = new Date();
     
-    const leadData: Lead = {
-      id: `lead_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+    const leadData: Omit<Lead, 'id'> = {
       name: body.name.trim(),
       email: body.email.trim(),
       phone: body.phone?.trim() || undefined,
@@ -123,19 +133,12 @@ export async function POST(request: Request) {
 
     console.log("Lead data to be saved:", leadData);
 
-    // Read existing leads
-    const existingLeads = await readLeads();
+    // Add lead to Firestore
+    const leadId = await addLead(leadData);
     
-    // Add new lead
-    existingLeads.push(leadData);
-    
-    // Write back to file
-    await writeLeads(existingLeads);
-    
-    console.log("Lead saved successfully with ID:", leadData.id);
-    console.log("Total leads stored:", existingLeads.length);
+    console.log("Lead saved successfully to Firestore with ID:", leadId);
 
-    return NextResponse.json(leadData, { status: 201 });
+    return NextResponse.json({ id: leadId, ...leadData }, { status: 201 });
   } catch (error) {
     console.error("Error creating lead:", error);
     return NextResponse.json({ 
@@ -153,24 +156,26 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: "Lead ID is required" }, { status: 400 });
     }
 
-    const leads = await readLeads();
-    const leadIndex = leads.findIndex(lead => lead.id === id);
-    
-    if (leadIndex === -1) {
-      return NextResponse.json({ error: "Lead not found" }, { status: 404 });
+    console.log(`Updating lead ${id} with status: ${status}, notes: ${adminNotes}`);
+
+    // Prepare update data
+    const updateData: Partial<Lead> = {};
+    if (status !== undefined) {
+      updateData.status = status;
+    }
+    if (adminNotes !== undefined) {
+      updateData.adminNotes = adminNotes;
+    }
+    if (status === 'contacted') {
+      updateData.lastContacted = new Date();
     }
 
-    // Update lead
-    leads[leadIndex] = {
-      ...leads[leadIndex],
-      status: status || leads[leadIndex].status,
-      adminNotes: adminNotes !== undefined ? adminNotes : leads[leadIndex].adminNotes,
-      lastContacted: status === 'contacted' ? new Date() : leads[leadIndex].lastContacted
-    };
-
-    await writeLeads(leads);
+    // Update lead in Firestore
+    await updateLead(id, updateData);
     
-    return NextResponse.json(leads[leadIndex]);
+    console.log(`Lead ${id} updated successfully`);
+    
+    return NextResponse.json({ id, ...updateData });
   } catch (error) {
     console.error("Error updating lead:", error);
     return NextResponse.json({ error: "Failed to update lead" }, { status: 500 });
