@@ -226,10 +226,10 @@ export default function QuoteForm() {
   };
 
   return (
-    <div className="border border-gray-200 dark:border-gray-700 rounded-xl p-6 grid gap-6 bg-white dark:bg-gray-800">
+    <div className="border border-[color:var(--border)] rounded-xl p-6 grid gap-6 bg-[color:var(--card)]">
       <div className="text-center">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Get Your Free Quote</h2>
-        <p className="text-gray-600 dark:text-gray-300">Tell us about your project and get an instant estimate</p>
+        <h2 className="text-2xl font-bold text-[color:var(--foreground)] mb-2">Get Your Free Quote</h2>
+        <p className="text-[color:var(--muted-foreground)]">Tell us about your project and get an instant estimate</p>
         {user && (
           <div className="mt-3 flex items-center justify-center gap-2 text-sm text-blue-600 dark:text-blue-400">
             <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
@@ -251,7 +251,7 @@ export default function QuoteForm() {
                   projectDetails: ""
                 });
               }}
-              className="text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 underline"
+              className="text-primary hover:opacity-90 underline"
             >
               Clear
             </button>
@@ -263,7 +263,7 @@ export default function QuoteForm() {
         {/* Contact Information */}
         <div className="grid md:grid-cols-3 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-sm font-medium text-[color:var(--muted-foreground)] mb-1">
               Name *
               {user && formData.name && (
                 <span className="ml-2 text-xs text-blue-600 dark:text-blue-400 flex items-center gap-1">
@@ -275,7 +275,7 @@ export default function QuoteForm() {
               )}
             </label>
             <input 
-              className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
+              className="w-full border border-[color:var(--border)] rounded-lg px-3 py-2 bg-[color:var(--popover)] text-[color:var(--foreground)] placeholder-[color:var(--muted-foreground)]/70 focus:outline-none focus:ring-2 focus:ring-[color:var(--ring)] focus:border-transparent" 
               placeholder="Your name" 
               value={formData.name}
               onChange={(e) => handleInputChange("name", e.target.value)}
@@ -283,7 +283,7 @@ export default function QuoteForm() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-sm font-medium text-[color:var(--muted-foreground)] mb-1">
               Email *
               {user && formData.email && (
                 <span className="ml-2 text-xs text-blue-600 dark:text-blue-400 flex items-center gap-1">
@@ -295,7 +295,7 @@ export default function QuoteForm() {
               )}
             </label>
             <input 
-              className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
+              className="w-full border border-[color:var(--border)] rounded-lg px-3 py-2 bg-[color:var(--popover)] text-[color:var(--foreground)] placeholder-[color:var(--muted-foreground)]/70 focus:outline-none focus:ring-2 focus:ring-[color:var(--ring)] focus:border-transparent" 
               placeholder="your@email.com" 
               type="email"
               value={formData.email}
@@ -304,7 +304,7 @@ export default function QuoteForm() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-sm font-medium text-[color:var(--muted-foreground)] mb-1">
               Phone
               {user && formData.phone && (
                 <span className="ml-2 text-xs text-blue-600 dark:text-blue-400 flex items-center gap-1">
@@ -316,7 +316,7 @@ export default function QuoteForm() {
               )}
             </label>
             <input 
-              className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
+              className="w-full border border-[color:var(--border)] rounded-lg px-3 py-2 bg-[color:var(--popover)] text-[color:var(--foreground)] placeholder-[color:var(--muted-foreground)]/70 focus:outline-none focus:ring-2 focus:ring-[color:var(--ring)] focus:border-transparent" 
               placeholder="(555) 123-4567" 
               type="tel"
               value={formData.phone}
@@ -328,9 +328,9 @@ export default function QuoteForm() {
         {/* Project Details */}
         <div className="grid md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Project Type *</label>
+            <label className="block text-sm font-medium text-[color:var(--muted-foreground)] mb-1">Project Type *</label>
             <select
-              className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full border border-[color:var(--border)] rounded-lg px-3 py-2 bg-[color:var(--popover)] text-[color:var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[color:var(--ring)] focus:border-transparent"
               value={formData.projectType}
               onChange={(e) => handleInputChange("projectType", e.target.value)}
               required
@@ -342,9 +342,9 @@ export default function QuoteForm() {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Project Size *</label>
+            <label className="block text-sm font-medium text-[color:var(--muted-foreground)] mb-1">Project Size *</label>
             <select
-              className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full border border-[color:var(--border)] rounded-lg px-3 py-2 bg-[color:var(--popover)] text-[color:var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[color:var(--ring)] focus:border-transparent"
               value={formData.projectSize}
               onChange={(e) => handleInputChange("projectSize", e.target.value)}
               required
@@ -359,9 +359,9 @@ export default function QuoteForm() {
 
         <div className="grid md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Timeline *</label>
+            <label className="block text-sm font-medium text-[color:var(--muted-foreground)] mb-1">Timeline *</label>
             <select
-              className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full border border-[color:var(--border)] rounded-lg px-3 py-2 bg-[color:var(--popover)] text-[color:var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[color:var(--ring)] focus:border-transparent"
               value={formData.timeline}
               onChange={(e) => handleInputChange("timeline", e.target.value)}
               required
@@ -373,9 +373,9 @@ export default function QuoteForm() {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Budget Range</label>
+            <label className="block text-sm font-medium text-[color:var(--muted-foreground)] mb-1">Budget Range</label>
             <select
-              className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full border border-[color:var(--border)] rounded-lg px-3 py-2 bg-[color:var(--popover)] text-[color:var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[color:var(--ring)] focus:border-transparent"
               value={formData.budget}
               onChange={(e) => handleInputChange("budget", e.target.value)}
             >
@@ -394,18 +394,18 @@ export default function QuoteForm() {
             id="customQuote"
             checked={formData.customQuote}
             onChange={(e) => handleInputChange("customQuote", e.target.checked)}
-            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700"
+            className="h-4 w-4 text-primary focus:ring-[color:var(--ring)] border-[color:var(--border)] rounded bg-[color:var(--popover)]"
           />
-          <label htmlFor="customQuote" className="ml-2 block text-sm text-gray-700 dark:text-gray-300">
+          <label htmlFor="customQuote" className="ml-2 block text-sm text-[color:var(--muted-foreground)]">
             I need a custom quote (skip automatic estimate)
           </label>
         </div>
 
         {/* Project Details */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Project Details *</label>
+          <label className="block text-sm font-medium text-[color:var(--muted-foreground)] mb-1">Project Details *</label>
           <textarea 
-            className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
+            className="w-full border border-[color:var(--border)] rounded-lg px-3 py-2 bg-[color:var(--popover)] text-[color:var(--foreground)] placeholder-[color:var(--muted-foreground)]/70 focus:outline-none focus:ring-2 focus:ring-[color:var(--ring)] focus:border-transparent" 
             placeholder="Describe your project in detail..." 
             rows={4}
             value={formData.projectDetails}
@@ -416,27 +416,27 @@ export default function QuoteForm() {
 
         {/* Instant Estimate Display */}
         {showEstimate && estimate && !formData.customQuote && (
-          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-            <h3 className="text-lg font-semibold text-blue-900 dark:text-blue-100 mb-2">Instant Estimate</h3>
+          <div className="bg-[color:var(--muted)] border border-[color:var(--border)] rounded-lg p-4">
+            <h3 className="text-lg font-semibold text-[color:var(--foreground)] mb-2">Instant Estimate</h3>
             {estimate.minPrice === 0 ? (
-              <p className="text-blue-800 dark:text-blue-200">Custom project - we&apos;ll provide a detailed quote after reviewing your requirements.</p>
+              <p className="text-[color:var(--muted-foreground)]">Custom project - we&apos;ll provide a detailed quote after reviewing your requirements.</p>
             ) : (
               <div className="grid md:grid-cols-3 gap-4 text-sm">
                 <div>
-                  <span className="font-medium text-blue-900 dark:text-blue-100">Estimated Range:</span>
-                  <p className="text-blue-800 dark:text-blue-200">${estimate.minPrice.toLocaleString()} - ${estimate.maxPrice.toLocaleString()}</p>
+                  <span className="font-medium text-[color:var(--foreground)]">Estimated Range:</span>
+                  <p className="text-[color:var(--muted-foreground)]">${estimate.minPrice.toLocaleString()} - ${estimate.maxPrice.toLocaleString()}</p>
                 </div>
                 <div>
-                  <span className="font-medium text-blue-900 dark:text-blue-100">Timeline:</span>
-                  <p className="text-blue-800 dark:text-blue-200">{estimate.timeline}</p>
+                  <span className="font-medium text-[color:var(--foreground)]">Timeline:</span>
+                  <p className="text-[color:var(--muted-foreground)]">{estimate.timeline}</p>
                 </div>
                 <div>
-                  <span className="font-medium text-blue-900 dark:text-blue-100">Complexity:</span>
-                  <p className="text-blue-800 dark:text-blue-200">{estimate.complexity}</p>
+                  <span className="font-medium text-[color:var(--foreground)]">Complexity:</span>
+                  <p className="text-[color:var(--muted-foreground)]">{estimate.complexity}</p>
                 </div>
               </div>
             )}
-            <p className="text-xs text-blue-600 dark:text-blue-400 mt-2">
+            <p className="text-xs text-[color:var(--muted-foreground)] mt-2">
               * This is a preliminary estimate. Final pricing will be provided after consultation.
             </p>
           </div>
@@ -447,7 +447,7 @@ export default function QuoteForm() {
           <button 
             type="submit"
             disabled={isSubmitting}
-            className="bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 disabled:opacity-50 transition-colors"
+            className="bg-primary text-primary-foreground px-8 py-3 rounded-lg font-semibold hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-[color:var(--ring)] focus:ring-offset-2 disabled:opacity-50 transition-colors"
           >
             {isSubmitting ? "Sending..." : "Get My Quote"}
           </button>

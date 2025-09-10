@@ -102,13 +102,13 @@ export default function AuthProvider() {
                   />
                 ) : (
                   <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center border border-gray-300 dark:border-gray-600">
-                    <span className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-300">
+                    <span className="text-xs sm:text-sm font-medium text-gray-600 dark:text-white">
                       {(user.displayName || user.email || 'U')[0].toUpperCase()}
                     </span>
                   </div>
                 )}
                 {/* User name - hidden on very small screens */}
-                <span className="hidden sm:inline text-sm font-medium text-gray-700 dark:text-gray-300">
+                <span className="hidden sm:inline text-sm font-medium text-gray-700 dark:text-white">
                   {user.displayName || user.email?.split('@')[0] || 'User'}
                 </span>
               </Link>

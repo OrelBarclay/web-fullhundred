@@ -343,10 +343,6 @@ export default function AdminDashboard() {
     return matchesSearch && matchesStatus;
   });
 
-  console.log('Projects state:', projects);
-  console.log('Filtered projects:', filteredProjects);
-  console.log('Search term:', searchTerm);
-  console.log('Filter status:', filterStatus);
 
   const filteredClients = clients.filter(client => 
     client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||

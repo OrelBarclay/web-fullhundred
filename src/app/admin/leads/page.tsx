@@ -255,7 +255,7 @@ export default function LeadsManagement() {
         </div>
 
         {/* Leads List */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
+        <div className="bg-[color:var(--card)] rounded-lg shadow overflow-hidden border border-[color:var(--border)]">
           {filteredLeads.length === 0 ? (
             <div className="text-center py-12">
               <svg className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -274,12 +274,12 @@ export default function LeadsManagement() {
                 <div
                   key={lead.id}
                   onClick={() => handleLeadClick(lead)}
-                  className="p-6 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors"
+                  className="p-6 hover:bg-[color:var(--muted)] cursor-pointer transition-colors"
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center space-x-3">
-                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{lead.name}</h3>
+                        <h3 className="text-lg font-semibold text-[color:var(--foreground)]">{lead.name}</h3>
                         <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(lead.status || 'new')}`}>
                           {lead.status || 'new'}
                         </span>
@@ -309,11 +309,11 @@ export default function LeadsManagement() {
 
       {/* Lead Detail Modal */}
       {isModalOpen && selectedLead && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-xl max-w-2xl w-full mx-4">
+        <div className="fixed inset-0 bg-black/40 overflow-y-auto h-full w-full flex items-center justify-center z-50">
+          <div className="bg-[color:var(--card)] border border-[color:var(--border)] p-8 rounded-lg shadow-xl max-w-2xl w-full mx-4">
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Lead Details</h2>
             
-            <div className="space-y-4 mb-6">
+            <div className="space-y-4 mb-6 text-[color:var(--foreground)]">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Name</label>
                 <p className="text-gray-900 dark:text-white">{selectedLead.name}</p>
@@ -418,26 +418,26 @@ export default function LeadsManagement() {
             </div>
 
             <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Admin Notes</label>
+              <label className="block text-sm font-medium text-[color:var(--muted-foreground)] mb-2">Admin Notes</label>
               <textarea
                 value={adminNotes}
                 onChange={(e) => setAdminNotes(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-[color:var(--border)] rounded-lg bg-[color:var(--popover)] text-[color:var(--foreground)] focus:ring-2 focus:ring-[color:var(--ring)] focus:border-transparent"
                 rows={3}
                 placeholder="Add notes about this lead..."
               />
             </div>
 
             {/* Quick Contact Section */}
-            <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Quick Contact</h3>
+            <div className="mb-6 p-4 bg-[color:var(--muted)] rounded-lg">
+              <h3 className="text-lg font-semibold text-[color:var(--foreground)] mb-3">Quick Contact</h3>
               <div className="space-y-3">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Quick Message</label>
+                  <label className="block text-sm font-medium text-[color:var(--muted-foreground)] mb-1">Quick Message</label>
                   <textarea
                     value={quickMessage}
                     onChange={(e) => setQuickMessage(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-[color:var(--border)] rounded-lg bg-[color:var(--popover)] text-[color:var(--foreground)] focus:ring-2 focus:ring-[color:var(--ring)] focus:border-transparent"
                     rows={2}
                     placeholder="Type a quick message to send to the client..."
                   />
@@ -446,7 +446,7 @@ export default function LeadsManagement() {
                   <button 
                     onClick={handleSendEmail}
                     disabled={!quickMessage.trim()}
-                    className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm"
+                    className="flex-1 bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm"
                   >
                     Send Email
                   </button>
@@ -454,7 +454,7 @@ export default function LeadsManagement() {
                     <button 
                       onClick={handleSendSMS}
                       disabled={!quickMessage.trim()}
-                      className="flex-1 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm"
+                      className="flex-1 bg-[color:oklch(0.646_0.222_41.116)] text-white px-4 py-2 rounded-lg hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm"
                     >
                       Send SMS
                     </button>

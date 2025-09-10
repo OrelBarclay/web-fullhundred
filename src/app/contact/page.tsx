@@ -60,15 +60,15 @@ export default function ContactPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-[color:var(--background)] text-[color:var(--foreground)]">
       {/* Hero Section */}
-      <div className="bg-gradient-to-r from-blue-900 to-blue-700 text-white">
+      <div className="bg-primary text-primary-foreground">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
           <div className="text-center">
             <h1 className="text-4xl md:text-6xl font-bold mb-6">
               Get In Touch
             </h1>
-            <p className="text-xl md:text-2xl text-blue-100 max-w-3xl mx-auto">
+            <p className="text-xl md:text-2xl text-[color:var(--primary-foreground)]/80 max-w-3xl mx-auto">
               Ready to transform your space? Let&apos;s discuss your project and bring your vision to life.
             </p>
           </div>
@@ -78,8 +78,8 @@ export default function ContactPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="grid lg:grid-cols-2 gap-16">
           {/* Contact Form */}
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8">
-            <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-8">Send us a message</h2>
+          <div className="bg-[color:var(--card)] border border-[color:var(--border)] rounded-2xl shadow-xl p-8">
+            <h2 className="text-3xl font-bold text-[color:var(--foreground)] mb-8">Send us a message</h2>
             
             {submitStatus === "success" && (
               <div className="mb-6 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
@@ -118,7 +118,7 @@ export default function ContactPage() {
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="grid md:grid-cols-2 gap-6">
                 <div>
-                  <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label htmlFor="name" className="block text-sm font-medium text-[color:var(--muted-foreground)] mb-2">
                     Full Name *
                   </label>
                   <input
@@ -128,13 +128,13 @@ export default function ContactPage() {
                     required
                     value={formData.name}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                    className="w-full px-4 py-3 border border-[color:var(--border)] rounded-lg bg-[color:var(--popover)] text-[color:var(--foreground)] placeholder-[color:var(--muted-foreground)]/70 focus:ring-2 focus:ring-[color:var(--ring)] focus:border-transparent transition-colors"
                     placeholder="John Doe"
                   />
                 </div>
                 
                 <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label htmlFor="email" className="block text-sm font-medium text-[color:var(--muted-foreground)] mb-2">
                     Email Address *
                   </label>
                   <input
@@ -144,7 +144,7 @@ export default function ContactPage() {
                     required
                     value={formData.email}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                    className="w-full px-4 py-3 border border-[color:var(--border)] rounded-lg bg-[color:var(--popover)] text-[color:var(--foreground)] placeholder-[color:var(--muted-foreground)]/70 focus:ring-2 focus:ring-[color:var(--ring)] focus:border-transparent transition-colors"
                     placeholder="john@example.com"
                   />
                 </div>
@@ -152,7 +152,7 @@ export default function ContactPage() {
 
               <div className="grid md:grid-cols-2 gap-6">
                 <div>
-                  <label htmlFor="phone" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label htmlFor="phone" className="block text-sm font-medium text-[color:var(--muted-foreground)] mb-2">
                     Phone Number
                   </label>
                   <input
@@ -161,13 +161,13 @@ export default function ContactPage() {
                     name="phone"
                     value={formData.phone}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                    className="w-full px-4 py-3 border border-[color:var(--border)] rounded-lg bg-[color:var(--popover)] text-[color:var(--foreground)] placeholder-[color:var(--muted-foreground)]/70 focus:ring-2 focus:ring-[color:var(--ring)] focus:border-transparent transition-colors"
                     placeholder="(555) 123-4567"
                   />
                 </div>
                 
                 <div>
-                  <label htmlFor="service" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label htmlFor="service" className="block text-sm font-medium text-[color:var(--muted-foreground)] mb-2">
                     Service Interest
                   </label>
                   <select
@@ -175,7 +175,7 @@ export default function ContactPage() {
                     name="service"
                     value={formData.service}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                    className="w-full px-4 py-3 border border-[color:var(--border)] rounded-lg bg-[color:var(--popover)] text-[color:var(--foreground)] focus:ring-2 focus:ring-[color:var(--ring)] focus:border-transparent transition-colors"
                   >
                     <option value="">Select a service</option>
                     <option value="kitchen-remodeling">Kitchen Remodeling</option>
@@ -189,7 +189,7 @@ export default function ContactPage() {
               </div>
 
               <div>
-                <label htmlFor="message" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label htmlFor="message" className="block text-sm font-medium text-[color:var(--muted-foreground)] mb-2">
                   Project Details *
                 </label>
                 <textarea
@@ -199,7 +199,7 @@ export default function ContactPage() {
                   rows={6}
                   value={formData.message}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors resize-none"
+                  className="w-full px-4 py-3 border border-[color:var(--border)] rounded-lg bg-[color:var(--popover)] text-[color:var(--foreground)] placeholder-[color:var(--muted-foreground)]/70 focus:ring-2 focus:ring-[color:var(--ring)] focus:border-transparent transition-colors resize-none"
                   placeholder="Tell us about your project, timeline, budget, and any specific requirements..."
                 />
               </div>
@@ -207,7 +207,7 @@ export default function ContactPage() {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full bg-blue-600 text-white py-4 px-6 rounded-lg font-semibold text-lg hover:bg-blue-700 focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-500 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full bg-primary text-primary-foreground py-4 px-6 rounded-lg font-semibold text-lg hover:opacity-90 focus:ring-4 focus:ring-[color:var(--ring)] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isSubmitting ? "Sending Message..." : "Send Message"}
               </button>
@@ -217,8 +217,8 @@ export default function ContactPage() {
           {/* Contact Information */}
           <div className="space-y-8">
             {/* Company Info */}
-            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8">
-              <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">Contact Information</h2>
+            <div className="bg-[color:var(--card)] border border-[color:var(--border)] rounded-2xl shadow-xl p-8">
+              <h2 className="text-3xl font-bold text-[color:var(--foreground)] mb-6">Contact Information</h2>
               
               <div className="space-y-6">
                 <div className="flex items-start space-x-4">
@@ -231,8 +231,8 @@ export default function ContactPage() {
                     </div>
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Address</h3>
-                    <p className="text-gray-600 dark:text-gray-300 mt-1">
+                    <h3 className="text-lg font-semibold text-[color:var(--foreground)]">Address</h3>
+                    <p className="text-[color:var(--muted-foreground)] mt-1">
                       123 Construction Way<br />
                       Building District<br />
                       City, State 12345
@@ -249,9 +249,9 @@ export default function ContactPage() {
                     </div>
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Phone</h3>
-                    <p className="text-gray-600 dark:text-gray-300 mt-1">
-                      <a href="tel:+15551234567" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                    <h3 className="text-lg font-semibold text-[color:var(--foreground)]">Phone</h3>
+                    <p className="text-[color:var(--muted-foreground)] mt-1">
+                      <a href="tel:+15551234567" className="hover:text-primary transition-colors">
                         (555) 123-4567
                       </a>
                     </p>
@@ -267,9 +267,9 @@ export default function ContactPage() {
                     </div>
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Email</h3>
-                    <p className="text-gray-600 dark:text-gray-300 mt-1">
-                      <a href="mailto:info@fullhundred.com" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                    <h3 className="text-lg font-semibold text-[color:var(--foreground)]">Email</h3>
+                    <p className="text-[color:var(--muted-foreground)] mt-1">
+                      <a href="mailto:info@fullhundred.com" className="hover:text-primary transition-colors">
                         info@fullhundred.com
                       </a>
                     </p>
@@ -279,34 +279,34 @@ export default function ContactPage() {
             </div>
 
             {/* Business Hours */}
-            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8">
-              <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">Business Hours</h2>
+            <div className="bg-[color:var(--card)] border border-[color:var(--border)] rounded-2xl shadow-xl p-8">
+              <h2 className="text-3xl font-bold text-[color:var(--foreground)] mb-6">Business Hours</h2>
               
               <div className="space-y-3">
-                <div className="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-700">
-                  <span className="text-gray-600 dark:text-gray-300">Monday - Friday</span>
-                  <span className="font-semibold text-gray-900 dark:text-white">8:00 AM - 6:00 PM</span>
+                <div className="flex justify-between items-center py-2 border-b border-[color:var(--border)]/60">
+                  <span className="text-[color:var(--muted-foreground)]">Monday - Friday</span>
+                  <span className="font-semibold text-[color:var(--foreground)]">8:00 AM - 6:00 PM</span>
                 </div>
-                <div className="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-700">
-                  <span className="text-gray-600 dark:text-gray-300">Saturday</span>
-                  <span className="font-semibold text-gray-900 dark:text-white">9:00 AM - 4:00 PM</span>
+                <div className="flex justify-between items-center py-2 border-b border-[color:var(--border)]/60">
+                  <span className="text-[color:var(--muted-foreground)]">Saturday</span>
+                  <span className="font-semibold text-[color:var(--foreground)]">9:00 AM - 4:00 PM</span>
                 </div>
                 <div className="flex justify-between items-center py-2">
-                  <span className="text-gray-600 dark:text-gray-300">Sunday</span>
-                  <span className="font-semibold text-gray-900 dark:text-white">Closed</span>
+                  <span className="text-[color:var(--muted-foreground)]">Sunday</span>
+                  <span className="font-semibold text-[color:var(--foreground)]">Closed</span>
                 </div>
               </div>
               
-              <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                <p className="text-sm text-blue-800 dark:text-blue-200">
+              <div className="mt-6 p-4 bg-[color:var(--muted)] rounded-lg">
+                <p className="text-sm text-[color:var(--muted-foreground)]">
                   <strong>Emergency Service:</strong> Available 24/7 for urgent repairs and emergencies.
                 </p>
               </div>
             </div>
 
             {/* Why Choose Us */}
-            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8">
-              <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">Why Choose Full Hundred?</h2>
+            <div className="bg-[color:var(--card)] border border-[color:var(--border)] rounded-2xl shadow-xl p-8">
+              <h2 className="text-3xl font-bold text-[color:var(--foreground)] mb-6">Why Choose Full Hundred?</h2>
               
               <div className="space-y-4">
                 <div className="flex items-start space-x-3">
@@ -315,7 +315,7 @@ export default function ContactPage() {
                       <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                     </svg>
                   </div>
-                  <span className="text-gray-700 dark:text-gray-300">Licensed and insured professionals</span>
+                  <span className="text-[color:var(--muted-foreground)]">Licensed and insured professionals</span>
                 </div>
                 
                 <div className="flex items-start space-x-3">
@@ -324,7 +324,7 @@ export default function ContactPage() {
                       <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                     </svg>
                   </div>
-                  <span className="text-gray-700 dark:text-gray-300">20+ years of experience</span>
+                  <span className="text-[color:var(--muted-foreground)]">20+ years of experience</span>
                 </div>
                 
                 <div className="flex items-start space-x-3">
@@ -333,7 +333,7 @@ export default function ContactPage() {
                       <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                     </svg>
                   </div>
-                  <span className="text-gray-700 dark:text-gray-300">Free consultations and estimates</span>
+                  <span className="text-[color:var(--muted-foreground)]">Free consultations and estimates</span>
                 </div>
                 
                 <div className="flex items-start space-x-3">
@@ -342,7 +342,7 @@ export default function ContactPage() {
                       <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                     </svg>
                   </div>
-                  <span className="text-gray-700 dark:text-gray-300">Warranty on all work</span>
+                  <span className="text-[color:var(--muted-foreground)]">Warranty on all work</span>
                 </div>
               </div>
             </div>
