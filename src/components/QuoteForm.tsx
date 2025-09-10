@@ -74,6 +74,16 @@ export default function QuoteForm() {
   const [submitStatus, setSubmitStatus] = useState<"idle" | "success" | "error">("idle");
   const [showEstimate, setShowEstimate] = useState(false);
   const [estimate, setEstimate] = useState<QuoteEstimate | null>(null);
+  const [aiPackages, setAiPackages] = useState<Array<{
+    name: string;
+    rationale: string;
+    estimatedPriceMin?: number;
+    estimatedPriceMax?: number;
+    timeline: string;
+    includedServices?: Array<{ title: string; estimatedPrice?: number }>;
+    upsellOptions?: string[];
+  }>>([]);
+  const [isLoadingAi, setIsLoadingAi] = useState(false);
 
   // Load user data and autofill form
   useEffect(() => {
@@ -178,6 +188,40 @@ export default function QuoteForm() {
     }
   };
 
+  const handleAiSuggest = async () => {
+    if (!formData.projectDetails.trim()) {
+      alert("Please describe your project first");
+      return;
+    }
+
+    setIsLoadingAi(true);
+    try {
+      const response = await fetch("/api/packages/suggest", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          query: formData.projectDetails,
+          budget: formData.budget ? parseInt(formData.budget) : undefined,
+          timeline: formData.timeline,
+          preferences: [formData.projectType].filter(Boolean),
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setAiPackages(data.packages || []);
+      } else {
+        console.error("AI suggest failed");
+      }
+    } catch (error) {
+      console.error("AI suggest error:", error);
+    } finally {
+      setIsLoadingAi(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -197,7 +241,7 @@ export default function QuoteForm() {
       });
 
       if (response.ok) {
-        const result = await response.json();
+        await response.json();
         setSubmitStatus("success");
         setFormData({
           name: "",
@@ -212,6 +256,7 @@ export default function QuoteForm() {
         });
         setEstimate(null);
         setShowEstimate(false);
+        setAiPackages([]);
       } else {
         const errorData = await response.json();
         console.error("Error response:", errorData);
@@ -439,6 +484,69 @@ export default function QuoteForm() {
             <p className="text-xs text-[color:var(--muted-foreground)] mt-2">
               * This is a preliminary estimate. Final pricing will be provided after consultation.
             </p>
+          </div>
+        )}
+
+        {/* AI Suggest Package Button */}
+        {formData.projectDetails.trim() && (
+          <div className="flex justify-center mb-4">
+            <button
+              type="button"
+              onClick={handleAiSuggest}
+              disabled={isLoadingAi}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 transition-colors"
+            >
+              {isLoadingAi ? "AI Thinking..." : "🤖 AI Suggest Package"}
+            </button>
+          </div>
+        )}
+
+        {/* AI Suggested Packages */}
+        {aiPackages.length > 0 && (
+          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-4">
+            <h3 className="text-lg font-semibold text-blue-800 dark:text-blue-200 mb-3">🤖 AI Suggested Package</h3>
+            {aiPackages.map((pkg, index) => (
+              <div key={index} className="bg-white dark:bg-gray-800 rounded-lg p-4 mb-3">
+                <h4 className="font-semibold text-gray-900 dark:text-white mb-2">{pkg.name}</h4>
+                <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">{pkg.rationale}</p>
+                
+                <div className="grid md:grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className="font-medium text-gray-700 dark:text-gray-300">Price Range:</span>
+                    <p className="text-gray-600 dark:text-gray-400">${pkg.estimatedPriceMin?.toLocaleString()} - ${pkg.estimatedPriceMax?.toLocaleString()}</p>
+                  </div>
+                  <div>
+                    <span className="font-medium text-gray-700 dark:text-gray-300">Timeline:</span>
+                    <p className="text-gray-600 dark:text-gray-400">{pkg.timeline}</p>
+                  </div>
+                </div>
+
+                {pkg.includedServices && pkg.includedServices.length > 0 && (
+                  <div className="mt-3">
+                    <span className="font-medium text-gray-700 dark:text-gray-300 text-sm">Included Services:</span>
+                    <ul className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                      {pkg.includedServices.map((service: { title: string; estimatedPrice?: number }, i: number) => (
+                        <li key={i} className="flex justify-between">
+                          <span>{service.title}</span>
+                          <span>${service.estimatedPrice?.toLocaleString()}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {pkg.upsellOptions && pkg.upsellOptions.length > 0 && (
+                  <div className="mt-3">
+                    <span className="font-medium text-gray-700 dark:text-gray-300 text-sm">Upsell Options:</span>
+                    <ul className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                      {pkg.upsellOptions.map((option: string, i: number) => (
+                        <li key={i}>• {option}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
         )}
 

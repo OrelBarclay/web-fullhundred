@@ -6,6 +6,7 @@ import AuthProvider from "@/components/AuthProvider";
 import Logo from "@/components/Logo";
 import ThemeProvider from "@/components/ThemeProvider";
 import ThemeToggle from "@/components/ThemeToggle";
+import CartProvider from "@/components/CartProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -31,6 +32,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <ThemeProvider>
+        <CartProvider>
         <header className="w-full sticky top-0 z-40 border-b border-[color:var(--border)] bg-[color:var(--card)]/70 backdrop-blur">
           <div className="mx-auto max-w-6xl px-4 sm:px-6 py-4">
             <div className="flex items-center justify-between">
@@ -42,6 +44,8 @@ export default function RootLayout({
                 <Link href="/portfolio" className="hidden sm:inline px-3 py-2 rounded-md text-[color:var(--muted-foreground)] hover:text-[color:var(--foreground)] hover:bg-[color:var(--muted)] transition-colors">Our Work</Link>
                 <Link href="/contact" className="hidden sm:inline px-3 py-2 rounded-md text-[color:var(--muted-foreground)] hover:text-[color:var(--foreground)] hover:bg-[color:var(--muted)] transition-colors">Contact</Link>
                 <Link href="/#quote" className="hidden sm:inline px-3 py-2 rounded-md bg-primary text-primary-foreground hover:opacity-90 transition">Get a Quote</Link>
+                <Link href="/shop" className="hidden sm:inline px-3 py-2 rounded-md text-[color:var(--muted-foreground)] hover:text-[color:var(--foreground)] hover:bg-[color:var(--muted)] transition-colors">Shop</Link>
+                <Link href="/cart" className="px-3 py-2 rounded-md border border-[color:var(--border)] hover:bg-[color:var(--muted)] transition-colors">Cart</Link>
                 <ThemeToggle />
                 <AuthProvider />
               </nav>
@@ -162,6 +166,7 @@ export default function RootLayout({
             </div>
           </div>
         </footer>
+        </CartProvider>
         </ThemeProvider>
       </body>
     </html>
