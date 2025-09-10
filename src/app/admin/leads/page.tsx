@@ -73,9 +73,13 @@ export default function LeadsManagement() {
 
   const loadLeads = async () => {
     try {
+      console.log("Loading leads from /api/leads...");
       const response = await fetch("/api/leads");
+      console.log("Response status:", response.status);
+      
       if (response.ok) {
         const data = await response.json();
+        console.log("Leads data received:", data);
         // Convert date strings back to Date objects
         const leadsWithDates = data.map((lead: Lead) => ({
           ...lead,
@@ -83,8 +87,11 @@ export default function LeadsManagement() {
           lastContacted: lead.lastContacted ? new Date(lead.lastContacted) : undefined
         }));
         setLeads(leadsWithDates);
+        console.log("Leads set in state:", leadsWithDates.length, "leads");
       } else {
-        console.error("Failed to load leads");
+        console.error("Failed to load leads, status:", response.status);
+        const errorText = await response.text();
+        console.error("Error response:", errorText);
       }
     } catch (error) {
       console.error("Error loading leads:", error);
