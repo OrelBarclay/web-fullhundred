@@ -4,22 +4,30 @@ import { collection, addDoc } from "firebase/firestore";
 
 export async function POST(request: Request) {
   try {
+    console.log("Leads fallback API called");
     const body = await request.json();
+    console.log("Request body:", body);
     
     // Basic validation
     if (!body.name || body.name.trim().length === 0) {
+      console.log("Validation failed: Name is required");
       return NextResponse.json({ error: "Name is required" }, { status: 400 });
     }
     if (!body.email || body.email.trim().length === 0) {
+      console.log("Validation failed: Email is required");
       return NextResponse.json({ error: "Email is required" }, { status: 400 });
     }
     if (!body.projectType || body.projectType.trim().length === 0) {
+      console.log("Validation failed: Project type is required");
       return NextResponse.json({ error: "Project type is required" }, { status: 400 });
     }
     if (!body.projectDetails || body.projectDetails.trim().length === 0) {
+      console.log("Validation failed: Project details are required");
       return NextResponse.json({ error: "Project details are required" }, { status: 400 });
     }
 
+    console.log("Validation passed, proceeding with database operation");
+    
     const db = getDb();
     const now = new Date();
     
@@ -39,7 +47,10 @@ export async function POST(request: Request) {
       createdAt: now
     };
 
+    console.log("Lead data to be saved:", leadData);
+
     const docRef = await addDoc(collection(db, 'leads'), leadData);
+    console.log("Lead saved successfully with ID:", docRef.id);
 
     return NextResponse.json({ 
       id: docRef.id, 

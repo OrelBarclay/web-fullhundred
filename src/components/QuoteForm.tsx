@@ -184,17 +184,26 @@ export default function QuoteForm() {
     setSubmitStatus("idle");
 
     try {
+      const requestData = {
+        ...formData,
+        estimate: estimate,
+        timestamp: new Date().toISOString()
+      };
+
+      console.log("Submitting quote form with data:", requestData);
+
       const response = await fetch("/api/leads-fallback", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...formData,
-          estimate: estimate,
-          timestamp: new Date().toISOString()
-        })
+        body: JSON.stringify(requestData)
       });
 
+      console.log("Response status:", response.status);
+      console.log("Response ok:", response.ok);
+
       if (response.ok) {
+        const result = await response.json();
+        console.log("Success response:", result);
         setSubmitStatus("success");
         setFormData({
           name: "",
@@ -210,9 +219,12 @@ export default function QuoteForm() {
         setEstimate(null);
         setShowEstimate(false);
       } else {
+        const errorData = await response.json();
+        console.error("Error response:", errorData);
         setSubmitStatus("error");
       }
-    } catch {
+    } catch (error) {
+      console.error("Submit error:", error);
       setSubmitStatus("error");
     } finally {
       setIsSubmitting(false);
