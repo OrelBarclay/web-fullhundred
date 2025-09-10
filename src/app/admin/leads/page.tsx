@@ -34,6 +34,8 @@ export default function LeadsManagement() {
   const [searchTerm, setSearchTerm] = useState('');
   const [adminNotes, setAdminNotes] = useState('');
   const [isUpdating, setIsUpdating] = useState(false);
+  const [quickMessage, setQuickMessage] = useState('');
+  const [copiedField, setCopiedField] = useState<string | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -74,7 +76,39 @@ export default function LeadsManagement() {
   const handleLeadClick = (lead: Lead) => {
     setSelectedLead(lead);
     setAdminNotes(lead.adminNotes || '');
+    setQuickMessage('');
     setIsModalOpen(true);
+  };
+
+  const handleSendEmail = () => {
+    if (!selectedLead || !quickMessage.trim()) return;
+    
+    const subject = `Re: Your Project Inquiry - ${selectedLead.projectType}`;
+    const body = `Hi ${selectedLead.name},\n\n${quickMessage}\n\nBest regards`;
+    const mailtoLink = `mailto:${selectedLead.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    
+    window.open(mailtoLink, '_blank');
+    setQuickMessage('');
+  };
+
+  const handleSendSMS = () => {
+    if (!selectedLead || !selectedLead.phone || !quickMessage.trim()) return;
+    
+    const smsBody = `Hi ${selectedLead.name}, ${quickMessage}`;
+    const smsLink = `sms:${selectedLead.phone}?body=${encodeURIComponent(smsBody)}`;
+    
+    window.open(smsLink, '_blank');
+    setQuickMessage('');
+  };
+
+  const handleCopyToClipboard = async (text: string, field: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedField(field);
+      setTimeout(() => setCopiedField(null), 2000);
+    } catch (error) {
+      console.error('Failed to copy to clipboard:', error);
+    }
   };
 
   const handleStatusUpdate = async (leadId: string, newStatus: string) => {
@@ -286,12 +320,83 @@ export default function LeadsManagement() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Email</label>
-                <p className="text-gray-900 dark:text-white">{selectedLead.email}</p>
+                <div className="flex items-center space-x-2">
+                  <p className="text-gray-900 dark:text-white flex-1">{selectedLead.email}</p>
+                  <button
+                    onClick={() => handleCopyToClipboard(selectedLead.email, 'email')}
+                    className="inline-flex items-center px-2 py-1 text-xs font-medium text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 bg-gray-50 dark:bg-gray-600 rounded-md hover:bg-gray-100 dark:hover:bg-gray-500 transition-colors"
+                  >
+                    {copiedField === 'email' ? (
+                      <>
+                        <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        Copied
+                      </>
+                    ) : (
+                      <>
+                        <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                        </svg>
+                        Copy
+                      </>
+                    )}
+                  </button>
+                  <a
+                    href={`mailto:${selectedLead.email}?subject=Re: Your Project Inquiry&body=Hi ${selectedLead.name},%0D%0A%0D%0AThank you for your interest in our services. I'd like to discuss your project in more detail.%0D%0A%0D%0ABest regards`}
+                    className="inline-flex items-center px-2 py-1 text-xs font-medium text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 bg-blue-50 dark:bg-blue-900/20 rounded-md hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors"
+                  >
+                    <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                    Email
+                  </a>
+                </div>
               </div>
               {selectedLead.phone && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Phone</label>
-                  <p className="text-gray-900 dark:text-white">{selectedLead.phone}</p>
+                  <div className="flex items-center space-x-2">
+                    <p className="text-gray-900 dark:text-white flex-1">{selectedLead.phone}</p>
+                    <button
+                      onClick={() => selectedLead.phone && handleCopyToClipboard(selectedLead.phone, 'phone')}
+                      className="inline-flex items-center px-2 py-1 text-xs font-medium text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 bg-gray-50 dark:bg-gray-600 rounded-md hover:bg-gray-100 dark:hover:bg-gray-500 transition-colors"
+                    >
+                      {copiedField === 'phone' ? (
+                        <>
+                          <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                          Copied
+                        </>
+                      ) : (
+                        <>
+                          <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                          </svg>
+                          Copy
+                        </>
+                      )}
+                    </button>
+                    <a
+                      href={`tel:${selectedLead.phone}`}
+                      className="inline-flex items-center px-2 py-1 text-xs font-medium text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-300 bg-green-50 dark:bg-green-900/20 rounded-md hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors"
+                    >
+                      <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                      </svg>
+                      Call
+                    </a>
+                    <a
+                      href={`sms:${selectedLead.phone}`}
+                      className="inline-flex items-center px-2 py-1 text-xs font-medium text-purple-600 dark:text-purple-400 hover:text-purple-800 dark:hover:text-purple-300 bg-purple-50 dark:bg-purple-900/20 rounded-md hover:bg-purple-100 dark:hover:bg-purple-900/30 transition-colors"
+                    >
+                      <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                      </svg>
+                      SMS
+                    </a>
+                  </div>
                 </div>
               )}
               <div>
@@ -321,6 +426,41 @@ export default function LeadsManagement() {
                 rows={3}
                 placeholder="Add notes about this lead..."
               />
+            </div>
+
+            {/* Quick Contact Section */}
+            <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Quick Contact</h3>
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Quick Message</label>
+                  <textarea
+                    value={quickMessage}
+                    onChange={(e) => setQuickMessage(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    rows={2}
+                    placeholder="Type a quick message to send to the client..."
+                  />
+                </div>
+                <div className="flex space-x-2">
+                  <button 
+                    onClick={handleSendEmail}
+                    disabled={!quickMessage.trim()}
+                    className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm"
+                  >
+                    Send Email
+                  </button>
+                  {selectedLead.phone && (
+                    <button 
+                      onClick={handleSendSMS}
+                      disabled={!quickMessage.trim()}
+                      className="flex-1 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm"
+                    >
+                      Send SMS
+                    </button>
+                  )}
+                </div>
+              </div>
             </div>
 
             <div className="flex justify-between items-center">
