@@ -192,7 +192,7 @@ export default function QuoteForm() {
 
       console.log("Submitting quote form with data:", requestData);
 
-      const response = await fetch("/api/leads-db", {
+      const response = await fetch("/api/leads", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(requestData)

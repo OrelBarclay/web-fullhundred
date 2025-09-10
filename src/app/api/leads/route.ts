@@ -76,6 +76,75 @@ export async function GET() {
   }
 }
 
+export async function POST(request: Request) {
+  try {
+    console.log("Leads API called");
+    const body = await request.json();
+    console.log("Request body:", body);
+    
+    // Basic validation
+    if (!body.name || body.name.trim().length === 0) {
+      console.log("Validation failed: Name is required");
+      return NextResponse.json({ error: "Name is required" }, { status: 400 });
+    }
+    if (!body.email || body.email.trim().length === 0) {
+      console.log("Validation failed: Email is required");
+      return NextResponse.json({ error: "Email is required" }, { status: 400 });
+    }
+    if (!body.projectType || body.projectType.trim().length === 0) {
+      console.log("Validation failed: Project type is required");
+      return NextResponse.json({ error: "Project type is required" }, { status: 400 });
+    }
+    if (!body.projectDetails || body.projectDetails.trim().length === 0) {
+      console.log("Validation failed: Project details are required");
+      return NextResponse.json({ error: "Project details are required" }, { status: 400 });
+    }
+
+    console.log("Validation passed, proceeding with database operation");
+    
+    const now = new Date();
+    
+    const leadData: Lead = {
+      id: `lead_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      name: body.name.trim(),
+      email: body.email.trim(),
+      phone: body.phone?.trim() || undefined,
+      projectType: body.projectType.trim(),
+      description: body.projectDetails.trim(),
+      budget: body.budget,
+      timeline: body.timeline,
+      projectSize: body.projectSize,
+      customQuote: body.customQuote || false,
+      estimate: body.estimate,
+      timestamp: body.timestamp,
+      createdAt: now,
+      status: 'new'
+    };
+
+    console.log("Lead data to be saved:", leadData);
+
+    // Read existing leads
+    const existingLeads = await readLeads();
+    
+    // Add new lead
+    existingLeads.push(leadData);
+    
+    // Write back to file
+    await writeLeads(existingLeads);
+    
+    console.log("Lead saved successfully with ID:", leadData.id);
+    console.log("Total leads stored:", existingLeads.length);
+
+    return NextResponse.json(leadData, { status: 201 });
+  } catch (error) {
+    console.error("Error creating lead:", error);
+    return NextResponse.json({ 
+      error: "Failed to create lead",
+      details: error instanceof Error ? error.message : "Unknown error"
+    }, { status: 500 });
+  }
+}
+
 export async function PUT(request: Request) {
   try {
     const { id, status, adminNotes } = await request.json();
