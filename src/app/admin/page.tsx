@@ -382,6 +382,12 @@ export default function AdminDashboard() {
                 Manage Content
               </button>
               <button
+                onClick={() => router.push("/admin/leads")}
+                className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors"
+              >
+                Manage Leads
+              </button>
+              <button
                 onClick={() => router.push("/admin/services")}
                 className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors"
               >
