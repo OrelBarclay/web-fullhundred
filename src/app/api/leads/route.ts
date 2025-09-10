@@ -77,9 +77,7 @@ async function updateLead(leadId: string, updates: Partial<Lead>): Promise<void>
 
 export async function GET() {
   try {
-    console.log("Fetching leads from Firestore...");
     const leads = await readLeads();
-    console.log(`Found ${leads.length} leads in database`);
     return NextResponse.json(leads);
   } catch (error) {
     console.error("Error reading leads:", error);
@@ -89,29 +87,21 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    console.log("Leads API called");
     const body = await request.json();
-    console.log("Request body:", body);
     
     // Basic validation
     if (!body.name || body.name.trim().length === 0) {
-      console.log("Validation failed: Name is required");
       return NextResponse.json({ error: "Name is required" }, { status: 400 });
     }
     if (!body.email || body.email.trim().length === 0) {
-      console.log("Validation failed: Email is required");
       return NextResponse.json({ error: "Email is required" }, { status: 400 });
     }
     if (!body.projectType || body.projectType.trim().length === 0) {
-      console.log("Validation failed: Project type is required");
       return NextResponse.json({ error: "Project type is required" }, { status: 400 });
     }
     if (!body.projectDetails || body.projectDetails.trim().length === 0) {
-      console.log("Validation failed: Project details are required");
       return NextResponse.json({ error: "Project details are required" }, { status: 400 });
     }
-
-    console.log("Validation passed, proceeding with Firestore operation");
     
     const now = new Date();
     
@@ -131,12 +121,8 @@ export async function POST(request: Request) {
       status: 'new'
     };
 
-    console.log("Lead data to be saved:", leadData);
-
     // Add lead to Firestore
     const leadId = await addLead(leadData);
-    
-    console.log("Lead saved successfully to Firestore with ID:", leadId);
 
     return NextResponse.json({ id: leadId, ...leadData }, { status: 201 });
   } catch (error) {
@@ -156,8 +142,6 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: "Lead ID is required" }, { status: 400 });
     }
 
-    console.log(`Updating lead ${id} with status: ${status}, notes: ${adminNotes}`);
-
     // Prepare update data
     const updateData: Partial<Lead> = {};
     if (status !== undefined) {
@@ -172,8 +156,6 @@ export async function PUT(request: Request) {
 
     // Update lead in Firestore
     await updateLead(id, updateData);
-    
-    console.log(`Lead ${id} updated successfully`);
     
     return NextResponse.json({ id, ...updateData });
   } catch (error) {

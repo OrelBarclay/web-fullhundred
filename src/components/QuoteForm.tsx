@@ -190,20 +190,14 @@ export default function QuoteForm() {
         timestamp: new Date().toISOString()
       };
 
-      console.log("Submitting quote form with data:", requestData);
-
       const response = await fetch("/api/leads", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(requestData)
       });
 
-      console.log("Response status:", response.status);
-      console.log("Response ok:", response.ok);
-
       if (response.ok) {
         const result = await response.json();
-        console.log("Success response:", result);
         setSubmitStatus("success");
         setFormData({
           name: "",
