@@ -162,29 +162,29 @@ export default function DashboardPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
         <div className="text-center">
           <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading dashboard...</p>
+          <p className="mt-4 text-gray-600 dark:text-gray-300">Loading dashboard...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b border-gray-200">
+      <header className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-6">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-              <p className="text-sm text-gray-600">Welcome back, {user?.displayName || user?.email}</p>
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
+              <p className="text-sm text-gray-600 dark:text-gray-300">Welcome back, {user?.displayName || user?.email}</p>
             </div>
             <div className="flex items-center space-x-4">
               <Link
                 href="/profile"
-                className="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors"
+                className="bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-4 py-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
               >
                 Profile
               </Link>
@@ -202,7 +202,7 @@ export default function DashboardPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
             <div className="flex items-center">
               <div className="flex-shrink-0">
                 <div className="w-8 h-8 bg-blue-500 rounded-md flex items-center justify-center">
@@ -212,13 +212,13 @@ export default function DashboardPage() {
                 </div>
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-500">Total Projects</p>
-                <p className="text-2xl font-semibold text-gray-900">{stats.totalProjects}</p>
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Projects</p>
+                <p className="text-2xl font-semibold text-gray-900 dark:text-white">{stats.totalProjects}</p>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
             <div className="flex items-center">
               <div className="flex-shrink-0">
                 <div className="w-8 h-8 bg-green-500 rounded-md flex items-center justify-center">
@@ -228,13 +228,13 @@ export default function DashboardPage() {
                 </div>
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-500">Completed</p>
-                <p className="text-2xl font-semibold text-gray-900">{stats.completedProjects}</p>
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Completed</p>
+                <p className="text-2xl font-semibold text-gray-900 dark:text-white">{stats.completedProjects}</p>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
             <div className="flex items-center">
               <div className="flex-shrink-0">
                 <div className="w-8 h-8 bg-yellow-500 rounded-md flex items-center justify-center">
@@ -244,13 +244,13 @@ export default function DashboardPage() {
                 </div>
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-500">Active</p>
-                <p className="text-2xl font-semibold text-gray-900">{stats.activeProjects}</p>
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Active</p>
+                <p className="text-2xl font-semibold text-gray-900 dark:text-white">{stats.activeProjects}</p>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
             <div className="flex items-center">
               <div className="flex-shrink-0">
                 <div className="w-8 h-8 bg-purple-500 rounded-md flex items-center justify-center">
@@ -260,15 +260,15 @@ export default function DashboardPage() {
                 </div>
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-500">Total Clients</p>
-                <p className="text-2xl font-semibold text-gray-900">{stats.totalClients}</p>
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Clients</p>
+                <p className="text-2xl font-semibold text-gray-900 dark:text-white">{stats.totalClients}</p>
               </div>
             </div>
           </div>
         </div>
 
         {/* Search and Filter */}
-        <div className="bg-white rounded-lg shadow mb-8 p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow mb-8 p-6">
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="flex-1">
               <input
@@ -276,14 +276,14 @@ export default function DashboardPage() {
                 placeholder="Search projects..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
             <div className="sm:w-48">
               <select
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value="all">All Status</option>
                 <option value="planning">Planning</option>
@@ -299,11 +299,11 @@ export default function DashboardPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
           {filteredProjects.length === 0 ? (
             <div className="col-span-full text-center py-12">
-              <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
               </svg>
-              <h3 className="mt-2 text-sm font-medium text-gray-900">No projects found</h3>
-              <p className="mt-1 text-sm text-gray-500">
+              <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-white">No projects found</h3>
+              <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                 {searchTerm || filterStatus !== 'all' 
                   ? 'Try adjusting your search or filter criteria.' 
                   : 'Get started by creating your first project.'}
@@ -311,21 +311,21 @@ export default function DashboardPage() {
             </div>
           ) : (
             filteredProjects.map((project) => (
-              <div key={project.id} className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow">
+              <div key={project.id} className="bg-white dark:bg-gray-800 rounded-lg shadow hover:shadow-lg transition-shadow">
                 <div className="p-6">
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex-1">
-                      <h3 className="text-lg font-semibold text-gray-900 mb-1">{project.title}</h3>
-                      <p className="text-sm text-gray-600">{project.clientName}</p>
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">{project.title}</h3>
+                      <p className="text-sm text-gray-600 dark:text-gray-300">{project.clientName}</p>
                     </div>
                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(project.status)}`}>
                       {project.status.replace('-', ' ')}
                     </span>
                   </div>
                   
-                  <p className="text-sm text-gray-600 mb-4 line-clamp-2">{project.description}</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 line-clamp-2">{project.description}</p>
                   
-                  <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
+                  <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400 mb-4">
                     <span>Budget: ${project.budget?.toLocaleString() || '0'}</span>
                     <span>{project.startDate.toLocaleDateString()}</span>
                   </div>
@@ -333,12 +333,12 @@ export default function DashboardPage() {
                   <div className="flex items-center justify-between">
                     <Link
                       href={`/project/${project.id}`}
-                      className="text-blue-600 hover:text-blue-800 font-medium text-sm"
+                      className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium text-sm"
                     >
                       View Details →
                     </Link>
                     {project.beforeImages && project.beforeImages.length > 0 && (
-                      <div className="flex items-center text-xs text-gray-500">
+                        <div className="flex items-center text-xs text-gray-500 dark:text-gray-400">
                         <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                         </svg>

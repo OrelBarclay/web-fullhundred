@@ -224,17 +224,17 @@ export default function ProfilePage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div>Loading...</div>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+        <div className="text-gray-900 dark:text-white">Loading...</div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
         <div className="text-center">
-          <div className="text-red-600 text-xl mb-4">{error}</div>
+          <div className="text-red-600 dark:text-red-400 text-xl mb-4">{error}</div>
           <div className="space-x-4">
             <button
               onClick={() => window.location.reload()}
@@ -256,9 +256,9 @@ export default function ProfilePage() {
 
   if (!profile) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
         <div className="text-center">
-          <div className="text-gray-600 text-xl mb-4">Loading profile...</div>
+          <div className="text-gray-600 dark:text-gray-300 text-xl mb-4">Loading profile...</div>
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
         </div>
       </div>
@@ -266,11 +266,11 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <header className="bg-white dark:bg-gray-800 shadow">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-6">
-            <h1 className="text-3xl font-bold text-gray-900">Profile</h1>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Profile</h1>
             <div className="flex items-center space-x-4">
               <Link
                 href={profile.role === 'admin' ? '/admin' : '/dashboard'}
@@ -291,14 +291,14 @@ export default function ProfilePage() {
 
       <main className="max-w-3xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
-          <div className="bg-white shadow rounded-lg">
+          <div className="bg-white dark:bg-gray-800 shadow rounded-lg">
             {/* Profile Header */}
-            <div className="px-6 py-4 border-b border-gray-200">
+            <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
               <div className="flex items-center space-x-4">
                 <div className="flex-shrink-0">
                   {imagePreview || profile.photoURL ? (
                     <img
-                      className="h-20 w-20 rounded-full object-cover border-2 border-gray-200"
+                      className="h-20 w-20 rounded-full object-cover border-2 border-gray-200 dark:border-gray-600"
                       src={imagePreview || profile.photoURL}
                       alt={profile.displayName || profile.email}
                       onError={(e) => {
@@ -308,8 +308,8 @@ export default function ProfilePage() {
                         const parent = target.parentElement;
                         if (parent) {
                           parent.innerHTML = `
-                            <div class="h-20 w-20 rounded-full bg-gray-300 flex items-center justify-center border-2 border-gray-200">
-                              <span class="text-2xl font-medium text-gray-600">
+                            <div class="h-20 w-20 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center border-2 border-gray-200 dark:border-gray-600">
+                              <span class="text-2xl font-medium text-gray-600 dark:text-gray-300">
                                 ${profile.displayName?.[0]?.toUpperCase() || profile.email[0].toUpperCase()}
                               </span>
                             </div>
@@ -318,19 +318,19 @@ export default function ProfilePage() {
                       }}
                     />
                   ) : (
-                    <div className="h-20 w-20 rounded-full bg-gray-300 flex items-center justify-center border-2 border-gray-200">
-                      <span className="text-2xl font-medium text-gray-600">
+                    <div className="h-20 w-20 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center border-2 border-gray-200 dark:border-gray-600">
+                      <span className="text-2xl font-medium text-gray-600 dark:text-gray-300">
                         {profile.displayName?.[0]?.toUpperCase() || profile.email[0].toUpperCase()}
                       </span>
                     </div>
                   )}
                 </div>
                 <div>
-                  <h2 className="text-2xl font-bold text-gray-900">
+                  <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
                     {profile.displayName || 'User'}
                   </h2>
-                  <p className="text-gray-600">{profile.email}</p>
-                  <p className="text-sm text-gray-500 capitalize">
+                  <p className="text-gray-600 dark:text-gray-300">{profile.email}</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 capitalize">
                     {profile.role} • Member since {new Date(profile.createdAt).toLocaleDateString()}
                   </p>
                 </div>
@@ -340,7 +340,7 @@ export default function ProfilePage() {
 
             {/* Error Display */}
             {error && (
-              <div className="px-6 py-4 bg-red-50 border-l-4 border-red-400">
+              <div className="px-6 py-4 bg-red-50 dark:bg-red-900/20 border-l-4 border-red-400 dark:border-red-600">
                 <div className="flex">
                   <div className="flex-shrink-0">
                     <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
@@ -348,7 +348,7 @@ export default function ProfilePage() {
                     </svg>
                   </div>
                   <div className="ml-3">
-                    <p className="text-sm text-red-700">{error}</p>
+                    <p className="text-sm text-red-700 dark:text-red-200">{error}</p>
                   </div>
                 </div>
               </div>
@@ -360,22 +360,22 @@ export default function ProfilePage() {
                 <div className="space-y-4">
                   {/* Profile Image Upload */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Profile Picture
                     </label>
                     <div className="flex items-center space-x-4">
                       <div className="flex-shrink-0">
                         {imagePreview || profile.photoURL ? (
                           <Image
-                            className="h-16 w-16 rounded-full object-cover border-2 border-gray-200"
+                            className="h-16 w-16 rounded-full object-cover border-2 border-gray-200 dark:border-gray-600"
                             src={imagePreview || profile.photoURL || ''}
                             alt="Profile preview"
                             width={64}
                             height={64}
                           />
                         ) : (
-                          <div className="h-16 w-16 rounded-full bg-gray-300 flex items-center justify-center border-2 border-gray-200">
-                            <span className="text-lg font-medium text-gray-600">
+                          <div className="h-16 w-16 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center border-2 border-gray-200 dark:border-gray-600">
+                            <span className="text-lg font-medium text-gray-600 dark:text-gray-300">
                               {profile.displayName?.[0]?.toUpperCase() || profile.email[0].toUpperCase()}
                             </span>
                           </div>
@@ -386,9 +386,9 @@ export default function ProfilePage() {
                           type="file"
                           accept="image/*"
                           onChange={handleImageSelect}
-                          className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                          className="block w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                         />
-                        <p className="mt-1 text-xs text-gray-500">
+                        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                           PNG, JPG, GIF up to 5MB
                         </p>
                       </div>
@@ -396,38 +396,38 @@ export default function ProfilePage() {
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                       Display Name
                     </label>
                     <input
                       type="text"
                       value={editForm.displayName}
                       onChange={(e) => setEditForm({ ...editForm, displayName: e.target.value })}
-                      className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                      className="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                     />
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                       Phone
                     </label>
                     <input
                       type="tel"
                       value={editForm.phone}
                       onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
-                      className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                      className="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                     />
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                       Address
                     </label>
                     <textarea
                       value={editForm.address}
                       onChange={(e) => setEditForm({ ...editForm, address: e.target.value })}
                       rows={3}
-                      className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                      className="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                     />
                   </div>
                   
@@ -465,7 +465,7 @@ export default function ProfilePage() {
                         setError(null);
                       }}
                       disabled={isSaving || isUploadingImage}
-                      className="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400 disabled:opacity-50"
+                      className="bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-300 px-4 py-2 rounded hover:bg-gray-400 dark:hover:bg-gray-500 disabled:opacity-50"
                     >
                       Cancel
                     </button>
@@ -474,37 +474,37 @@ export default function ProfilePage() {
               ) : (
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                       Display Name
                     </label>
-                    <p className="mt-1 text-sm text-gray-900">
+                    <p className="mt-1 text-sm text-gray-900 dark:text-white">
                       {profile.displayName || 'Not set'}
                     </p>
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                       Phone
                     </label>
-                    <p className="mt-1 text-sm text-gray-900">
+                    <p className="mt-1 text-sm text-gray-900 dark:text-white">
                       {profile.phone || 'Not set'}
                     </p>
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                       Address
                     </label>
-                    <p className="mt-1 text-sm text-gray-900">
+                    <p className="mt-1 text-sm text-gray-900 dark:text-white">
                       {profile.address || 'Not set'}
                     </p>
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                       Last Login
                     </label>
-                    <p className="mt-1 text-sm text-gray-900">
+                    <p className="mt-1 text-sm text-gray-900 dark:text-white">
                       {new Date(profile.lastLoginAt).toLocaleString()}
                     </p>
                   </div>
