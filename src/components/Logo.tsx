@@ -77,7 +77,7 @@ export default function Logo() {
   // Don't render until mounted to avoid hydration mismatch
   if (!mounted) {
     return (
-      <div className="w-[100px] sm:w-[120px] h-[40px] sm:h-[48px] bg-gray-200 rounded animate-pulse" />
+      <div className="w-[100px] sm:w-[140px] lg:w-[160px] h-[40px] sm:h-[56px] lg:h-[64px] bg-gray-200 rounded animate-pulse" />
     );
   }
 
@@ -86,9 +86,9 @@ export default function Logo() {
       <Image
         src={isDark ? "/images/logo-dark.png" : "/images/logo-light.png"}
         alt="Full Hundred Logo"
-        width={120}
-        height={48}
-        className="w-[80px] h-[32px] sm:w-[100px] sm:h-[40px] lg:w-[120px] lg:h-[48px]"
+        width={160}
+        height={64}
+        className="w-[100px] h-[40px] sm:w-[140px] sm:h-[56px] lg:w-[160px] lg:h-[64px]"
         priority
       />
       <span className="text-base sm:text-lg lg:text-xl font-semibold text-[color:var(--foreground)] hidden sm:inline">
