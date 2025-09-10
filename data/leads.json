@@ -1,0 +1,17 @@
+[
+  {
+    "id": "lead_1757474023795_5pub83obi",
+    "name": "Test User",
+    "email": "test@example.com",
+    "phone": "123-456-7890",
+    "projectType": "Website Development",
+    "description": "Need a new website for my business",
+    "budget": "$5,000 - $10,000",
+    "timeline": "2-3 months",
+    "projectSize": "Medium",
+    "customQuote": false,
+    "timestamp": "2025-09-10T03:13:42.405Z",
+    "createdAt": "2025-09-10T03:13:43.795Z",
+    "status": "new"
+  }
+]
