@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 interface ProductImageProps {
   category: string;
@@ -13,28 +13,47 @@ export default function ProductImage({
   category, 
   width = 400, 
   height = 300, 
-  className = "",
-  fallbackIcon = "🏠"
+  className = ""
 }: ProductImageProps) {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const isMountedRef = useRef(true);
 
   useEffect(() => {
+    let isCancelled = false;
+
     const fetchImage = async () => {
       try {
         const response = await fetch(`/api/images/placeholder?category=${category}&width=${width}&height=${height}`);
+        
+        if (isCancelled || !isMountedRef.current) return;
+        
         const data = await response.json();
         setImageUrl(data.imageUrl);
-      } catch (err) {
-        setError(true);
+      } catch {
+        if (!isCancelled && isMountedRef.current) {
+          setError(true);
+        }
       } finally {
-        setLoading(false);
+        if (!isCancelled && isMountedRef.current) {
+          setLoading(false);
+        }
       }
     };
 
     fetchImage();
+
+    return () => {
+      isCancelled = true;
+    };
   }, [category, width, height]);
+
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   // Fallback to icon-based design if image fails to load
   if (loading || error || !imageUrl) {
@@ -54,14 +73,25 @@ export default function ProductImage({
     );
   }
 
+  const handleImageError = () => {
+    if (isMountedRef.current) {
+      setError(true);
+    }
+  };
+
   return (
     <div className={`relative overflow-hidden ${className}`}>
       <img
         src={imageUrl}
         alt={`${category} construction work`}
         className="w-full h-full object-cover"
-        onError={() => setError(true)}
+        onError={handleImageError}
         loading="lazy"
+        onLoad={() => {
+          if (isMountedRef.current) {
+            setError(false);
+          }
+        }}
       />
       {/* Overlay with category name */}
       <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-4">

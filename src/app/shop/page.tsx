@@ -16,24 +16,7 @@ type Product = {
   complexity?: string;
 };
 
-// Helper function to get category-specific icons
-function getCategoryIcon(category: string): string {
-  const icons: Record<string, string> = {
-    kitchen: "🍳",
-    bathroom: "🚿", 
-    outdoor: "🌳",
-    renovation: "🔨",
-    maintenance: "🔧",
-    combo: "📦",
-    electrical: "⚡",
-    plumbing: "🚰",
-    hvac: "🌡️",
-    flooring: "🏠",
-    carpentry: "🪚",
-    roofing: "🏠"
-  };
-  return icons[category] || "🏠";
-}
+
 
 export default function ShopPage() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -88,7 +71,7 @@ export default function ShopPage() {
                 <div className="flex items-start justify-between">
                   <h2 className="text-lg font-medium text-[color:var(--foreground)]">{p.name}</h2>
                   <div className="text-right">
-                    <span className="text-lg font-bold text-primary">${(p.price / 100).toFixed(2)}</span>
+                    <span className="text-lg font-bold text-primary">${(p.price / 10).toFixed(2)}</span>
                     {p.includedServices && (
                       <p className="text-xs text-[color:var(--muted-foreground)]">
                         {p.includedServices.length} services

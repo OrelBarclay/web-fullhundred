@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import { getAuthInstance, signOut, getDb } from "@/lib/firebase";
 import { doc, getDoc } from "firebase/firestore";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useCart } from "@/components/CartProvider";
 import type { User } from "firebase/auth";
 
 export default function AuthProvider() {
@@ -10,6 +12,8 @@ export default function AuthProvider() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [profileImage, setProfileImage] = useState<string | null>(null);
+  const { clear } = useCart();
+  const router = useRouter();
 
   useEffect(() => {
     const auth = getAuthInstance();
@@ -66,6 +70,8 @@ export default function AuthProvider() {
       await fetch("/api/auth/logout", { method: "POST" });
       setUser(null);
       setIsAdmin(false);
+      clear(); // Clear cart on logout
+      router.push("/"); // Redirect to home page
     } catch (error) {
       console.error("Logout error:", error);
     }
@@ -87,16 +93,19 @@ export default function AuthProvider() {
                     onError={(e) => {
                       // Fallback to initials if image fails to load
                       const target = e.target as HTMLImageElement;
-                      target.style.display = 'none';
                       const parent = target.parentElement;
-                      if (parent) {
-                        parent.innerHTML = `
-                          <div class="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center border border-gray-300 dark:border-gray-600">
-                            <span class="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-300">
-                              ${(user.displayName || user.email || 'U')[0].toUpperCase()}
-                            </span>
-                          </div>
+                      if (parent && parent.contains(target)) {
+                        // Create fallback element
+                        const fallback = document.createElement('div');
+                        fallback.className = 'w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center border border-gray-300 dark:border-gray-600';
+                        fallback.innerHTML = `
+                          <span class="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-300">
+                            ${(user.displayName || user.email || 'U')[0].toUpperCase()}
+                          </span>
                         `;
+                        
+                        // Replace the image with fallback
+                        parent.replaceChild(fallback, target);
                       }
                     }}
                   />
@@ -129,7 +138,9 @@ export default function AuthProvider() {
               </div>
             </div>
           ) : (
-            <Link href="/login" className="hover:underline text-sm">Login</Link>
+            <div className="flex items-center gap-4">
+              <Link href="/login" className="hover:underline text-sm">Login</Link>
+            </div>
           )}
         </>
       )}

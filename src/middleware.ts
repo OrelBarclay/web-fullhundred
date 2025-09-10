@@ -5,6 +5,8 @@ import type { NextRequest } from 'next/server';
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   
+  console.log('Middleware triggered for path:', pathname);
+  
   // Debug: Log all cookies
   const allCookies = request.cookies.getAll();
   console.log('Middleware - All cookies:', allCookies.map(c => ({ name: c.name, value: c.value ? 'present' : 'missing' })));
@@ -46,10 +48,26 @@ export function middleware(request: NextRequest) {
       return NextResponse.redirect(new URL('/login', request.url));
     }
   }
+
+  // Protect cart routes
+  if (pathname.startsWith('/cart')) {
+    console.log('Middleware - Cart route detected, checking auth...');
+    if (!authToken?.value) {
+      console.log('Middleware - No auth token found, redirecting to login (cart route)');
+      return NextResponse.redirect(new URL('/login', request.url));
+    }
+    console.log('Middleware - Auth token found, allowing cart access');
+  }
   
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ['/admin/:path*', '/dashboard/:path*', '/profile/:path*']
+  matcher: [
+    '/admin/:path*', 
+    '/dashboard/:path*', 
+    '/profile/:path*', 
+    '/cart',
+    '/cart/:path*'
+  ]
 };
