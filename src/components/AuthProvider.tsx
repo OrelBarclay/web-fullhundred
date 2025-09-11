@@ -30,8 +30,8 @@ export default function AuthProvider() {
             body: JSON.stringify({ idToken }),
           });
           if (response.ok) {
-            const { isAdmin: adminStatus } = await response.json();
-            setIsAdmin(adminStatus);
+            const { isAdmin } = await response.json();
+            setIsAdmin(isAdmin);
           }
         } catch (error) {
           console.error("Error checking admin status:", error);
