@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ imageUrl: imageBase64 || null });
     }
 
-    const body: any = {
+    const body: { input: { prompt: string; strength: number; image?: string } } = {
       input: {
         prompt: stylePrompt || 'high-end bathroom renovation, professional interior render',
         // Guidance to preserve layout
@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
     // Poll for completion
     let status = pred.status;
     let outputUrl: string | null = null;
-    let pollUrl = pred.urls?.get;
+    let pollUrl: string | undefined = pred.urls?.get;
     const maxAttempts = 40;
     let attempts = 0;
     while (status !== 'succeeded' && status !== 'failed' && attempts < maxAttempts && pollUrl) {
