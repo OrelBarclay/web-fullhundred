@@ -365,45 +365,81 @@ export default function AdminDashboard() {
       {/* Header */}
       <header className="bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
+          <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center py-4 space-y-4 lg:space-y-0">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Admin Dashboard</h1>
               <p className="text-sm text-gray-600">Welcome back, {user?.email}</p>
             </div>
-            <div className="flex items-center space-x-4">
+            
+            {/* Desktop Button Grid */}
+            <div className="hidden lg:flex items-center space-x-2">
               <button
                 onClick={() => router.push("/admin/manage")}
-                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                className="bg-blue-600 text-white px-3 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm"
               >
                 Manage Content
               </button>
               <button
                 onClick={() => router.push("/admin/leads")}
-                className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors"
+                className="bg-indigo-600 text-white px-3 py-2 rounded-lg hover:bg-indigo-700 transition-colors text-sm"
               >
                 Manage Leads
               </button>
               <button
                 onClick={() => router.push("/admin/services")}
-                className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors"
+                className="bg-purple-600 text-white px-3 py-2 rounded-lg hover:bg-purple-700 transition-colors text-sm"
               >
                 Manage Services
               </button>
               <button
-                onClick={uploadExistingServices}
-                className="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition-colors"
-              >
-                Upload Services
-              </button>
-              <button
                 onClick={() => router.push("/admin/users")}
-                className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
+                className="bg-green-600 text-white px-3 py-2 rounded-lg hover:bg-green-700 transition-colors text-sm"
               >
                 Manage Users
               </button>
               <button
                 onClick={handleLogout}
-                className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors"
+                className="bg-red-600 text-white px-3 py-2 rounded-lg hover:bg-red-700 transition-colors text-sm"
+              >
+                Logout
+              </button>
+            </div>
+
+            {/* Mobile Button Grid */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:hidden gap-2">
+              <button
+                onClick={() => router.push("/admin/manage")}
+                className="bg-blue-600 text-white px-3 py-2 rounded-lg hover:bg-blue-700 transition-colors text-xs"
+              >
+                Content
+              </button>
+              <button
+                onClick={() => router.push("/admin/leads")}
+                className="bg-indigo-600 text-white px-3 py-2 rounded-lg hover:bg-indigo-700 transition-colors text-xs"
+              >
+                Leads
+              </button>
+              <button
+                onClick={() => router.push("/admin/services")}
+                className="bg-purple-600 text-white px-3 py-2 rounded-lg hover:bg-purple-700 transition-colors text-xs"
+              >
+                Services
+              </button>
+              <button
+                onClick={() => router.push("/admin/users")}
+                className="bg-green-600 text-white px-3 py-2 rounded-lg hover:bg-green-700 transition-colors text-xs"
+              >
+                Users
+              </button>
+              <button
+                onClick={uploadExistingServices}
+                className="bg-orange-600 text-white px-3 py-2 rounded-lg hover:bg-orange-700 transition-colors text-xs"
+              >
+                Upload
+              </button>
+              <button
+                onClick={handleLogout}
+                className="bg-red-600 text-white px-3 py-2 rounded-lg hover:bg-red-700 transition-colors text-xs"
               >
                 Logout
               </button>
@@ -415,7 +451,7 @@ export default function AdminDashboard() {
       {/* Navigation Tabs */}
       <div className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <nav className="flex space-x-8">
+          <nav className="flex overflow-x-auto space-x-4 sm:space-x-8">
             {[
               { id: "overview", label: "Overview" },
               { id: "clients", label: "Clients" },
@@ -425,7 +461,7 @@ export default function AdminDashboard() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as "overview" | "clients" | "projects" | "analytics")}
-                className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                className={`py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${
                   activeTab === tab.id
                     ? "border-blue-500 text-blue-600"
                     : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
@@ -443,7 +479,7 @@ export default function AdminDashboard() {
         {activeTab === "overview" && (
           <div className="space-y-8">
             {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 sm:gap-6">
               <div className="bg-white rounded-lg shadow p-6">
                 <div className="flex items-center">
                   <div className="p-2 bg-blue-100 rounded-lg">
@@ -530,7 +566,7 @@ export default function AdminDashboard() {
             </div>
 
             {/* Recent Activity */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 lg:gap-8">
               <div className="bg-white rounded-lg shadow">
                 <div className="px-6 py-4 border-b border-gray-200">
                   <h3 className="text-lg font-medium text-gray-900">Recent Projects</h3>
@@ -580,11 +616,11 @@ export default function AdminDashboard() {
         {/* Clients Tab */}
         {activeTab === "clients" && (
           <div className="space-y-6">
-            <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-bold text-gray-900">Client Management</h2>
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-4 sm:space-y-0">
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Client Management</h2>
               <button
                 onClick={() => router.push("/admin/manage")}
-                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm sm:text-base"
               >
                 Add New Client
               </button>
@@ -604,11 +640,11 @@ export default function AdminDashboard() {
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Client</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Projects</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Joined</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                      <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Client</th>
+                      <th className="hidden sm:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</th>
+                      <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Projects</th>
+                      <th className="hidden md:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Joined</th>
+                      <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
@@ -616,27 +652,30 @@ export default function AdminDashboard() {
                       const clientProjects = projects.filter(p => p.clientId === client.id);
                       return (
                         <tr key={client.id}>
-                          <td className="px-6 py-4 whitespace-nowrap">
+                          <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
                             <div>
                               <div className="text-sm font-medium text-gray-900">{client.name}</div>
-                              <div className="text-sm text-gray-500">{client.address}</div>
+                              <div className="text-xs sm:text-sm text-gray-500">{client.address}</div>
+                              <div className="sm:hidden text-xs text-gray-500 mt-1">{client.email}</div>
                             </div>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
+                          <td className="hidden sm:table-cell px-6 py-4 whitespace-nowrap">
                             <div className="text-sm text-gray-900">{client.email}</div>
                             <div className="text-sm text-gray-500">{client.phone}</div>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
+                          <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                               {clientProjects.length} projects
                             </span>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          <td className="hidden md:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                             {client.createdAt.toLocaleDateString()}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <button className="text-blue-600 hover:text-blue-900 mr-3">Edit</button>
-                            <button className="text-red-600 hover:text-red-900">Delete</button>
+                          <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <div className="flex flex-col sm:flex-row space-y-1 sm:space-y-0 sm:space-x-3">
+                              <button className="text-blue-600 hover:text-blue-900 text-xs sm:text-sm">Edit</button>
+                              <button className="text-red-600 hover:text-red-900 text-xs sm:text-sm">Delete</button>
+                            </div>
                           </td>
                         </tr>
                       );
@@ -651,17 +690,17 @@ export default function AdminDashboard() {
         {/* Projects Tab */}
         {activeTab === "projects" && (
           <div className="space-y-6">
-            <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-bold text-gray-900">Project Management</h2>
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-4 sm:space-y-0">
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Project Management</h2>
               <button
                 onClick={() => router.push("/admin/manage")}
-                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm sm:text-base"
               >
                 Add New Project
               </button>
             </div>
 
-            <div className="flex space-x-4 mb-6">
+            <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 mb-6">
               <input
                 type="text"
                 placeholder="Search projects..."
@@ -672,7 +711,7 @@ export default function AdminDashboard() {
               <select
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent sm:w-auto w-full"
               >
                 <option value="all">All Status</option>
                 <option value="planning">Planning</option>
@@ -687,13 +726,13 @@ export default function AdminDashboard() {
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Project</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Client</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Progress</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Budget</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Timeline</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                      <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Project</th>
+                      <th className="hidden sm:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Client</th>
+                      <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                      <th className="hidden md:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Progress</th>
+                      <th className="hidden lg:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Budget</th>
+                      <th className="hidden xl:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Timeline</th>
+                      <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
@@ -725,16 +764,17 @@ export default function AdminDashboard() {
                     ) : (
                       filteredProjects.map((project) => (
                         <tr key={project.id}>
-                          <td className="px-6 py-4 whitespace-nowrap">
+                          <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
                             <div>
                               <div className="text-sm font-medium text-gray-900">{project.title}</div>
-                              <div className="text-sm text-gray-500">ID: {project.id}</div>
+                              <div className="text-xs sm:text-sm text-gray-500">ID: {project.id}</div>
+                              <div className="sm:hidden text-xs text-gray-500 mt-1">{project.clientName}</div>
                             </div>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          <td className="hidden sm:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                             {project.clientName}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
+                          <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
                             <select
                               value={project.status}
                               onChange={(e) => updateProjectStatus(project.id, e.target.value)}
@@ -751,7 +791,7 @@ export default function AdminDashboard() {
                               <option value="on-hold">On Hold</option>
                             </select>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
+                          <td className="hidden md:table-cell px-6 py-4 whitespace-nowrap">
                             <div className="flex items-center">
                               <div className="w-16 bg-gray-200 rounded-full h-2 mr-2">
                                 <div 
@@ -762,26 +802,28 @@ export default function AdminDashboard() {
                               <span className="text-sm text-gray-900">{project.progress || 0}%</span>
                             </div>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          <td className="hidden lg:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                             ${project.budget?.toLocaleString() || "0"}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          <td className="hidden xl:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                             <div>{project.startDate.toLocaleDateString()}</div>
                             <div>to {project.endDate.toLocaleDateString()}</div>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <button 
-                              onClick={() => editProject(project)}
-                              className="text-blue-600 hover:text-blue-900 mr-3"
-                            >
-                              Edit
-                            </button>
-                            <button 
-                              onClick={() => deleteProject(project.id)}
-                              className="text-red-600 hover:text-red-900"
-                            >
-                              Delete
-                            </button>
+                          <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <div className="flex flex-col sm:flex-row space-y-1 sm:space-y-0 sm:space-x-3">
+                              <button 
+                                onClick={() => editProject(project)}
+                                className="text-blue-600 hover:text-blue-900 text-xs sm:text-sm"
+                              >
+                                Edit
+                              </button>
+                              <button 
+                                onClick={() => deleteProject(project.id)}
+                                className="text-red-600 hover:text-red-900 text-xs sm:text-sm"
+                              >
+                                Delete
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       ))
@@ -796,9 +838,9 @@ export default function AdminDashboard() {
         {/* Analytics Tab */}
         {activeTab === "analytics" && (
           <div className="space-y-8">
-            <h2 className="text-2xl font-bold text-gray-900">Business Analytics</h2>
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Business Analytics</h2>
             
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 lg:gap-8">
               <div className="bg-white rounded-lg shadow p-6">
                 <h3 className="text-lg font-medium text-gray-900 mb-4">Project Status Distribution</h3>
                 <div className="space-y-3">

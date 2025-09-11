@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useCart } from "@/components/CartProvider";
 import type { User } from "firebase/auth";
 import Image from "next/image";
+import { request } from "http";
 
 export default function AuthProvider() {
   const [user, setUser] = useState<User | null>(null);
@@ -19,23 +20,6 @@ export default function AuthProvider() {
     const unsubscribe = auth.onAuthStateChanged(async (user) => {
       if (user) {
         setUser(user);
-        
-        
-        // Check if user is admin
-        try {
-          const idToken = await user.getIdToken();
-          const response = await fetch("/api/auth/login", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ idToken }),
-          });
-          if (response.ok) {
-            const { isAdmin } = await response.json();
-            setIsAdmin(isAdmin);
-          }
-        } catch (error) {
-          console.error("Error checking admin status:", error);
-        }
       } else {
         setUser(null);
         setIsAdmin(false);
@@ -45,6 +29,37 @@ export default function AuthProvider() {
 
     return () => unsubscribe();
   }, []);
+
+  // Separate useEffect to check admin status when user changes
+  useEffect(() => {
+    if (user) {
+      // Check admin status from session token in cookies with retry
+      const checkAdminStatus = () => {
+        const getCookieValue = (name: string) => {
+          const value = `; ${document.cookie}`;
+          const parts = value.split(`; ${name}=`);
+          if (parts.length === 2) return parts.pop()?.split(';').shift();
+          return null;
+        };
+        
+        const authToken = getCookieValue('auth-token') || getCookieValue('auth-token-debug');
+        const isAdmin = authToken?.includes('-admin') || false;
+        console.log('Auth token:', authToken);
+        console.log('Is admin from token:', isAdmin);
+        setIsAdmin(isAdmin);
+        
+        // If no token found, retry after a short delay (cookies might be setting)
+        if (!authToken) {
+          console.log('No auth token found, retrying in 500ms...');
+          setTimeout(checkAdminStatus, 500);
+        }
+      };
+      
+      checkAdminStatus();
+    } else {
+      setIsAdmin(false);
+    }
+  }, [user]);
 
   async function handleLogout() {
     try {

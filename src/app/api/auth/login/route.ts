@@ -4,6 +4,7 @@ import { getFirestore, doc, setDoc, getDoc, serverTimestamp } from 'firebase/fir
 import { isUserAdmin } from '@/lib/auth-utils';
 
 export async function POST(request: NextRequest) {
+  ;
   // Handle CORS preflight
   if (request.method === 'OPTIONS') {
     return new NextResponse(null, {
