@@ -3,8 +3,7 @@ import { useState, useEffect, useCallback } from "react";
 import { getAuthInstance, signInWithPopup, GoogleAuthProvider, FacebookAuthProvider, TwitterAuthProvider, GithubAuthProvider } from "@/lib/firebase";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { isUserAdmin } from "@/lib/auth-utils";
-import Logo from "@/components/Logo";
+import Image from "next/image";
 import type { User } from "firebase/auth";
 
 export default function LoginPage() {
@@ -128,7 +127,8 @@ export default function LoginPage() {
         {/* Logo and Header */}
         <div className="text-center mb-8">
           <div className="flex justify-center mb-6">
-            <Logo />
+            {/* <Logo /> */}
+            <Image src="/images/logo-light.png" alt="Full Hundred Logo" width={160} height={64} />
           </div>
           <h1 className="text-3xl font-bold text-primary mb-2">
             Welcome Back
