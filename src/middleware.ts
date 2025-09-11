@@ -5,7 +5,10 @@ import type { NextRequest } from 'next/server';
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   
-  console.log('Middleware triggered for path:', pathname);
+  console.log('=== MIDDLEWARE TRIGGERED ===');
+  console.log('Path:', pathname);
+  console.log('Method:', request.method);
+  console.log('URL:', request.url);
   
   // Debug: Log all cookies
   const allCookies = request.cookies.getAll();
@@ -13,8 +16,19 @@ export function middleware(request: NextRequest) {
   
   // Get auth token (try both versions)
   const authToken = request.cookies.get('auth-token') || request.cookies.get('auth-token-debug');
-  const hasValidToken = authToken?.value && authToken.value.trim() !== '';
-  console.log('Middleware - Auth token present:', hasValidToken);
+  const tokenValue = authToken?.value?.trim();
+  
+  // Check if token exists and is not empty
+  const hasToken = tokenValue && tokenValue !== '';
+  
+  // Basic JWT validation - check if it has 3 parts separated by dots
+  const isValidJWT = hasToken && tokenValue.split('.').length === 3;
+  
+  const hasValidToken = isValidJWT;
+  
+  console.log('Middleware - Auth token present:', hasToken);
+  console.log('Middleware - Auth token valid JWT format:', isValidJWT);
+  console.log('Middleware - Has valid token:', hasValidToken);
   console.log('Middleware - Auth token source:', request.cookies.get('auth-token')?.value ? 'httpOnly' : 'debug');
   
   // Protect admin routes
@@ -53,6 +67,8 @@ export function middleware(request: NextRequest) {
   // Protect cart routes
   if (pathname.startsWith('/cart')) {
     console.log('Middleware - Cart route detected, checking auth...');
+    console.log('Middleware - Auth token value:', authToken?.value ? 'present' : 'missing');
+    console.log('Middleware - Has valid token:', hasValidToken);
     if (!hasValidToken) {
       console.log('Middleware - No valid auth token found, redirecting to login (cart route)');
       return NextResponse.redirect(new URL('/login', request.url));
