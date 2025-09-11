@@ -92,7 +92,7 @@ export default function Logo() {
         priority
       />
       <span className="text-base sm:text-lg lg:text-xl font-semibold text-[color:var(--foreground)] hidden sm:inline">
-        Full Hundred LLC 🚀
+        Full Hundred LLC
       </span>
     </div>
   );
