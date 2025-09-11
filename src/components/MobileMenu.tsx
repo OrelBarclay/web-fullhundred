@@ -23,13 +23,13 @@ export default function MobileMenu() {
   }, [open]);
 
   return (
-    <div className="sm:hidden relative" ref={menuRef}>
+    <div className="lg:hidden relative" ref={menuRef}>
       <button
         aria-label={open ? "Close menu" : "Open menu"}
         aria-expanded={open}
         aria-controls="mobile-menu-panel"
         onClick={() => setOpen((v) => !v)}
-        className="inline-flex items-center justify-center rounded-md border border-[color:var(--border)] px-3 py-2 text-[color:var(--foreground)] bg-[color:var(--card)] hover:bg-[color:var(--muted)] transition-colors"
+        className="inline-flex items-center justify-center w-10 h-10 rounded-md text-[color:var(--muted-foreground)] hover:text-[color:var(--foreground)] hover:bg-[color:var(--muted)] transition-all duration-200"
       >
         <svg
           className="h-5 w-5"
@@ -55,21 +55,65 @@ export default function MobileMenu() {
       {open && (
         <div
           id="mobile-menu-panel"
-          className="absolute right-0 mt-2 w-[88vw] max-w-xs rounded-lg border border-[color:var(--border)] bg-[color:var(--card)] shadow-lg overflow-hidden"
+          className="absolute right-0 mt-2 w-80 max-w-[calc(100vw-2rem)] rounded-lg border border-[color:var(--border)] bg-[color:var(--card)] shadow-xl backdrop-blur-md overflow-hidden z-50"
         >
-          <div className="p-2 divide-y divide-[color:var(--border)]">
-            <div className="flex items-center gap-2 pb-2">
-              <CartIcon />
-              <ThemeToggle />
+          <div className="p-4 space-y-4">
+            {/* Mobile Navigation Links */}
+            <div className="space-y-1">
+              <Link 
+                href="/services" 
+                className="block px-3 py-2 text-sm font-medium text-[color:var(--foreground)] hover:bg-[color:var(--muted)] rounded-md transition-colors"
+                onClick={() => setOpen(false)}
+              >
+                Services
+              </Link>
+              <Link 
+                href="/portfolio" 
+                className="block px-3 py-2 text-sm font-medium text-[color:var(--foreground)] hover:bg-[color:var(--muted)] rounded-md transition-colors"
+                onClick={() => setOpen(false)}
+              >
+                Our Work
+              </Link>
+              <Link 
+                href="/contact" 
+                className="block px-3 py-2 text-sm font-medium text-[color:var(--foreground)] hover:bg-[color:var(--muted)] rounded-md transition-colors"
+                onClick={() => setOpen(false)}
+              >
+                Contact
+              </Link>
+              <Link 
+                href="/shop" 
+                className="block px-3 py-2 text-sm font-medium text-[color:var(--foreground)] hover:bg-[color:var(--muted)] rounded-md transition-colors"
+                onClick={() => setOpen(false)}
+              >
+                Shop
+              </Link>
+              <Link 
+                href="/visualizer" 
+                className="block px-3 py-2 text-sm font-medium text-[color:var(--foreground)] hover:bg-[color:var(--muted)] rounded-md transition-colors"
+                onClick={() => setOpen(false)}
+              >
+                Visualizer
+              </Link>
+              <Link 
+                href="/#quote" 
+                className="block px-3 py-2 text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 rounded-md transition-colors text-center"
+                onClick={() => setOpen(false)}
+              >
+                Get a Quote
+              </Link>
             </div>
-            <div className="py-2 flex flex-col">
-              <Link href="/services" className="px-3 py-2 rounded-md text-[color:var(--foreground)] hover:bg-[color:var(--muted)] transition-colors">Services</Link>
-              <Link href="/portfolio" className="px-3 py-2 rounded-md text-[color:var(--foreground)] hover:bg-[color:var(--muted)] transition-colors">Our Work</Link>
-              <Link href="/contact" className="px-3 py-2 rounded-md text-[color:var(--foreground)] hover:bg-[color:var(--muted)] transition-colors">Contact</Link>
-              <Link href="/shop" className="px-3 py-2 rounded-md text-[color:var(--foreground)] hover:bg-[color:var(--muted)] transition-colors">Shop</Link>
-              <Link href="/#quote" className="mt-1 px-3 py-2 rounded-md bg-primary text-primary-foreground hover:opacity-90 transition">Get a Quote</Link>
+            
+            {/* Mobile Controls */}
+            <div className="flex items-center justify-between pt-4 border-t border-[color:var(--border)]">
+              <div className="flex items-center gap-2">
+                <CartIcon />
+                <ThemeToggle />
+              </div>
             </div>
-            <div className="pt-2">
+            
+            {/* Mobile Auth */}
+            <div className="pt-2 border-t border-[color:var(--border)]">
               <AuthProvider />
             </div>
           </div>

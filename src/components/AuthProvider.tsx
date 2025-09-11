@@ -64,30 +64,67 @@ export default function AuthProvider() {
       {!isLoading && (
         <>
           {user ? (
-            <div className="flex items-center gap-2 sm:gap-4">
-              {/* Profile Image - Always visible */}
-              <Link href="/profile" className="flex items-center gap-1 sm:gap-2 hover:opacity-80 transition-opacity">
-                <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center border border-gray-300 dark:border-gray-600">
-                  <span className="text-xs sm:text-sm font-medium text-gray-600 dark:text-white">
-                    {(user.displayName || user.email || 'U')[0].toUpperCase()}
-                  </span>
-                </div>
-                {/* User name - hidden on very small screens */}
-                <span className="hidden sm:inline text-sm font-medium text-gray-700 dark:text-white">
-                  {user.displayName || user.email?.split('@')[0] || 'User'}
-                </span>
-              </Link>
+            <div className="flex items-center gap-3 sm:gap-4">
+              {/* Profile Section */}
+              <div className="flex items-center gap-2 sm:gap-3">
+                {/* Profile Image */}
+                <Link href="/profile" className="group flex items-center gap-2 hover:opacity-80 transition-all duration-200">
+                  <div className="relative">
+                    {user.photoURL ? (
+                      <img
+                        src={user.photoURL}
+                        alt={user.displayName || user.email || 'Profile'}
+                        className="w-8 h-8 sm:w-10 sm:h-10 rounded-full object-cover border-2 border-[color:var(--border)] group-hover:border-primary transition-colors"
+                        onError={(e) => {
+                          // Fallback to initials if image fails
+                          const target = e.target as HTMLImageElement;
+                          target.style.display = 'none';
+                          const fallback = target.nextElementSibling as HTMLElement;
+                          if (fallback) fallback.style.display = 'flex';
+                        }}
+                      />
+                    ) : null}
+                    <div 
+                      className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-primary/20 to-primary/40 flex items-center justify-center border-2 border-[color:var(--border)] group-hover:border-primary transition-colors ${user.photoURL ? 'hidden' : 'flex'}`}
+                    >
+                      <span className="text-sm sm:text-base font-semibold text-primary">
+                        {(user.displayName || user.email || 'U')[0].toUpperCase()}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  {/* User name */}
+                  <div className="hidden sm:block">
+                    <div className="text-sm font-medium text-[color:var(--foreground)]">
+                      {user.displayName || user.email?.split('@')[0] || 'User'}
+                    </div>
+                    <div className="text-xs text-[color:var(--muted-foreground)]">
+                      {isAdmin ? 'Administrator' : 'User'}
+                    </div>
+                  </div>
+                </Link>
+              </div>
               
-              {/* Navigation Links - Responsive layout */}
-              <div className="flex items-center gap-2 sm:gap-4">
+              {/* Action Buttons */}
+              <div className="flex items-center gap-2">
                 {isAdmin ? (
-                  <Link href="/admin" className="hover:underline text-xs sm:text-sm px-1 sm:px-0">Admin</Link>
+                  <Link 
+                    href="/admin" 
+                    className="px-3 py-1.5 text-xs sm:text-sm font-medium text-[color:var(--muted-foreground)] hover:text-[color:var(--foreground)] hover:bg-[color:var(--muted)] rounded-md transition-colors"
+                  >
+                    Admin
+                  </Link>
                 ) : (
-                  <Link href="/dashboard" className="hover:underline text-xs sm:text-sm px-1 sm:px-0">Dashboard</Link>
+                  <Link 
+                    href="/dashboard" 
+                    className="px-3 py-1.5 text-xs sm:text-sm font-medium text-[color:var(--muted-foreground)] hover:text-[color:var(--foreground)] hover:bg-[color:var(--muted)] rounded-md transition-colors"
+                  >
+                    Dashboard
+                  </Link>
                 )}
                 <button
                   onClick={handleLogout}
-                  className="text-red-600 hover:text-red-700 hover:underline text-xs sm:text-sm px-1 sm:px-0"
+                  className="px-3 py-1.5 text-xs sm:text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-md transition-colors"
                 >
                   Logout
                 </button>
