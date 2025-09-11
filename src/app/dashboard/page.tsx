@@ -18,21 +18,11 @@ interface Project {
   afterImages?: string[];
 }
 
-interface Client {
-  id: string;
-  name: string;
-  email: string;
-  phone: string;
-  address: string;
-  createdAt: Date;
-  lastContact: Date;
-}
 
 export default function DashboardPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState<User | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
-  const [clients, setClients] = useState<Client[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const router = useRouter();
@@ -65,21 +55,6 @@ export default function DashboardPage() {
           };
         }) as Project[];
         setProjects(processedProjects);
-      }
-
-      // Load clients
-      const clientsRes = await fetch('/api/clients-fallback', { cache: 'no-store' });
-      if (clientsRes.ok) {
-        const clientsData = await clientsRes.json();
-        const processedClients = (Array.isArray(clientsData) ? clientsData : []).map((client: unknown) => {
-          const c = client as Record<string, unknown>;
-          return {
-            ...c,
-            createdAt: safeDate(c.createdAt),
-            lastContact: safeDate(c.lastContact)
-          };
-        }) as Client[];
-        setClients(processedClients);
       }
     } catch (error) {
       console.error('Error loading dashboard data:', error);
@@ -133,7 +108,6 @@ export default function DashboardPage() {
     totalProjects: projects.length,
     activeProjects: projects.filter(p => p.status === 'in-progress').length,
     completedProjects: projects.filter(p => p.status === 'completed').length,
-    totalClients: clients.length,
     totalBudget: projects.reduce((sum, p) => sum + (p.budget || 0), 0),
     recentProjects: projects
       .sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime())
@@ -201,7 +175,7 @@ export default function DashboardPage() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
             <div className="flex items-center">
               <div className="flex-shrink-0">
@@ -246,22 +220,6 @@ export default function DashboardPage() {
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Active</p>
                 <p className="text-2xl font-semibold text-gray-900 dark:text-white">{stats.activeProjects}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-purple-500 rounded-md flex items-center justify-center">
-                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                  </svg>
-                </div>
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Clients</p>
-                <p className="text-2xl font-semibold text-gray-900 dark:text-white">{stats.totalClients}</p>
               </div>
             </div>
           </div>
