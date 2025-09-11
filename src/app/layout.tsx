@@ -9,6 +9,7 @@ import ThemeToggle from "@/components/ThemeToggle";
 import CartProvider from "@/components/CartProvider";
 import CartIcon from "@/components/CartIcon";
 import MobileMenu from "@/components/MobileMenu";
+import AssistantWidget from "@/components/AssistantWidget";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -47,6 +48,7 @@ export default function RootLayout({
                 <Link href="/contact" className="hidden sm:inline px-3 py-2 rounded-md text-[color:var(--muted-foreground)] hover:text-[color:var(--foreground)] hover:bg-[color:var(--muted)] transition-colors">Contact</Link>
                 <Link href="/#quote" className="hidden sm:inline px-3 py-2 rounded-md bg-primary text-primary-foreground hover:opacity-90 transition">Get a Quote</Link>
                 <Link href="/shop" className="hidden sm:inline px-3 py-2 rounded-md text-[color:var(--muted-foreground)] hover:text-[color:var(--foreground)] hover:bg-[color:var(--muted)] transition-colors">Shop</Link>
+                <Link href="/visualizer" className="hidden sm:inline px-3 py-2 rounded-md text-[color:var(--muted-foreground)] hover:text-[color:var(--foreground)] hover:bg-[color:var(--muted)] transition-colors">Visualizer</Link>
                 <CartIcon />
                 <ThemeToggle />
                 <AuthProvider />
@@ -56,6 +58,7 @@ export default function RootLayout({
           </div>
         </header>
         <main>{children}</main>
+        <AssistantWidget />
         
         <footer className="bg-[color:var(--card)] text-[color:var(--foreground)] border-t border-[color:var(--border)]">
           <div className="max-w-7xl mx-auto px-6 py-16">
