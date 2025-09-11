@@ -13,12 +13,13 @@ export function middleware(request: NextRequest) {
   
   // Get auth token (try both versions)
   const authToken = request.cookies.get('auth-token') || request.cookies.get('auth-token-debug');
-  console.log('Middleware - Auth token present:', !!authToken?.value);
-  console.log('Middleware - Auth token source:', request.cookies.get('auth-token') ? 'httpOnly' : 'debug');
+  const hasValidToken = authToken?.value && authToken.value.trim() !== '';
+  console.log('Middleware - Auth token present:', hasValidToken);
+  console.log('Middleware - Auth token source:', request.cookies.get('auth-token')?.value ? 'httpOnly' : 'debug');
   
   // Protect admin routes
   if (pathname.startsWith('/admin')) {
-    if (!authToken?.value) {
+    if (!hasValidToken) {
       console.log('Middleware - Redirecting to login (admin route)');
       return NextResponse.redirect(new URL('/login', request.url));
     }
@@ -26,14 +27,14 @@ export function middleware(request: NextRequest) {
   
   // Protect dashboard routes
   if (pathname.startsWith('/dashboard')) {
-    if (!authToken?.value) {
+    if (!hasValidToken) {
       console.log('Middleware - Redirecting to login (dashboard route)');
       return NextResponse.redirect(new URL('/login', request.url));
     }
     
     // Check if user is admin and redirect to admin dashboard
     // Check if the session token contains 'admin' (set by login API)
-    const isAdmin = authToken.value.includes('-admin');
+    const isAdmin = authToken?.value?.includes('-admin') || false;
     
     if (isAdmin) {
       console.log('Middleware - User is admin, redirecting to admin dashboard');
@@ -43,7 +44,7 @@ export function middleware(request: NextRequest) {
   
   // Protect profile routes
   if (pathname.startsWith('/profile')) {
-    if (!authToken?.value) {
+    if (!hasValidToken) {
       console.log('Middleware - Redirecting to login (profile route)');
       return NextResponse.redirect(new URL('/login', request.url));
     }
@@ -52,11 +53,11 @@ export function middleware(request: NextRequest) {
   // Protect cart routes
   if (pathname.startsWith('/cart')) {
     console.log('Middleware - Cart route detected, checking auth...');
-    if (!authToken?.value) {
-      console.log('Middleware - No auth token found, redirecting to login (cart route)');
+    if (!hasValidToken) {
+      console.log('Middleware - No valid auth token found, redirecting to login (cart route)');
       return NextResponse.redirect(new URL('/login', request.url));
     }
-    console.log('Middleware - Auth token found, allowing cart access');
+    console.log('Middleware - Valid auth token found, allowing cart access');
   }
   
   return NextResponse.next();
