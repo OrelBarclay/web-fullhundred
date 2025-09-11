@@ -1,7 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { getAuthInstance, signOut, getDb } from "@/lib/firebase";
-import { doc, getDoc } from "firebase/firestore";
+import { getAuthInstance, signOut } from "@/lib/firebase";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/components/CartProvider";
@@ -11,7 +10,6 @@ export default function AuthProvider() {
   const [user, setUser] = useState<User | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [profileImage, setProfileImage] = useState<string | null>(null);
   const { clearLocal } = useCart();
   const router = useRouter();
 
@@ -21,22 +19,6 @@ export default function AuthProvider() {
       if (user) {
         setUser(user);
         
-        // Load user profile image
-        try {
-          const db = getDb();
-          const userDocRef = doc(db, 'users', user.uid);
-          const userDoc = await getDoc(userDocRef);
-          
-          if (userDoc.exists()) {
-            const userData = userDoc.data();
-            setProfileImage(userData.photoURL || user.photoURL || null);
-          } else {
-            setProfileImage(user.photoURL || null);
-          }
-        } catch (error) {
-          console.error("Error loading profile image:", error);
-          setProfileImage(user.photoURL || null);
-        }
         
         // Check if user is admin
         try {
@@ -56,7 +38,6 @@ export default function AuthProvider() {
       } else {
         setUser(null);
         setIsAdmin(false);
-        setProfileImage(null);
       }
       setIsLoading(false);
     });
@@ -86,37 +67,11 @@ export default function AuthProvider() {
             <div className="flex items-center gap-2 sm:gap-4">
               {/* Profile Image - Always visible */}
               <Link href="/profile" className="flex items-center gap-1 sm:gap-2 hover:opacity-80 transition-opacity">
-                {profileImage ? (
-                  <img
-                    src={profileImage}
-                    alt={user.displayName || user.email || 'Profile'}
-                    className="w-6 h-6 sm:w-8 sm:h-8 rounded-full object-cover border border-gray-300 dark:border-gray-600"
-                    onError={(e) => {
-                      // Fallback to initials if image fails to load
-                      const target = e.target as HTMLImageElement;
-                      const parent = target.parentElement;
-                      if (parent && parent.contains(target)) {
-                        // Create fallback element
-                        const fallback = document.createElement('div');
-                        fallback.className = 'w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center border border-gray-300 dark:border-gray-600';
-                        fallback.innerHTML = `
-                          <span class="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-300">
-                            ${(user.displayName || user.email || 'U')[0].toUpperCase()}
-                          </span>
-                        `;
-                        
-                        // Replace the image with fallback
-                        parent.replaceChild(fallback, target);
-                      }
-                    }}
-                  />
-                ) : (
-                  <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center border border-gray-300 dark:border-gray-600">
-                    <span className="text-xs sm:text-sm font-medium text-gray-600 dark:text-white">
-                      {(user.displayName || user.email || 'U')[0].toUpperCase()}
-                    </span>
-                  </div>
-                )}
+                <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center border border-gray-300 dark:border-gray-600">
+                  <span className="text-xs sm:text-sm font-medium text-gray-600 dark:text-white">
+                    {(user.displayName || user.email || 'U')[0].toUpperCase()}
+                  </span>
+                </div>
                 {/* User name - hidden on very small screens */}
                 <span className="hidden sm:inline text-sm font-medium text-gray-700 dark:text-white">
                   {user.displayName || user.email?.split('@')[0] || 'User'}
