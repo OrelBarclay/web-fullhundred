@@ -431,12 +431,12 @@ export default function AdminDashboard() {
               >
                 Users
               </button>
-              <button
+              {/* <button
                 onClick={uploadExistingServices}
                 className="bg-orange-600 text-white px-3 py-2 rounded-lg hover:bg-orange-700 transition-colors text-xs"
               >
                 Upload
-              </button>
+              </button> */}
               <button
                 onClick={handleLogout}
                 className="bg-red-600 text-white px-3 py-2 rounded-lg hover:bg-red-700 transition-colors text-xs"
