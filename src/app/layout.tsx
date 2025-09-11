@@ -22,8 +22,60 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Full Hundred - Transforming Spaces with Precision and Craft",
-  description: "We design, build, and renovate with a relentless focus on quality. Explore our portfolio and get a free, no-obligation quote today.",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://localhost:3000"),
+  title: {
+    default: "Full Hundred - Transforming Spaces with Precision and Craft",
+    template: "%s | Full Hundred",
+  },
+  description:
+    "We design, build, and renovate with a relentless focus on quality. Explore our portfolio and get a free, no-obligation quote today.",
+  keywords: [
+    "home renovation",
+    "bathroom remodel",
+    "kitchen remodeling",
+    "custom carpentry",
+    "Full Hundred",
+  ],
+  alternates: {
+    canonical: "/",
+  },
+  openGraph: {
+    type: "website",
+    url: "/",
+    title: "Full Hundred - Transforming Spaces with Precision and Craft",
+    description:
+      "We design, build, and renovate with a relentless focus on quality. Explore our portfolio and get a free, no-obligation quote today.",
+    images: [
+      {
+        url: "/images/og/cover.jpg",
+        width: 1200,
+        height: 630,
+        alt: "Full Hundred craftsmanship",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Full Hundred - Transforming Spaces with Precision and Craft",
+    description:
+      "We design, build, and renovate with a relentless focus on quality. Explore our portfolio and get a free, no-obligation quote today.",
+    images: ["/images/og/cover.jpg"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
+  icons: {
+    icon: [
+      { url: "/images/favicons/favicon-16x16.png", sizes: "16x16", type: "image/png" },
+      { url: "/images/favicons/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+      { url: "/images/favicons/favicon.ico" },
+    ],
+    apple: [
+      { url: "/images/favicons/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+    ],
+    shortcut: ["/images/favicons/favicon.ico"],
+  },
 };
 
 export default function RootLayout({
