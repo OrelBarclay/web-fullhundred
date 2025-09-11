@@ -21,13 +21,17 @@ export function middleware(request: NextRequest) {
   // Check if token exists and is not empty
   const hasToken = tokenValue && tokenValue !== '';
   
-  // Basic JWT validation - check if it has 3 parts separated by dots
-  const isValidJWT = hasToken && tokenValue.split('.').length === 3;
+  // Validate custom session token format: session-{timestamp}-{random}-{role}
+  const isValidSessionToken = hasToken && 
+    tokenValue.startsWith('session-') && 
+    tokenValue.split('-').length >= 3 &&
+    tokenValue.length > 20; // Reasonable minimum length for session token
   
-  const hasValidToken = isValidJWT;
+  const hasValidToken = isValidSessionToken;
   
   console.log('Middleware - Auth token present:', hasToken);
-  console.log('Middleware - Auth token valid JWT format:', isValidJWT);
+  console.log('Middleware - Token value:', tokenValue?.substring(0, 20) + '...');
+  console.log('Middleware - Is valid session token:', isValidSessionToken);
   console.log('Middleware - Has valid token:', hasValidToken);
   console.log('Middleware - Auth token source:', request.cookies.get('auth-token')?.value ? 'httpOnly' : 'debug');
   
