@@ -1,0 +1,33 @@
+name: Build (resolve apphosting config)
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build-config:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Substitute secrets into apphosting.yaml (artifact only)
+        uses: cschleiden/replace-tokens@v1
+        with:
+          files: 'apphosting.yaml'
+        env:
+          __FIREBASE_CLIENT_EMAIL__: ${{ secrets.FIREBASE_CLIENT_EMAIL }}
+          __FIREBASE_PRIVATE_KEY__: ${{ secrets.FIREBASE_PRIVATE_KEY }}
+          __CLOUDINARY_API_KEY__: ${{ secrets.CLOUDINARY_API_KEY }}
+          __CLOUDINARY_API_SECRET__: ${{ secrets.CLOUDINARY_API_SECRET }}
+          __STRIPE_SECRET_KEY__: ${{ secrets.STRIPE_SECRET_KEY }}
+          __STRIPE_WEBHOOK_SECRET__: ${{ secrets.STRIPE_WEBHOOK_SECRET }}
+          __NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY__: ${{ secrets.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY }}
+
+      - name: Upload resolved config
+        uses: actions/upload-artifact@v4
+        with:
+          name: resolved-apphosting-config
+          path: apphosting.yaml
+
+
