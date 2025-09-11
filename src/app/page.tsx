@@ -1,9 +1,9 @@
+"use client";
 export const metadata = {
   title: "Full Hundred | Design, Build, Renovate",
   description:
     "Premium home renovations. Get a free, no-obligation quote and explore our portfolio.",
 };
-"use client";
 import Image from "next/image";
 import QuoteForm from "@/components/QuoteForm";
 
