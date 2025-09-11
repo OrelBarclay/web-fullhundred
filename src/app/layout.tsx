@@ -22,7 +22,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://localhost:3000"),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://fullhundred.com"),
   title: {
     default: "Full Hundred - Transforming Spaces with Precision and Craft",
     template: "%s | Full Hundred",
