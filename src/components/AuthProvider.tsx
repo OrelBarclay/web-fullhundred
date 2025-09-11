@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/components/CartProvider";
 import type { User } from "firebase/auth";
+import Image from "next/image";
 
 export default function AuthProvider() {
   const [user, setUser] = useState<User | null>(null);
@@ -69,12 +70,13 @@ export default function AuthProvider() {
               <div className="flex items-center gap-2 sm:gap-3">
                 {/* Profile Image */}
                 <Link href="/profile" className="group flex items-center gap-2 hover:opacity-80 transition-all duration-200">
-                  <div className="relative">
+                  <div className="relative w-8 h-8 sm:w-10 sm:h-10">
                     {user.photoURL ? (
-                      <img
+                      <Image
                         src={user.photoURL}
-                        alt={user.displayName || user.email || 'Profile'}
-                        className="w-8 h-8 sm:w-10 sm:h-10 rounded-full object-cover border-2 border-[color:var(--border)] group-hover:border-primary transition-colors"
+                        alt={user.displayName?.split(' ')[0] || user.email || 'Profile'}
+                        fill
+                        className="rounded-full object-cover border-2 border-[color:var(--border)] group-hover:border-primary transition-colors"
                         onError={(e) => {
                           // Fallback to initials if image fails
                           const target = e.target as HTMLImageElement;
@@ -85,10 +87,10 @@ export default function AuthProvider() {
                       />
                     ) : null}
                     <div 
-                      className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-primary/20 to-primary/40 flex items-center justify-center border-2 border-[color:var(--border)] group-hover:border-primary transition-colors ${user.photoURL ? 'hidden' : 'flex'}`}
+                      className={`absolute inset-0 rounded-full bg-gradient-to-br from-primary/20 to-primary/40 flex items-center justify-center border-2 border-[color:var(--border)] group-hover:border-primary transition-colors ${user.photoURL ? 'hidden' : 'flex'}`}
                     >
                       <span className="text-sm sm:text-base font-semibold text-primary">
-                        {(user.displayName || user.email || 'U')[0].toUpperCase()}
+                        {(user.displayName?.split(' ')[0] || user.email || 'U')[0].toUpperCase()}
                       </span>
                     </div>
                   </div>
@@ -96,7 +98,7 @@ export default function AuthProvider() {
                   {/* User name */}
                   <div className="hidden sm:block">
                     <div className="text-sm font-medium text-[color:var(--foreground)]">
-                      {user.displayName || user.email?.split('@')[0] || 'User'}
+                      {user.displayName?.split(' ')[0] || user.email?.split('@')[0] || 'User'}
                     </div>
                     <div className="text-xs text-[color:var(--muted-foreground)]">
                       {isAdmin ? 'Administrator' : 'User'}
