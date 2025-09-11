@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
     // Poll for completion
     let status = pred.status;
     let outputUrl: string | null = null;
-    let pollUrl: string | undefined = pred.urls?.get;
+    const pollUrl: string | undefined = pred.urls?.get;
     const maxAttempts = 40;
     let attempts = 0;
     while (status !== 'succeeded' && status !== 'failed' && attempts < maxAttempts && pollUrl) {
