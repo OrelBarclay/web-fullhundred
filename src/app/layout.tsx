@@ -8,6 +8,7 @@ import ThemeProvider from "@/components/ThemeProvider";
 import ThemeToggle from "@/components/ThemeToggle";
 import CartProvider from "@/components/CartProvider";
 import CartIcon from "@/components/CartIcon";
+import MobileMenu from "@/components/MobileMenu";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -36,11 +37,11 @@ export default function RootLayout({
         <CartProvider>
         <header className="w-full sticky top-0 z-40 border-b border-[color:var(--border)] bg-[color:var(--card)]/70 backdrop-blur">
           <div className="mx-auto max-w-6xl px-4 sm:px-6 py-4">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-2">
               <Link href="/" className="flex items-center">
                 <Logo />
               </Link>
-              <nav className="flex items-center gap-1 sm:gap-2 lg:gap-3 text-sm">
+              <nav className="hidden sm:flex items-center gap-1 sm:gap-2 lg:gap-3 text-sm">
                 <Link href="/services" className="hidden sm:inline px-3 py-2 rounded-md text-[color:var(--muted-foreground)] hover:text-[color:var(--foreground)] hover:bg-[color:var(--muted)] transition-colors">Services</Link>
                 <Link href="/portfolio" className="hidden sm:inline px-3 py-2 rounded-md text-[color:var(--muted-foreground)] hover:text-[color:var(--foreground)] hover:bg-[color:var(--muted)] transition-colors">Our Work</Link>
                 <Link href="/contact" className="hidden sm:inline px-3 py-2 rounded-md text-[color:var(--muted-foreground)] hover:text-[color:var(--foreground)] hover:bg-[color:var(--muted)] transition-colors">Contact</Link>
@@ -50,14 +51,8 @@ export default function RootLayout({
                 <ThemeToggle />
                 <AuthProvider />
               </nav>
+              <MobileMenu />
             </div>
-            {/* Mobile navigation */}
-            <nav className="flex items-center gap-2 text-sm mt-2 sm:hidden">
-              <Link href="/services" className="px-3 py-2 rounded-md text-[color:var(--muted-foreground)] hover:text-[color:var(--foreground)] hover:bg-[color:var(--muted)] transition-colors">Services</Link>
-              <Link href="/portfolio" className="px-3 py-2 rounded-md text-[color:var(--muted-foreground)] hover:text-[color:var(--foreground)] hover:bg-[color:var(--muted)] transition-colors">Portfolio</Link>
-              <Link href="/contact" className="px-3 py-2 rounded-md text-[color:var(--muted-foreground)] hover:text-[color:var(--foreground)] hover:bg-[color:var(--muted)] transition-colors">Contact</Link>
-              <Link href="/#quote" className="px-3 py-2 rounded-md bg-primary text-primary-foreground hover:opacity-90 transition">Quote</Link>
-            </nav>
           </div>
         </header>
         <main>{children}</main>

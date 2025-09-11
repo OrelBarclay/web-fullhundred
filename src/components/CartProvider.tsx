@@ -1,8 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useMemo, useState, useCallback } from "react";
-import { getAuthInstance, getDb } from "@/lib/firebase";
-import { doc, setDoc, onSnapshot } from "firebase/firestore";
+import { getAuthInstance } from "@/lib/firebase";
 import type { User } from "firebase/auth";
 
 export type CartItem = {
@@ -18,6 +17,7 @@ type CartContextValue = {
   addItem: (item: Omit<CartItem, "quantity">, qty?: number) => Promise<void>;
   removeItem: (id: string) => Promise<void>;
   clear: () => Promise<void>;
+  clearLocal: () => void;
   setQuantity: (id: string, qty: number) => Promise<void>;
   subtotal: number;
 };
@@ -62,113 +62,83 @@ export default function CartProvider({ children }: { children: React.ReactNode }
     return () => unsubscribe();
   }, []);
 
-  // Load cart from database when user changes
+  // Load cart via API when user changes (single fetch), and merge local storage if present
   useEffect(() => {
     if (isLoading) return;
+    
+    async function loadForAuthenticatedUser(authUser: User) {
+      try {
+        // Fetch current cart from API
+        const response = await fetch(`/api/cart?userId=${authUser.uid}`);
+        if (response.ok) {
+          const data = await response.json();
+          const dbItems: CartItem[] = Array.isArray(data.items) ? data.items : [];
 
-    if (user) {
-      // Load from Firestore for authenticated users
-      const db = getDb();
-      const cartRef = doc(db, 'carts', user.uid);
-      
-      const unsubscribe = onSnapshot(cartRef, async (doc) => {
-        if (doc.exists()) {
-          const data = doc.data();
-          const dbItems = data.items || [];
-          
-          // Check if there are items in localStorage to merge
+          // Attempt local merge
+          let merged = dbItems;
           try {
             const raw = localStorage.getItem(STORAGE_KEY);
             if (raw) {
-              const localItems = JSON.parse(raw);
-              if (localItems.length > 0) {
-                // Merge localStorage cart with database cart
-                const mergedItems = mergeCarts(dbItems, localItems);
-                setItems(mergedItems);
-                
-                // Save merged cart to database
-                await setDoc(cartRef, {
-                  items: mergedItems,
-                  updatedAt: new Date(),
-                  userId: user.uid
-                });
-                
-                // Clear localStorage after merge
+              const localItems: CartItem[] = JSON.parse(raw);
+              if (Array.isArray(localItems) && localItems.length > 0) {
+                merged = mergeCarts(dbItems, localItems);
+                // Push merged items to DB via API by adding each delta from local
+                for (const localItem of localItems) {
+                  const existing = dbItems.find((i) => i.id === localItem.id);
+                  const deltaQty = existing ? localItem.quantity : localItem.quantity; // always add local qty
+                  if (deltaQty > 0) {
+                    await fetch('/api/cart/add', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ userId: authUser.uid, item: { id: localItem.id, name: localItem.name, price: localItem.price, image: localItem.image }, quantity: localItem.quantity })
+                    });
+                  }
+                }
+                // Clear local after merge
                 localStorage.removeItem(STORAGE_KEY);
-                return;
               }
             }
-          } catch (error) {
-            console.error("Error merging carts:", error);
+          } catch (err) {
+            console.error('Error merging local cart:', err);
           }
-          
-          setItems(dbItems);
-        } else {
-          // No cart in database, check localStorage
-          try {
-            const raw = localStorage.getItem(STORAGE_KEY);
-            if (raw) {
-              const localItems = JSON.parse(raw);
-              setItems(localItems);
-              
-              // Save localStorage cart to database
-              await setDoc(cartRef, {
-                items: localItems,
-                updatedAt: new Date(),
-                userId: user.uid
-              });
-              
-              // Clear localStorage after saving
-              localStorage.removeItem(STORAGE_KEY);
-            } else {
-              setItems([]);
-            }
-          } catch (error) {
-            console.error("Error loading from localStorage:", error);
-            setItems([]);
-          }
-        }
-      }, (error) => {
-        console.error("Error loading cart:", error);
-        // Fallback to localStorage
-        try {
-          const raw = localStorage.getItem(STORAGE_KEY);
-          if (raw) setItems(JSON.parse(raw));
-        } catch {}
-      });
 
-      return () => unsubscribe();
+          // Re-fetch to ensure server is source of truth after merge
+          const refetch = await fetch(`/api/cart?userId=${authUser.uid}`);
+          if (refetch.ok) {
+            const refreshed = await refetch.json();
+            setItems(Array.isArray(refreshed.items) ? refreshed.items : merged);
+          } else {
+            setItems(merged);
+          }
+        } else {
+          // If API fails, fallback to local
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (raw) setItems(JSON.parse(raw)); else setItems([]);
+        }
+      } catch (error) {
+        console.error('Error loading cart from API:', error);
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) setItems(JSON.parse(raw)); else setItems([]);
+      }
+    }
+
+    if (user) {
+      loadForAuthenticatedUser(user);
     } else {
-      // Load from localStorage for anonymous users
+      // Anonymous user -> load from localStorage only
       try {
         const raw = localStorage.getItem(STORAGE_KEY);
-        if (raw) setItems(JSON.parse(raw));
-      } catch {}
+        if (raw) setItems(JSON.parse(raw)); else setItems([]);
+      } catch {
+        setItems([]);
+      }
     }
   }, [user, isLoading]);
 
-  // Save cart to database when items change
+  // Persist cart to localStorage for anonymous users when items change
   useEffect(() => {
     if (isLoading) return;
-
-    if (user) {
-      // Save to Firestore for authenticated users
-      const db = getDb();
-      const cartRef = doc(db, 'carts', user.uid);
-      
-      setDoc(cartRef, {
-        items,
-        updatedAt: new Date(),
-        userId: user.uid
-      }).catch((error) => {
-        console.error("Error saving cart:", error);
-        // Fallback to localStorage
-        try {
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
-        } catch {}
-      });
-    } else {
-      // Save to localStorage for anonymous users
+    if (!user) {
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
       } catch {}
@@ -304,9 +274,17 @@ export default function CartProvider({ children }: { children: React.ReactNode }
     }
   }, [user]);
 
+  // Local-only clear (used on logout) to avoid deleting server cart
+  const clearLocal = useCallback(() => {
+    setItems([]);
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+    } catch {}
+  }, []);
+
   const subtotal = useMemo(() => items.reduce((sum, i) => sum + i.price * i.quantity, 0), [items]);
 
-  const value = useMemo<CartContextValue>(() => ({ items, addItem, removeItem, clear, setQuantity, subtotal }), [items, subtotal, addItem, removeItem, clear, setQuantity]);
+  const value = useMemo<CartContextValue>(() => ({ items, addItem, removeItem, clear, clearLocal, setQuantity, subtotal }), [items, subtotal, addItem, removeItem, clear, clearLocal, setQuantity]);
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 }

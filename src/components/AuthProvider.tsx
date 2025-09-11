@@ -12,7 +12,7 @@ export default function AuthProvider() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [profileImage, setProfileImage] = useState<string | null>(null);
-  const { clear } = useCart();
+  const { clearLocal } = useCart();
   const router = useRouter();
 
   useEffect(() => {
@@ -70,7 +70,8 @@ export default function AuthProvider() {
       await fetch("/api/auth/logout", { method: "POST" });
       setUser(null);
       setIsAdmin(false);
-      clear(); // Clear cart on logout
+      // Clear only local state on logout; keep server cart intact
+      clearLocal();
       router.push("/"); // Redirect to home page
     } catch (error) {
       console.error("Logout error:", error);

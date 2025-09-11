@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { stripe, formatPriceForStripe } from '@/lib/stripe';
+import { stripe } from '@/lib/stripe';
 
 export async function POST(request: NextRequest) {
   try {
@@ -9,21 +9,37 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No items provided' }, { status: 400 });
     }
 
-    // Calculate total amount
-    const totalAmount = items.reduce((sum, item) => {
+    // Basic validation
+    if (process.env.STRIPE_SECRET_KEY?.includes('placeholder') || !process.env.STRIPE_SECRET_KEY) {
+      return NextResponse.json({ error: 'Stripe is not configured. Set STRIPE_SECRET_KEY.' }, { status: 500 });
+    }
+
+    // Calculate total amount (price is already in cents)
+    const totalAmount = items.reduce((sum: number, item: { price: number; quantity: number }) => {
       return sum + (item.price * item.quantity);
     }, 0);
 
     // Create line items for Stripe
-    const lineItems = items.map((item) => ({
+    function isValidHttpUrl(url?: string): boolean {
+      if (!url) return false;
+      try {
+        const u = new URL(url);
+        return u.protocol === 'http:' || u.protocol === 'https:';
+      } catch {
+        return false;
+      }
+    }
+
+    const lineItems = items.map((item: { name: string; price: number; quantity: number; image?: string }) => ({
       price_data: {
         currency: 'usd',
         product_data: {
           name: item.name,
           description: `Labor-only pricing for ${item.name}`,
-          images: item.image ? [item.image] : [],
+          images: isValidHttpUrl(item.image) ? [item.image as string] : [],
         },
-        unit_amount: formatPriceForStripe(item.price), // Convert to cents
+        // item.price is already in cents
+        unit_amount: item.price,
       },
       quantity: item.quantity,
     }));
