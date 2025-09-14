@@ -13,28 +13,13 @@ function CheckoutSuccessContent() {
   const { clear } = useCart();
 
   useEffect(() => {
-    // Debug: Log all search parameters
-    console.log('All search params:', searchParams.toString());
-    console.log('URL search params:', window.location.search);
-    
     const sessionIdParam = searchParams.get('session_id');
-    console.log('Session ID param:', sessionIdParam);
-    
     if (sessionIdParam) {
       setSessionId(sessionIdParam);
       // Clear the cart after successful payment
       clear();
     } else {
-      // Check for alternative parameter names
-      const altSessionId = searchParams.get('sessionId') || searchParams.get('session') || searchParams.get('id');
-      console.log('Alternative session ID:', altSessionId);
-      
-      if (altSessionId) {
-        setSessionId(altSessionId);
-        clear();
-      } else {
-        setError('No session ID found. Please check the URL parameters.');
-      }
+      setError('No session ID found');
     }
     setLoading(false);
   }, [searchParams, clear]);
