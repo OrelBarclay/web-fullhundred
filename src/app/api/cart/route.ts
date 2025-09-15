@@ -26,7 +26,6 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ items: [], updatedAt: null, userId });
     }
   } catch (error) {
-    console.error('Error fetching cart:', error);
     return NextResponse.json({ error: 'Failed to fetch cart' }, { status: 500 });
   }
 }
@@ -59,7 +58,6 @@ export async function POST(request: NextRequest) {
       updatedAt: new Date()
     });
   } catch (error) {
-    console.error('Error updating cart:', error);
     return NextResponse.json({ error: 'Failed to update cart' }, { status: 500 });
   }
 }
@@ -82,7 +80,6 @@ export async function DELETE(request: NextRequest) {
       message: 'Cart cleared successfully' 
     });
   } catch (error) {
-    console.error('Error clearing cart:', error);
     return NextResponse.json({ error: 'Failed to clear cart' }, { status: 500 });
   }
 }

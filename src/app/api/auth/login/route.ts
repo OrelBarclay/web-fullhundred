@@ -26,7 +26,6 @@ export async function POST(request: NextRequest) {
 
     // For now, skip Admin SDK verification and use the user data from the client
     // This is a temporary workaround until Firebase Admin permissions are fixed
-    console.log('Skipping Admin SDK verification due to permissions issue');
     
     if (!userData || !userData.uid) {
       return NextResponse.json({ error: 'User data required' }, { status: 400 });
@@ -38,10 +37,7 @@ export async function POST(request: NextRequest) {
       name: userData.displayName,
       picture: userData.photoURL
     };
-    console.log('Using client-provided user data:', decodedToken);
-    
     // Store/update user in Firestore
-    console.log('Storing user data in Firestore...');
     
     const app = getFirebaseApp();
     const db = getFirestore(app);
@@ -65,19 +61,16 @@ export async function POST(request: NextRequest) {
     // If user doesn't exist, set createdAt; if they do, keep existing createdAt and role
     if (!userDoc.exists()) {
       userDataToStore.createdAt = now;
-      console.log('Creating new user:', userDataToStore);
     } else {
       const existingData = userDoc.data();
       userDataToStore.createdAt = existingData?.createdAt || now;
       userDataToStore.role = existingData?.role || 'user';
       userDataToStore.isAdmin = existingData?.isAdmin || false;
-      console.log('Updating existing user:', userDataToStore);
     }
     
     await setDoc(userRef, userDataToStore, { merge: true });
     
     const user = userDataToStore;
-    console.log('User stored/updated in Firestore:', user);
     
     // Check if user is admin using custom claims
     // For now, we'll check the user's role in Firestore and custom claims
@@ -95,7 +88,6 @@ export async function POST(request: NextRequest) {
     
     // Create session token with admin status
     const sessionCookie = `session-${Date.now()}-${Math.random().toString(36).substr(2, 9)}-${isAdminUser ? 'admin' : 'user'}`;
-    console.log('Created session token with admin status:', isAdminUser);
     
     if (!user) {
       return NextResponse.json({ error: 'Failed to create or retrieve user' }, { status: 500 });
@@ -136,24 +128,9 @@ export async function POST(request: NextRequest) {
     response.headers.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
     response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
     
-    console.log('Session cookie set:', {
-      name: 'auth-token',
-      maxAge: 60 * 60 * 24 * 5 * 1000,
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      path: '/'
-    });
     
     return response;
   } catch (error) {
-    console.error('Login error:', error);
-    console.error('Login error details:', {
-      message: error instanceof Error ? error.message : 'Unknown error',
-      stack: error instanceof Error ? error.stack : undefined,
-      name: error instanceof Error ? error.name : 'Unknown'
-    });
-    
     // Add CORS headers to error response
     const errorResponse = NextResponse.json({ 
       error: 'Authentication failed',

@@ -44,13 +44,10 @@ export default function AuthProvider() {
         
         const authToken = getCookieValue('auth-token') || getCookieValue('auth-token-debug');
         const isAdmin = authToken?.includes('-admin') || false;
-        console.log('Auth token:', authToken);
-        console.log('Is admin from token:', isAdmin);
         setIsAdmin(isAdmin);
         
         // If no token found, retry after a short delay (cookies might be setting)
         if (!authToken) {
-          console.log('No auth token found, retrying in 500ms...');
           setTimeout(checkAdminStatus, 500);
         }
       };

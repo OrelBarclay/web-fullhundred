@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getDb } from "@/lib/firebase";
 import { collection, getDocs } from "firebase/firestore";
-import { cacheGet, cacheSet, estimateServicePriceUSD } from "@/lib/ai";
+import { estimateServicePriceUSD } from "@/lib/ai";
 import type { Service } from "@/server/db/schema";
 
 export const runtime = 'nodejs';
@@ -53,44 +53,50 @@ const staticProducts: Product[] = [
 ];
 
 export async function GET() {
-  const cacheKey = "ai_products";
-  const cached = cacheGet<Product[]>(cacheKey);
-  if (cached) return NextResponse.json(cached);
-
   try {
-    // Fetch services from Firestore
+    // Fetch services from Firestore fresh every request
     const db = getDb();
     const snap = await getDocs(collection(db, "services"));
-    const services: Array<Service & { id: string }> = snap.docs.map((d) => {
-      const data = d.data() as Partial<Service>;
-      return {
-        id: d.id,
-        title: data.title || "",
-        description: data.description || "",
-        features: Array.isArray(data.features) ? data.features as string[] : [],
-        iconColor: data.iconColor || "",
-        iconPath: data.iconPath || "",
-        isActive: Boolean(data.isActive),
-        order: Number(data.order || 0),
-        createdAt: (data.createdAt as Date) || new Date(),
-        updatedAt: (data.updatedAt as Date) || new Date(),
-      } as Service & { id: string };
-    }).filter(s => s.isActive);
+    const services: Array<Service & { id: string }> = snap.docs
+      .map((d) => {
+        const data = d.data() as Partial<Service>;
+        return {
+          id: d.id,
+          title: data.title || "",
+          description: data.description || "",
+          features: Array.isArray(data.features) ? (data.features as string[]) : [],
+          iconColor: data.iconColor || "",
+          iconPath: data.iconPath || "",
+          isActive: Boolean(data.isActive),
+          order: Number(data.order || 0),
+          createdAt: (data.createdAt as Date) || new Date(),
+          updatedAt: (data.updatedAt as Date) || new Date(),
+        } as Service & { id: string };
+      })
+      .filter((s) => s.isActive);
 
-    // Generate AI-powered product packages
+    // Generate AI-powered product packages from current services
     const aiProducts = generateProductPackages(services);
-    
-    // Combine with static products
+
+    // Combine with static products (optional baseline)
     const allProducts = [...staticProducts, ...aiProducts];
-    
-    // Cache for 10 minutes
-    cacheSet(cacheKey, allProducts, 10 * 60_000);
-    
-    return NextResponse.json(allProducts);
-  } catch (error) {
-    console.error("Error generating AI products:", error);
-    // Fallback to static products
-    return NextResponse.json(staticProducts);
+
+    return NextResponse.json(allProducts, {
+      headers: {
+        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+        Pragma: 'no-cache',
+        Expires: '0',
+      },
+    });
+  } catch (_error) {
+    // Fallback to static products only
+    return NextResponse.json(staticProducts, {
+      headers: {
+        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+        Pragma: 'no-cache',
+        Expires: '0',
+      },
+    });
   }
 }
 
@@ -139,7 +145,7 @@ function generateProductPackages(services: Array<Service & { id: string }>): Pro
       { name: "Premium", maxServices: 4, discount: 0.75 }
     ];
 
-    tiers.forEach((tier, index) => {
+    tiers.forEach((tier) => {
       const selectedServices = categoryServices.slice(0, tier.maxServices);
       if (selectedServices.length === 0) return;
 
@@ -153,7 +159,7 @@ function generateProductPackages(services: Array<Service & { id: string }>): Pro
       const packageDescription = `Complete ${category} solution with ${selectedServices.length} professional services. ${tier.name.toLowerCase()} tier includes everything you need.`;
 
       packages.push({
-        id: `ai-${category}-${tier.name.toLowerCase()}-${Date.now()}`,
+        id: `ai-${category}-${tier.name.toLowerCase()}-${Date.now()}-${Math.random().toString(36).slice(2,7)}`,
         name: packageName,
         description: packageDescription,
         price: discountedPrice,
@@ -187,7 +193,7 @@ function generateProductPackages(services: Array<Service & { id: string }>): Pro
     );
 
     packages.push({
-      id: `ai-best-value-${Date.now()}`,
+      id: `ai-best-value-${Date.now()}-${Math.random().toString(36).slice(2,7)}`,
       name: "Best Value Home Package",
       description: "Our most popular services bundled together for maximum value. Perfect for comprehensive home improvements.",
       price: bestValuePrice,
@@ -216,11 +222,11 @@ function getEstimatedTimeline(category: string, serviceCount: number): string {
     combo: "6-12 weeks"
   };
   
-  const base = baseTimelines[category as keyof typeof baseTimelines] || "4-8 weeks";
+  const base = (baseTimelines as Record<string,string>)[category] || "4-8 weeks";
   return base;
 }
 
-function getComplexityLevel(category: string, serviceCount: number): string {
+function getComplexityLevel(_category: string, serviceCount: number): string {
   if (serviceCount <= 2) return "Low";
   if (serviceCount <= 3) return "Medium";
   return "High";

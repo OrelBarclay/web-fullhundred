@@ -41,7 +41,6 @@ export async function POST(request: NextRequest) {
 
     const pred = await resp.json();
     if (!resp.ok) {
-      console.error('Replicate error:', pred);
       const detail = (pred && (pred.detail || pred.message || pred.title)) || 'AI generation failed';
       return NextResponse.json({ error: detail }, { status: 500 });
     }
@@ -74,7 +73,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ imageUrl: outputUrl });
   } catch (e) {
-    console.error('Visualizer API error:', e);
     return NextResponse.json({ error: 'Server error' }, { status: 500 });
   }
 }

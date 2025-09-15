@@ -99,7 +99,7 @@ export default function CartProvider({ children }: { children: React.ReactNode }
               }
             }
           } catch (err) {
-            console.error('Error merging local cart:', err);
+            // Error merging local cart
           }
 
           // Re-fetch to ensure server is source of truth after merge
@@ -116,7 +116,6 @@ export default function CartProvider({ children }: { children: React.ReactNode }
           if (raw) setItems(JSON.parse(raw)); else setItems([]);
         }
       } catch (error) {
-        console.error('Error loading cart from API:', error);
         const raw = localStorage.getItem(STORAGE_KEY);
         if (raw) setItems(JSON.parse(raw)); else setItems([]);
       }
@@ -159,7 +158,6 @@ export default function CartProvider({ children }: { children: React.ReactNode }
           const data = await response.json();
           setItems(data.items);
         } else {
-          console.error('Failed to add item to cart in database');
           // Fallback to local state
           setItems((prev) => {
             const existing = prev.find((p) => p.id === item.id);
@@ -170,7 +168,6 @@ export default function CartProvider({ children }: { children: React.ReactNode }
           });
         }
       } catch (error) {
-        console.error('Error adding item to cart:', error);
         // Fallback to local state
         setItems((prev) => {
           const existing = prev.find((p) => p.id === item.id);
@@ -206,12 +203,10 @@ export default function CartProvider({ children }: { children: React.ReactNode }
           const data = await response.json();
           setItems(data.items);
         } else {
-          console.error('Failed to remove item from cart in database');
           // Fallback to local state
           setItems((prev) => prev.filter((p) => p.id !== id));
         }
       } catch (error) {
-        console.error('Error removing item from cart:', error);
         // Fallback to local state
         setItems((prev) => prev.filter((p) => p.id !== id));
       }
@@ -231,12 +226,10 @@ export default function CartProvider({ children }: { children: React.ReactNode }
         if (response.ok) {
           setItems([]);
         } else {
-          console.error('Failed to clear cart in database');
           // Fallback to local state
           setItems([]);
         }
       } catch (error) {
-        console.error('Error clearing cart:', error);
         // Fallback to local state
         setItems([]);
       }
@@ -259,12 +252,10 @@ export default function CartProvider({ children }: { children: React.ReactNode }
           const data = await response.json();
           setItems(data.items);
         } else {
-          console.error('Failed to update item quantity in database');
           // Fallback to local state
           setItems((prev) => prev.map((p) => (p.id === id ? { ...p, quantity: qty } : p)));
         }
       } catch (error) {
-        console.error('Error updating item quantity:', error);
         // Fallback to local state
         setItems((prev) => prev.map((p) => (p.id === id ? { ...p, quantity: qty } : p)));
       }

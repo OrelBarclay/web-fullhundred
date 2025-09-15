@@ -24,7 +24,6 @@ export async function POST(request: NextRequest) {
         process.env.STRIPE_WEBHOOK_SECRET!
       );
     } catch (err) {
-      console.error('Webhook signature verification failed:', err);
       return NextResponse.json({ error: 'Invalid signature' }, { status: 400 });
     }
 
@@ -32,37 +31,31 @@ export async function POST(request: NextRequest) {
     switch (event.type) {
       case 'checkout.session.completed':
         const session = event.data.object;
-        console.log('Payment succeeded:', session.id);
         
         try {
           // Save order to database
           await saveOrderToDatabase(session as Stripe.Checkout.Session);
-          console.log('Order saved to database successfully');
         } catch (dbError) {
-          console.error('Failed to save order to database:', dbError);
           // Don't return error here as payment is already processed
         }
         
         break;
 
       case 'payment_intent.succeeded':
-        const paymentIntent = event.data.object;
-        console.log('PaymentIntent succeeded:', paymentIntent.id);
+        // Payment succeeded
         break;
 
       case 'payment_intent.payment_failed':
-        const failedPayment = event.data.object;
-        console.log('PaymentIntent failed:', failedPayment.id);
+        // Payment failed
         break;
 
       default:
-        console.log(`Unhandled event type: ${event.type}`);
+        // Unhandled event type
     }
 
     return NextResponse.json({ received: true });
 
   } catch (error) {
-    console.error('Webhook error:', error);
     return NextResponse.json(
       { error: 'Webhook handler failed' },
       { status: 500 }
@@ -79,7 +72,6 @@ async function saveOrderToDatabase(session: Stripe.Checkout.Session) {
   try {
     items = JSON.parse(session.metadata?.items || '[]');
   } catch (error) {
-    console.error('Failed to parse items from metadata:', error);
     items = [];
   }
 
@@ -129,7 +121,6 @@ async function saveOrderToDatabase(session: Stripe.Checkout.Session) {
         });
       }
     } catch (userError) {
-      console.error('Failed to update user orders:', userError);
       // Don't throw error as order is already saved
     }
   }
@@ -143,17 +134,9 @@ async function saveOrderToDatabase(session: Stripe.Checkout.Session) {
         updatedAt: new Date(),
         userId: session.customer_email
       });
-      console.log('Cart cleared for user:', session.customer_email);
     } catch (cartError) {
-      console.error('Failed to clear cart:', cartError);
       // Don't throw error as order is already saved
     }
   }
 
-  console.log('Order saved successfully:', {
-    orderId: session.id,
-    customerEmail: session.customer_email,
-    amountTotal: session.amount_total,
-    itemsCount: items.length
-  });
 }

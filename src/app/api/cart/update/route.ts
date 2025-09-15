@@ -48,7 +48,6 @@ export async function POST(request: NextRequest) {
       updatedAt: new Date()
     });
   } catch (error) {
-    console.error('Error updating item quantity:', error);
     return NextResponse.json({ error: 'Failed to update item quantity' }, { status: 500 });
   }
 }

@@ -16,11 +16,11 @@ type Product = {
   complexity?: string;
 };
 
-
-
 export default function ShopPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const { addItem } = useCart();
 
   useEffect(() => {
@@ -28,7 +28,7 @@ export default function ShopPage() {
       try {
         const res = await fetch("/api/products", { cache: "no-store" });
         const data = await res.json();
-        setProducts(data);
+        setProducts(Array.isArray(data) ? data : []);
       } catch {
         setProducts([]);
       } finally {
@@ -36,6 +36,25 @@ export default function ShopPage() {
       }
     })();
   }, []);
+
+  // Lightweight auth detection via cookies (matches AuthProvider logic)
+  useEffect(() => {
+    const getCookieValue = (name: string) => {
+      if (typeof document === 'undefined') return null;
+      const value = `; ${document.cookie}`;
+      const parts = value.split(`; ${name}=`);
+      if (parts.length === 2) return parts.pop()?.split(';').shift() || null;
+      return null;
+    };
+
+    const authToken = getCookieValue('auth-token') || getCookieValue('auth-token-debug');
+    const hasSession = Boolean(authToken && authToken.trim() !== '');
+    const admin = Boolean(authToken && authToken.includes('-admin'));
+    setIsLoggedIn(hasSession);
+    setIsAdmin(admin);
+  }, []);
+
+  const addDisabled = (loading || !isLoggedIn || isAdmin);
 
   return (
     <section className="mx-auto max-w-6xl px-6 py-12 text-[color:var(--foreground)]">
@@ -54,6 +73,14 @@ export default function ShopPage() {
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
           <p>Generating AI packages...</p>
         </div>
+      ) : products.length === 0 ? (
+        <div className="text-center text-[color:var(--muted-foreground)] py-16">
+          <p className="mb-3">No services found to generate packages.</p>
+          <p className="mb-6">Add or activate services in the admin panel, then refresh.</p>
+          <Link href="/admin/services" className="inline-flex items-center px-4 py-2 bg-primary text-primary-foreground rounded-md hover:opacity-90 transition">
+            Manage Services
+          </Link>
+        </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {products.map((p) => (
@@ -71,7 +98,7 @@ export default function ShopPage() {
                 <div className="flex items-start justify-between">
                   <h2 className="text-lg font-medium text-[color:var(--foreground)]">{p.name}</h2>
                   <div className="text-right">
-                    <span className="text-lg font-bold text-primary">${(p.price / 10).toFixed(2)}</span>
+                    <span className="text-lg font-bold text-primary">${(p.price / 100).toFixed(2)}</span>
                     {p.includedServices && (
                       <p className="text-xs text-[color:var(--muted-foreground)]">
                         {p.includedServices.length} services
@@ -129,8 +156,10 @@ export default function ShopPage() {
                     View Details
                   </Link>
                   <button
+                    disabled={addDisabled}
                     onClick={() => addItem({ id: p.id, name: p.name, price: p.price, image: p.image })}
-                    className="flex-1 bg-primary text-primary-foreground py-2 px-3 rounded-md hover:opacity-90 transition-opacity font-medium text-sm"
+                    className="flex-1 bg-primary text-primary-foreground py-2 px-3 rounded-md hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity font-medium text-sm"
+                    title={!isLoggedIn ? 'Sign in to add to cart' : (isAdmin ? 'Admins cannot purchase' : undefined)}
                   >
                     Add to Cart
                   </button>

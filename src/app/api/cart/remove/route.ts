@@ -42,7 +42,6 @@ export async function POST(request: NextRequest) {
       updatedAt: new Date()
     });
   } catch (error) {
-    console.error('Error removing item from cart:', error);
     return NextResponse.json({ error: 'Failed to remove item from cart' }, { status: 500 });
   }
 }

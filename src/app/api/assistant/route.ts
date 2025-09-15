@@ -76,7 +76,6 @@ export async function POST(request: NextRequest) {
     const reply = await callOpenAI(messages, retrieved);
     return NextResponse.json({ reply });
   } catch (e) {
-    console.error('Assistant API error:', e);
     return NextResponse.json({ error: 'Server error' }, { status: 500 });
   }
 }
