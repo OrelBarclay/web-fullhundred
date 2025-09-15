@@ -1,6 +1,6 @@
 "use client";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 
 interface ContactForm {
   name: string;
@@ -10,7 +10,7 @@ interface ContactForm {
   message: string;
 }
 
-export default function ContactPage() {
+function ContactPageContent() {
   const [formData, setFormData] = useState<ContactForm>({
     name: "",
     email: "",
@@ -21,6 +21,24 @@ export default function ContactPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<"idle" | "success" | "error">("idle");
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    if (!searchParams) return;
+    const service = searchParams.get('service') || '';
+    const packageName = searchParams.get('packageName') || '';
+    const price = searchParams.get('price') || '';
+    const included = searchParams.get('included') || '';
+    const message = searchParams.get('message') || '';
+
+    if (service || packageName || price || included || message) {
+      setFormData(prev => ({
+        ...prev,
+        service,
+        message: message || `I'm interested in the ${packageName}${price ? ` (estimated labor $${price})` : ''}.${included ? `\nIncluded: ${included}` : ''}`.trim()
+      }));
+    }
+  }, [searchParams]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -36,10 +54,7 @@ export default function ContactPage() {
     setSubmitStatus("idle");
 
     try {
-      // For now, we'll simulate form submission
-      // In production, you'd send this to your backend or email service
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
       setSubmitStatus("success");
       setFormData({
         name: "",
@@ -48,8 +63,6 @@ export default function ContactPage() {
         service: "",
         message: ""
       });
-      
-      // Reset success message after 5 seconds
       setTimeout(() => setSubmitStatus("idle"), 5000);
     } catch (error) {
       setSubmitStatus("error");
@@ -178,11 +191,11 @@ export default function ContactPage() {
                     className="w-full px-4 py-3 border border-[color:var(--border)] rounded-lg bg-[color:var(--popover)] text-[color:var(--foreground)] focus:ring-2 focus:ring-[color:var(--ring)] focus:border-transparent transition-colors"
                   >
                     <option value="">Select a service</option>
-                    <option value="kitchen-remodeling">Kitchen Remodeling</option>
-                    <option value="bathroom-renovation">Bathroom Renovation</option>
-                    <option value="home-additions">Home Additions</option>
-                    <option value="custom-carpentry">Custom Carpentry</option>
-                    <option value="project-management">Project Management</option>
+                    <option value="kitchen">Kitchen Remodeling</option>
+                    <option value="bathroom">Bathroom Renovation</option>
+                    <option value="renovation">Home Additions</option>
+                    <option value="outdoor">Custom Carpentry</option>
+                    <option value="maintenance">Project Management</option>
                     <option value="other">Other</option>
                   </select>
                 </div>
@@ -350,5 +363,13 @@ export default function ContactPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function ContactPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="text-center"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div><p className="text-lg text-muted-foreground">Loading...</p></div></div>}>
+      <ContactPageContent />
+    </Suspense>
   );
 }

@@ -56,6 +56,20 @@ export default function ShopPage() {
 
   const addDisabled = (loading || !isLoggedIn || isAdmin);
 
+  function buildQuoteHref(p: Product): string {
+    const params = new URLSearchParams();
+    params.set('service', p.category || '');
+    params.set('packageId', p.id);
+    params.set('packageName', p.name);
+    params.set('price', (p.price / 100).toFixed(2));
+    if (p.includedServices && p.includedServices.length > 0) {
+      params.set('included', p.includedServices.map(s => s.title).join(', '));
+    }
+    const message = `Hi, I'm interested in the "${p.name}" package.\nCategory: ${p.category}\nEstimated Labor: $${(p.price / 100).toFixed(2)}\n${p.estimatedTimeline ? `Timeline: ${p.estimatedTimeline}\n` : ''}${p.complexity ? `Complexity: ${p.complexity}\n` : ''}${p.includedServices && p.includedServices.length ? `Included services: ${p.includedServices.map(s => s.title).join(', ')}` : ''}`.trim();
+    params.set('message', message);
+    return `/contact?${params.toString()}`;
+  }
+
   return (
     <section className="mx-auto max-w-6xl px-6 py-12 text-[color:var(--foreground)]">
       <div className="text-center mb-8">
@@ -154,6 +168,12 @@ export default function ShopPage() {
                     className="flex-1 bg-card border border-[color:var(--border)] text-[color:var(--foreground)] py-2 px-3 rounded-md hover:bg-[color:var(--accent)] transition-colors text-sm font-medium text-center"
                   >
                     View Details
+                  </Link>
+                  <Link
+                    href={buildQuoteHref(p)}
+                    className="flex-1 bg-emerald-600 text-white py-2 px-3 rounded-md hover:opacity-90 transition-opacity font-medium text-sm text-center"
+                  >
+                    Get a Quote
                   </Link>
                   <button
                     disabled={addDisabled}
