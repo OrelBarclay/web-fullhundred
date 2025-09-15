@@ -20,20 +20,40 @@ export async function GET(request: NextRequest) {
     const resultsMap = new Map<string, Record<string, unknown>>();
 
     if (email) {
-      // Query by clientId
-      const q1 = withLimit(query(projectsRef, where('clientId', '==', email), orderBy('startDate', 'desc')));
-      const s1 = await getDocs(q1);
-      s1.docs.forEach((d) => resultsMap.set(d.id, { id: d.id, ...d.data() as Record<string, unknown> }));
+      // Primary queries (fast path)
+      try {
+        const q1 = withLimit(query(projectsRef, where('clientId', '==', email), orderBy('startDate', 'desc')));
+        const s1 = await getDocs(q1);
+        s1.docs.forEach((d) => resultsMap.set(d.id, { id: d.id, ...d.data() as Record<string, unknown> }));
+      } catch (_) {}
 
-      // Query by clientEmail
-      const q2 = withLimit(query(projectsRef, where('clientEmail', '==', email), orderBy('startDate', 'desc')));
-      const s2 = await getDocs(q2);
-      s2.docs.forEach((d) => resultsMap.set(d.id, { id: d.id, ...d.data() as Record<string, unknown> }));
+      try {
+        const q2 = withLimit(query(projectsRef, where('clientEmail', '==', email), orderBy('startDate', 'desc')));
+        const s2 = await getDocs(q2);
+        s2.docs.forEach((d) => resultsMap.set(d.id, { id: d.id, ...d.data() as Record<string, unknown> }));
+      } catch (_) {}
 
-      // Query by customerEmail
-      const q3 = withLimit(query(projectsRef, where('customerEmail', '==', email), orderBy('startDate', 'desc')));
-      const s3 = await getDocs(q3);
-      s3.docs.forEach((d) => resultsMap.set(d.id, { id: d.id, ...d.data() as Record<string, unknown> }));
+      try {
+        const q3 = withLimit(query(projectsRef, where('customerEmail', '==', email), orderBy('startDate', 'desc')));
+        const s3 = await getDocs(q3);
+        s3.docs.forEach((d) => resultsMap.set(d.id, { id: d.id, ...d.data() as Record<string, unknown> }));
+      } catch (_) {}
+
+      // Fallback if nothing found or indexes missing: fetch recent and filter in-memory
+      if (resultsMap.size === 0) {
+        const fallback = withLimit(query(projectsRef, orderBy('startDate', 'desc')));
+        const snap = await getDocs(fallback);
+        const emailLower = email.toLowerCase();
+        snap.docs.forEach((d) => {
+          const data = d.data() as Record<string, unknown>;
+          const clientId = String((data as { clientId?: unknown }).clientId ?? '').toLowerCase();
+          const clientEmail = String((data as { clientEmail?: unknown }).clientEmail ?? '').toLowerCase();
+          const customerEmail = String((data as { customerEmail?: unknown }).customerEmail ?? '').toLowerCase();
+          if (clientId === emailLower || clientEmail === emailLower || customerEmail === emailLower) {
+            resultsMap.set(d.id, { id: d.id, ...data });
+          }
+        });
+      }
     } else {
       // No email provided; return a small recent set to avoid large scans
       const qAll = withLimit(query(projectsRef, orderBy('startDate', 'desc')));

@@ -1,14 +1,42 @@
 "use client";
 import Link from "next/link";
 import { useCart } from "@/components/CartProvider";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { getAuthInstance } from "@/lib/firebase";
 
 export default function CartPage() {
   const { items, setQuantity, removeItem, subtotal, clear } = useCart();
   const [isLoading, setIsLoading] = useState(false);
+  const [customerEmail, setCustomerEmail] = useState('');
+  const [hasAuthedEmail, setHasAuthedEmail] = useState(false);
+
+  // Prefill email from authenticated user if available
+  useEffect(() => {
+    const auth = getAuthInstance();
+    const unsubscribe = auth.onAuthStateChanged((u) => {
+      const email = (u?.email || "").trim();
+      if (email) {
+        setCustomerEmail(email.toLowerCase());
+        setHasAuthedEmail(true);
+      }
+    });
+    return () => unsubscribe();
+  }, []);
 
   const handleCheckout = async () => {
     if (items.length === 0) return;
+
+    // Validate email
+    if (!customerEmail.trim()) {
+      alert('Please enter your email address to continue with checkout.');
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(customerEmail.trim())) {
+      alert('Please enter a valid email address.');
+      return;
+    }
 
     setIsLoading(true);
     try {
@@ -20,6 +48,7 @@ export default function CartPage() {
         },
         body: JSON.stringify({
           items,
+          customerEmail: customerEmail.trim().toLowerCase(),
           successUrl: `${window.location.origin}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
           cancelUrl: `${window.location.origin}/cart`,
         }),
@@ -81,6 +110,34 @@ export default function CartPage() {
               </div>
             </div>
           </div>
+
+          {/* Email Input or Prefilled Notice */}
+          {hasAuthedEmail ? (
+            <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 mb-4">
+              <p className="text-sm text-gray-700 dark:text-gray-300">
+                Using account email: <span className="font-medium">{customerEmail}</span>
+              </p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">This email will be used to associate your order and projects.</p>
+            </div>
+          ) : (
+            <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 mb-4">
+              <label htmlFor="customer-email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Email Address <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="email"
+                id="customer-email"
+                value={customerEmail}
+                onChange={(e) => setCustomerEmail(e.target.value)}
+                placeholder="Enter your email address"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                required
+              />
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                Required for order tracking and project management
+              </p>
+            </div>
+          )}
 
           <div className="flex items-center justify-between">
             <div className="text-lg">Subtotal: <span className="font-semibold">${(subtotal / 100).toFixed(2)}</span></div>

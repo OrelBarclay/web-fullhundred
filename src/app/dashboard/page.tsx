@@ -74,7 +74,6 @@ export default function DashboardPage() {
         const ordersRes = await fetch(`/api/orders?email=${encodeURIComponent(currentEmail)}&limit=50`, { cache: 'no-store' });
         if (ordersRes.ok) {
           const { orders } = await ordersRes.json();
-          console.log('Dashboard - Orders loaded:', { email: currentEmail, count: orders?.length || 0, orders });
           const processedOrders = (Array.isArray(orders) ? orders : []).map((raw: Record<string, unknown>) => ({
             id: String(raw.id ?? ''),
             customerEmail: String(raw.customerEmail ?? ''),
@@ -96,7 +95,7 @@ export default function DashboardPage() {
     const unsubscribe = auth.onAuthStateChanged(async (u) => {
       if (u) {
         setUser(u);
-        await loadDashboardData(u.email || '');
+        await loadDashboardData((u.email || '').toLowerCase());
         setIsLoading(false);
       } else {
         router.push('/login');

@@ -43,7 +43,9 @@ export default function PortfolioPage() {
     return (projects || []).filter(p => {
       const matchText = !q || p.title.toLowerCase().includes(q) || (p.description || '').toLowerCase().includes(q);
       const matchStatus = !status || (p.status === status);
-      return matchText && matchStatus;
+      // Only show completed projects in portfolio
+      const isCompleted = p.status === 'completed';
+      return matchText && matchStatus && isCompleted;
     });
   }, [projects, query, status]);
 
@@ -55,8 +57,9 @@ export default function PortfolioPage() {
   };
 
   const getThumbnail = (p: Project): string | undefined => {
-    if (p.beforeImages && p.beforeImages.length > 0) return p.beforeImages[0];
+    // For completed work, prioritize after images (completed work)
     if (p.afterImages && p.afterImages.length > 0) return p.afterImages[0];
+    if (p.beforeImages && p.beforeImages.length > 0) return p.beforeImages[0];
     return undefined;
   };
 

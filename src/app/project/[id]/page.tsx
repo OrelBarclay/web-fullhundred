@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { notFound, useParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
+import { getAuthInstance } from "@/lib/firebase";
 
 type Project = {
   id: string;
@@ -10,6 +11,7 @@ type Project = {
   description?: string | null;
   clientName?: string;
   clientEmail?: string;
+  clientId?: string;
   customerEmail?: string;
   status?: string;
   startDate?: string | Date | null;
@@ -37,6 +39,30 @@ export default function ProjectDetail() {
   const [project, setProject] = useState<Project | null>(null);
   const [fallbackMedia, setFallbackMedia] = useState<Media[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [user, setUser] = useState<{ email?: string | null } | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [hasAccess, setHasAccess] = useState(false);
+
+  // Check authentication and admin status
+  useEffect(() => {
+    const auth = getAuthInstance();
+    const unsubscribe = auth.onAuthStateChanged(async (u) => {
+      setUser(u);
+      if (u) {
+        // Check if user is admin
+        const getCookieValue = (name: string) => {
+          const value = `; ${document.cookie}`;
+          const parts = value.split(`; ${name}=`);
+          if (parts.length === 2) return parts.pop()?.split(';').shift();
+          return null;
+        };
+        const authToken = getCookieValue('auth-token') || getCookieValue('auth-token-debug');
+        const admin = Boolean(authToken && authToken.includes('-admin'));
+        setIsAdmin(admin);
+      }
+    });
+    return () => unsubscribe();
+  }, []);
 
   useEffect(() => {
     async function load() {
@@ -85,7 +111,54 @@ export default function ProjectDetail() {
     load();
   }, [params.id]);
 
+  // Check access permissions
+  useEffect(() => {
+    if (!project || !user) return;
+
+    const userEmail = user.email?.toLowerCase() || '';
+    const projectClientEmail = project.clientEmail?.toLowerCase() || '';
+    const projectCustomerEmail = project.customerEmail?.toLowerCase() || '';
+    const projectClientId = project.clientId?.toLowerCase() || '';
+
+    // Admin can access any project
+    if (isAdmin) {
+      setHasAccess(true);
+      return;
+    }
+
+    // Project owner can access their project
+    if (userEmail === projectClientEmail || 
+        userEmail === projectCustomerEmail || 
+        userEmail === projectClientId) {
+      setHasAccess(true);
+      return;
+    }
+
+    // No access
+    setHasAccess(false);
+  }, [project, user, isAdmin]);
+
   if (!isLoading && !project) return notFound();
+
+  // Check access permissions
+  if (!isLoading && project && user && !hasAccess) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Access Denied</h1>
+          <p className="text-gray-600 dark:text-gray-300 mb-6">
+            You don&apos;t have permission to view this project.
+          </p>
+          <Link 
+            href="/dashboard" 
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Back to Dashboard
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   const images: string[] = [
     ...(project?.beforeImages || []),

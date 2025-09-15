@@ -9,6 +9,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No items provided' }, { status: 400 });
     }
 
+    // Require customer email for identification
+    if (!customerEmail || typeof customerEmail !== 'string' || !customerEmail.trim()) {
+      return NextResponse.json({ error: 'Customer email is required' }, { status: 400 });
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(customerEmail.trim())) {
+      return NextResponse.json({ error: 'Invalid email format' }, { status: 400 });
+    }
+
     // Basic validation
     if (process.env.STRIPE_SECRET_KEY?.includes('placeholder') || !process.env.STRIPE_SECRET_KEY) {
       return NextResponse.json({ error: 'Stripe is not configured. Set STRIPE_SECRET_KEY.' }, { status: 500 });
@@ -51,10 +62,11 @@ export async function POST(request: NextRequest) {
       mode: 'payment',
       success_url: successUrl || `${process.env.NEXT_PUBLIC_APP_URL}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: cancelUrl || `${process.env.NEXT_PUBLIC_APP_URL}/cart`,
-      customer_email: customerEmail,
+      customer_email: customerEmail.trim(),
       metadata: {
         items: JSON.stringify(items),
         totalAmount: totalAmount.toString(),
+        customerEmail: customerEmail.trim(),
       },
       // Add shipping address collection if needed
       shipping_address_collection: {

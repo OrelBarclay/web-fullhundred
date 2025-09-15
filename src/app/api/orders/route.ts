@@ -54,6 +54,23 @@ export async function GET(request: NextRequest) {
         return bd - ad;
       });
       orders = limitNum && !isNaN(limitNum) && limitNum > 0 ? raw.slice(0, limitNum) : raw;
+      // In-memory case-insensitive email filter if provided
+      if (email) {
+        const emailLower = email.toLowerCase();
+        orders = orders.filter(o => String((o as Record<string, unknown>).customerEmail || '').toLowerCase() === emailLower);
+      }
+    }
+
+    // Secondary fallback: if email provided and no results, fetch recent and filter in-memory (case-insensitive)
+    if (email && orders.length === 0) {
+      const q3 = limitNum && !isNaN(limitNum) && limitNum > 0
+        ? query(ordersRef, orderBy('createdAt', 'desc'), limit(limitNum))
+        : query(ordersRef, orderBy('createdAt', 'desc'));
+      const s3 = await getDocs(q3);
+      const emailLower = email.toLowerCase();
+      orders = s3.docs
+        .map(d => ({ id: d.id, ...d.data() }))
+        .filter(o => String((o as Record<string, unknown>).customerEmail || '').toLowerCase() === emailLower);
     }
     
     return NextResponse.json({ 
