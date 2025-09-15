@@ -6,6 +6,7 @@ import { getDb } from "@/lib/firebase";
 import { collection, getDocs, doc, updateDoc, deleteDoc } from "firebase/firestore";
 import { isUserAdmin } from "@/lib/auth-utils";
 import type { User } from "firebase/auth";
+import Link from "next/link";
 
 interface Client {
   id: string;
@@ -661,7 +662,11 @@ export default function AdminDashboard() {
                       ) : (
                         recentOrders.map((o) => (
                           <tr key={o.id}>
-                            <td className="px-6 py-3 text-sm text-blue-600 break-all">{o.id}</td>
+                            <td className="px-6 py-3 text-sm text-blue-600 break-all">
+                              <Link href={`/admin/orders/${o.id}`}>
+                              {o.id}
+                              </Link>
+                              </td>
                             <td className="px-6 py-3 text-sm text-gray-900">{o.customerEmail}</td>
                             <td className="px-6 py-3 text-sm text-gray-700">{o.createdAt.toLocaleString()}</td>
                             <td className="px-6 py-3 text-sm">
