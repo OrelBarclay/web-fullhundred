@@ -312,7 +312,13 @@ export default function ProjectDetail() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {images.map((url, idx) => (
                 <figure key={`img-${idx}`} className="border rounded-lg overflow-hidden">
-                  <Image src={url} alt={project?.title || ''} className="w-full" />
+                  <Image 
+                    src={url} 
+                    alt={project?.title || ''} 
+                    width={800} 
+                    height={600} 
+                    className="w-full" 
+                  />
                 </figure>
               ))}
               {videos.map((url, idx) => (
@@ -328,7 +334,13 @@ export default function ProjectDetail() {
                   {item.type === "video" ? (
                     <video src={item.url} controls className="w-full" />
                   ) : (
-                    <Image src={item.url} alt={project?.title || ''} className="w-full" />
+                    <Image 
+                      src={item.url} 
+                      alt={project?.title || ''} 
+                      width={800} 
+                      height={600} 
+                      className="w-full" 
+                    />
                   )}
                 </figure>
               ))}
