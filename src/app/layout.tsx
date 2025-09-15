@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Link from "next/link";
+import ActiveLink from "@/components/ActiveLink";
 import AuthProvider from "@/components/AuthProvider";
 import Logo from "@/components/Logo";
 import ThemeProvider from "@/components/ThemeProvider";
@@ -98,42 +99,17 @@ export default function RootLayout({
               
               {/* Desktop Navigation */}
               <nav className="hidden lg:flex items-center space-x-1">
-                <Link 
-                  href="/services" 
-                  className="px-3 py-2 text-sm font-medium text-[color:var(--muted-foreground)] hover:text-[color:var(--foreground)] hover:bg-[color:var(--muted)] rounded-md transition-all duration-200"
-                >
-                  Services
-                </Link>
-                <Link 
-                  href="/portfolio" 
-                  className="px-3 py-2 text-sm font-medium text-[color:var(--muted-foreground)] hover:text-[color:var(--foreground)] hover:bg-[color:var(--muted)] rounded-md transition-all duration-200"
-                >
-                  Our Work
-                </Link>
-                <Link 
-                  href="/contact" 
-                  className="px-3 py-2 text-sm font-medium text-[color:var(--muted-foreground)] hover:text-[color:var(--foreground)] hover:bg-[color:var(--muted)] rounded-md transition-all duration-200"
-                >
-                  Contact
-                </Link>
+                <ActiveLink href="/services">Services</ActiveLink>
+                <ActiveLink href="/portfolio">Our Work</ActiveLink>
+                <ActiveLink href="/contact">Contact</ActiveLink>
                 {/* <Link 
                   href="/#quote" 
                   className="px-4 py-2 text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 rounded-md transition-all duration-200 shadow-sm hover:shadow-md"
                 >
                   Get a Quote
                 </Link> */}
-                <Link 
-                  href="/shop" 
-                  className="px-3 py-2 text-sm font-medium text-[color:var(--muted-foreground)] hover:text-[color:var(--foreground)] hover:bg-[color:var(--muted)] rounded-md transition-all duration-200"
-                >
-                  Shop
-                </Link>
-                <Link 
-                  href="/visualizer" 
-                  className="px-3 py-2 text-sm font-medium text-[color:var(--muted-foreground)] hover:text-[color:var(--foreground)] hover:bg-[color:var(--muted)] rounded-md transition-all duration-200"
-                >
-                  Visualizer
-                </Link>
+                <ActiveLink href="/shop">Shop</ActiveLink>
+                <ActiveLink href="/visualizer">Visualizer</ActiveLink>
               </nav>
               
               {/* Right side - Cart, Theme, Auth */}

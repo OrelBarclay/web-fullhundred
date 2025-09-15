@@ -255,7 +255,6 @@ export default function AdminDashboard() {
         (p) => p.status === "completed"
       ).length;
       const totalRevenue = projectsData
-        .filter((p) => p.status === "completed")
         .reduce((sum, p) => sum + (p.budget || 0), 0);
 
       setStats({

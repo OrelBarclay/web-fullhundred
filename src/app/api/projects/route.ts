@@ -59,6 +59,7 @@ export async function GET(request: NextRequest) {
       return bDate.getTime() - aDate.getTime();
     });
 
+
     return NextResponse.json({ projects, total: projects.length });
   } catch (error) {
     return NextResponse.json({ error: 'Failed to fetch projects' }, { status: 500 });
