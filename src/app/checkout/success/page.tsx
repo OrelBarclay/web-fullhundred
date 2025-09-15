@@ -58,12 +58,24 @@ function CheckoutSuccessContent() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center">
-      <div className="text-center max-w-md mx-auto p-6">
-        <div className="text-green-500 text-6xl mb-4">✅</div>
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-          Payment Successful!
-        </h1>
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Breadcrumbs */}
+        <nav className="mb-6 text-sm text-gray-600">
+          <Link href="/" className="text-blue-600 hover:underline">Home</Link>
+          <span className="mx-2">/</span>
+          <Link href="/shop" className="text-blue-600 hover:underline">Shop</Link>
+          <span className="mx-2">/</span>
+          <Link href="/cart" className="text-blue-600 hover:underline">Cart</Link>
+          <span className="mx-2">/</span>
+          <span className="text-gray-900">Checkout Success</span>
+        </nav>
+
+        <div className="text-center max-w-md mx-auto p-6">
+          <div className="text-green-500 text-6xl mb-4">✅</div>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+            Payment Successful!
+          </h1>
         <p className="text-gray-600 dark:text-gray-400 mb-6">
           Thank you for your purchase. Your order has been processed successfully.
         </p>
@@ -97,6 +109,7 @@ function CheckoutSuccessContent() {
         <div className="mt-8 text-sm text-gray-500 dark:text-gray-400">
           <p>Questions about your order?</p>
           <p>Contact us at <a href="mailto:support@fullhundred.com" className="text-primary hover:underline">support@fullhundred.com</a></p>
+        </div>
         </div>
       </div>
     </div>

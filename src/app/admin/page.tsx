@@ -847,6 +847,9 @@ export default function AdminDashboard() {
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           Status
                         </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Project
+                        </th>
                         <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                           Total
                         </th>
@@ -856,7 +859,7 @@ export default function AdminDashboard() {
                       {recentOrders.length === 0 ? (
                         <tr>
                           <td
-                            colSpan={5}
+                            colSpan={6}
                             className="px-6 py-6 text-center text-gray-500"
                           >
                             No recent orders.
@@ -895,6 +898,11 @@ export default function AdminDashboard() {
                               >
                                 {o.paymentStatus}
                               </span>
+                            </td>
+                            <td className="px-6 py-3 text-sm">
+                              <Link href={`/project/proj-${o.id}`} className="text-blue-600 hover:underline">
+                                View Project
+                              </Link>
                             </td>
                             <td className="px-6 py-3 text-sm text-right text-gray-900 font-medium">
                               ${(o.amountTotal / 100).toFixed(2)}

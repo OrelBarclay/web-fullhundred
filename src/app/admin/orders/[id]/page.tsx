@@ -41,13 +41,16 @@ export default async function AdminOrderDetailsPage({
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-4 text-sm text-gray-600">
+        {/* Breadcrumbs */}
+        <nav className="mb-6 text-sm text-gray-600">
+          <Link href="/" className="text-blue-600 hover:underline">Home</Link>
+          <span className="mx-2">/</span>
           <Link href="/admin" className="text-blue-600 hover:underline">Admin</Link>
           <span className="mx-2">/</span>
           <Link href="/admin" className="text-blue-600 hover:underline">Overview</Link>
           <span className="mx-2">/</span>
-          <span>Order {id}</span>
-        </div>
+          <span className="text-gray-900">Order {id}</span>
+        </nav>
 
         <div className="bg-white rounded-lg shadow">
           <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">

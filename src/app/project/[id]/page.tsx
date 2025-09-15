@@ -1,11 +1,29 @@
 "use client";
 import { useEffect, useState } from "react";
 import { notFound, useParams } from "next/navigation";
+import Image from "next/image";
+import Link from "next/link";
 
 type Project = {
   id: string;
   title: string;
   description?: string | null;
+  clientName?: string;
+  clientEmail?: string;
+  customerEmail?: string;
+  status?: string;
+  startDate?: string | Date | null;
+  endDate?: string | Date | null;
+  budget?: number | null;
+  progress?: number | null;
+  projectType?: string | null;
+  complexity?: string | null;
+  estimatedTimeline?: string | null;
+  includedServices?: Array<{ title: string; estimatedPrice?: number }>;
+  orderItems?: Array<{ id: string; name: string; price: number; quantity: number; image?: string }>;
+  orderTotal?: number | null;
+  paymentStatus?: string | null;
+  createdFromOrderId?: string | null;
   beforeImages?: string[];
   afterImages?: string[];
   beforeVideos?: string[];
@@ -29,7 +47,6 @@ export default function ProjectDetail() {
           const projects = await pRes.json();
           const projectData = Array.isArray(projects) ? projects.find(p => p.id === params.id) : null;
           if (projectData) {
-            console.log('Project data from fallback API:', projectData);
             setProject(projectData as Project);
           } else {
             setProject(null);
@@ -43,7 +60,6 @@ export default function ProjectDetail() {
             return;
           }
           const pData = await pRes.json();
-          console.log('Project data from API:', pData);
           setProject(pData as Project);
         }
 
@@ -59,8 +75,7 @@ export default function ProjectDetail() {
         } else {
           setFallbackMedia([]);
         }
-      } catch (error) {
-        console.error("Error loading project data:", error);
+      } catch (_error) {
         setProject(null);
         setFallbackMedia([]);
       } finally {
@@ -84,32 +99,147 @@ export default function ProjectDetail() {
   // If no embedded media, attempt to use fallback media list
   const hasEmbedded = images.length > 0 || videos.length > 0;
   
-  console.log('Project media arrays:', {
-    beforeImages: project?.beforeImages,
-    afterImages: project?.afterImages,
-    beforeVideos: project?.beforeVideos,
-    afterVideos: project?.afterVideos,
-    images,
-    videos,
-    hasEmbedded
-  });
+  const fmtDate = (v?: string | Date | null) => {
+    if (!v) return null;
+    const d = v instanceof Date ? v : new Date(v);
+    if (Number.isNaN(d.getTime())) return null;
+    return d.toLocaleString();
+  };
 
   return (
     <section className="mx-auto max-w-5xl px-6 py-12">
+      {/* Breadcrumbs */}
+      <nav className="mb-6 text-sm text-gray-600">
+        <Link href="/" className="text-blue-600 hover:underline">Home</Link>
+        <span className="mx-2">/</span>
+        <Link href="/dashboard" className="text-blue-600 hover:underline">Dashboard</Link>
+        <span className="mx-2">/</span>
+        <span className="text-gray-900">{project?.title || 'Project'}</span>
+      </nav>
+
       {isLoading ? (
         <div>Loading…</div>
       ) : (
         <>
-          <h1 className="text-3xl font-semibold mb-3">{project?.title}</h1>
+          <h1 className="text-3xl font-semibold mb-1">{project?.title}</h1>
+          {(project?.clientName || project?.clientEmail) && (
+            <p className="text-sm text-gray-600 mb-4">
+              {project?.clientName}
+              {project?.clientName && project?.clientEmail ? " • " : ""}
+              {project?.clientEmail}
+            </p>
+          )}
+
+          {/* Project meta */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+            {project?.status && (
+              <div className="bg-white dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-700 p-4">
+                <p className="text-xs text-gray-500">Status</p>
+                <p className="text-sm font-medium">{project.status}</p>
+              </div>
+            )}
+            {(project?.startDate || project?.endDate) && (
+              <div className="bg-white dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-700 p-4">
+                <p className="text-xs text-gray-500">Timeline</p>
+                <p className="text-sm font-medium">
+                  {fmtDate(project?.startDate) || "TBD"}
+                  {" → "}
+                  {fmtDate(project?.endDate) || "TBD"}
+                </p>
+              </div>
+            )}
+            {typeof project?.budget === "number" && (
+              <div className="bg-white dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-700 p-4">
+                <p className="text-xs text-gray-500">Budget</p>
+                <p className="text-sm font-medium">${Number(project.budget).toLocaleString()}</p>
+              </div>
+            )}
+            {project?.projectType && (
+              <div className="bg-white dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-700 p-4">
+                <p className="text-xs text-gray-500">Type</p>
+                <p className="text-sm font-medium">{project.projectType}</p>
+              </div>
+            )}
+            {project?.complexity && (
+              <div className="bg-white dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-700 p-4">
+                <p className="text-xs text-gray-500">Complexity</p>
+                <p className="text-sm font-medium">{project.complexity}</p>
+              </div>
+            )}
+            {project?.estimatedTimeline && (
+              <div className="bg-white dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-700 p-4">
+                <p className="text-xs text-gray-500">Estimated Timeline</p>
+                <p className="text-sm font-medium">{project.estimatedTimeline}</p>
+              </div>
+            )}
+            {project?.paymentStatus && (
+              <div className="bg-white dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-700 p-4">
+                <p className="text-xs text-gray-500">Payment Status</p>
+                <p className="text-sm font-medium">{project.paymentStatus}</p>
+              </div>
+            )}
+            {project?.createdFromOrderId && (
+              <div className="bg-white dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-700 p-4">
+                <p className="text-xs text-gray-500">Order</p>
+                <p className="text-sm font-medium break-all">{project.createdFromOrderId}</p>
+              </div>
+            )}
+          </div>
+
           {project?.description ? (
-            <p className="opacity-80 mb-8">{project.description}</p>
+            <p className="opacity-80 mb-8 whitespace-pre-wrap">{project.description}</p>
           ) : null}
+
+          {/* Included Services */}
+          {project?.includedServices && project.includedServices.length > 0 && (
+            <div className="mb-8">
+              <h2 className="text-lg font-semibold mb-2">Included Services</h2>
+              <ul className="list-disc pl-5 space-y-1">
+                {project.includedServices.map((s, i) => (
+                  <li key={`${s.title}-${i}`} className="text-sm">
+                    {s.title}
+                    {typeof s.estimatedPrice === "number" ? ` ($${s.estimatedPrice.toLocaleString()})` : ""}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* Order Items */}
+          {project?.orderItems && project.orderItems.length > 0 && (
+            <div className="mb-8">
+              <h2 className="text-lg font-semibold mb-2">Order Items</h2>
+              <div className="overflow-hidden rounded-md border border-gray-200 dark:border-gray-700">
+                <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                  <thead className="bg-gray-50 dark:bg-gray-900/40">
+                    <tr>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                      <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Qty</th>
+                      <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                    {project.orderItems.map((it) => (
+                      <tr key={`${it.id}-${it.name}`}>
+                        <td className="px-4 py-2 text-sm text-gray-900 dark:text-white">{it.name}</td>
+                        <td className="px-4 py-2 text-sm text-right text-gray-700 dark:text-gray-300">{it.quantity}</td>
+                        <td className="px-4 py-2 text-sm text-right text-gray-900 dark:text-white">${(it.price / 100).toFixed(2)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              {typeof project.orderTotal === "number" && (
+                <div className="text-right mt-2 text-sm font-medium">Total: ${Number(project.orderTotal).toFixed(2)}</div>
+              )}
+            </div>
+          )}
 
           {hasEmbedded ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {images.map((url, idx) => (
                 <figure key={`img-${idx}`} className="border rounded-lg overflow-hidden">
-                  <img src={url} alt={project?.title || ''} className="w-full" />
+                  <Image src={url} alt={project?.title || ''} className="w-full" />
                 </figure>
               ))}
               {videos.map((url, idx) => (
@@ -125,7 +255,7 @@ export default function ProjectDetail() {
                   {item.type === "video" ? (
                     <video src={item.url} controls className="w-full" />
                   ) : (
-                    <img src={item.url} alt={project?.title || ''} className="w-full" />
+                    <Image src={item.url} alt={project?.title || ''} className="w-full" />
                   )}
                 </figure>
               ))}
