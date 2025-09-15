@@ -16,6 +16,7 @@ export async function GET(
     const db = getDb();
     const orderRef = doc(db, 'orders', orderId);
     const orderDoc = await getDoc(orderRef);
+
     
     if (!orderDoc.exists()) {
       return NextResponse.json({ error: 'Order not found' }, { status: 404 });

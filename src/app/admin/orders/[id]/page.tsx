@@ -10,29 +10,33 @@ type Order = {
   items?: OrderItem[];
 };
 
-async function getOrder(id: string): Promise<Order | null> {
-  try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || ''}/api/orders/${id}`, { cache: "no-store" });
-    if (!res.ok) return null;
-    const data = await res.json();
-    const o = data?.order || data;
-    if (!o) return null;
-    return {
-      id: String(o.id ?? id),
-      customerEmail: String(o.customerEmail ?? ""),
-      amountTotal: Number(o.amountTotal ?? 0),
-      paymentStatus: String(o.paymentStatus ?? "paid"),
-      createdAt: o.createdAt ?? new Date().toISOString(),
-      items: Array.isArray(o.items) ? (o.items as OrderItem[]) : []
-    };
-  } catch {
-    return null;
-  }
-}
-
-export default async function AdminOrderDetailsPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function AdminOrderDetailsPage({ 
+  params, 
+  searchParams 
+}: { 
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ data?: string }>;
+}) {
   const { id } = await params;
-  const order = await getOrder(id);
+  const { data } = await searchParams;
+  
+  let order: Order | null = null;
+  
+  if (data) {
+    try {
+      const parsed = JSON.parse(decodeURIComponent(data));
+      order = {
+        id: String(parsed.id ?? id),
+        customerEmail: String(parsed.customerEmail ?? ""),
+        amountTotal: Number(parsed.amountTotal ?? 0),
+        paymentStatus: String(parsed.paymentStatus ?? "paid"),
+        createdAt: parsed.createdAt ?? new Date().toISOString(),
+        items: Array.isArray(parsed.items) ? (parsed.items as OrderItem[]) : []
+      };
+    } catch {
+      order = null;
+    }
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
