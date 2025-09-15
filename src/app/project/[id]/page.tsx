@@ -295,7 +295,24 @@ export default function ProjectDetail() {
           </div>
 
           {project?.description ? (
-            <p className="opacity-80 mb-8 whitespace-pre-wrap">{project.description}</p>
+            <div className="mb-8">
+              <h2 className="text-lg font-semibold mb-2">Project Description</h2>
+              <p className="opacity-80 whitespace-pre-wrap">
+                {hasAccess 
+                  ? project.description 
+                  : project.description
+                      .replace(/Order Summary:[\s\S]*?(?=\n\n|\n[A-Z]|$)/g, '')
+                      .replace(/- Total Items:.*$/gm, '')
+                      .replace(/- Order Total:.*$/gm, '')
+                      .replace(/- Payment Status:.*$/gm, '')
+                      .replace(/- Order Date:.*$/gm, '')
+                      .replace(/- Customer Phone:.*$/gm, '')
+                      .replace(/- Customer Address:.*$/gm, '')
+                      .replace(/\n\s*\n/g, '\n\n')
+                      .trim()
+                }
+              </p>
+            </div>
           ) : null}
 
           {/* Included Services - Only for project owners and admins */}
