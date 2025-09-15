@@ -89,10 +89,10 @@ function ManageContentWithSearchParams() {
         // Check if user is admin using multiple methods
         let isAdmin = false;
         
-        // Method 1: Check email (temporary fallback)
-        if (user.email === "coolbarclay@gmail.com") {
-          isAdmin = true;
-        }
+        // // Method 1: Check email (temporary fallback)
+        // if (user.email === "coolbarclay@gmail.com") {
+        //   isAdmin = true;
+        // }
         
         // Method 2: Try custom claims (may fail due to Admin SDK issues)
         try {

@@ -30,6 +30,9 @@ type Project = {
   afterImages?: string[];
   beforeVideos?: string[];
   afterVideos?: string[];
+  images?: string[];
+  videos?: string[];
+  media?: Array<{ type: string; url: string }>;
 };
 
 type Media = { id: string; projectId: string; type: "image" | "video" | "before" | "after"; url: string; caption?: string | null };
@@ -160,14 +163,21 @@ export default function ProjectDetail() {
     );
   }
 
+  // Extract all possible image and video fields from project
   const images: string[] = [
     ...(project?.beforeImages || []),
-    ...(project?.afterImages || [])
-  ];
+    ...(project?.afterImages || []),
+    ...(project?.images || []),
+    ...(project?.media?.filter((m: { type: string; url: string }) => m.type === 'image' || m.type === 'before' || m.type === 'after')?.map((m: { type: string; url: string }) => m.url) || [])
+  ].filter(Boolean);
+  
   const videos: string[] = [
     ...(project?.beforeVideos || []),
-    ...(project?.afterVideos || [])
-  ];
+    ...(project?.afterVideos || []),
+    ...(project?.videos || []),
+    ...(project?.media?.filter((m: { type: string; url: string }) => m.type === 'video')?.map((m: { type: string; url: string }) => m.url) || [])
+  ].filter(Boolean);
+
 
   // If no embedded media, attempt to use fallback media list
   const hasEmbedded = images.length > 0 || videos.length > 0;
@@ -308,44 +318,60 @@ export default function ProjectDetail() {
             </div>
           )}
 
-          {hasEmbedded ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {images.map((url, idx) => (
-                <figure key={`img-${idx}`} className="border rounded-lg overflow-hidden">
-                  <Image 
-                    src={url} 
-                    alt={project?.title || ''} 
-                    width={800} 
-                    height={600} 
-                    className="w-full" 
-                  />
-                </figure>
-              ))}
-              {videos.map((url, idx) => (
-                <figure key={`vid-${idx}`} className="border rounded-lg overflow-hidden">
-                  <video src={url} controls className="w-full" />
-                </figure>
-              ))}
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {fallbackMedia.map((item) => (
-                <figure key={item.id} className="border rounded-lg overflow-hidden">
-                  {item.type === "video" ? (
-                    <video src={item.url} controls className="w-full" />
-                  ) : (
+          {/* Media Section */}
+          <div className="mt-8">
+            <h2 className="text-2xl font-semibold mb-4">Project Media</h2>
+            
+            {/* Show embedded images/videos if available */}
+            {hasEmbedded && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+                {images.map((url, idx) => (
+                  <figure key={`img-${idx}`} className="border rounded-lg overflow-hidden">
                     <Image 
-                      src={item.url} 
+                      src={url} 
                       alt={project?.title || ''} 
                       width={800} 
                       height={600} 
                       className="w-full" 
                     />
-                  )}
-                </figure>
-              ))}
-            </div>
-          )}
+                  </figure>
+                ))}
+                {videos.map((url, idx) => (
+                  <figure key={`vid-${idx}`} className="border rounded-lg overflow-hidden">
+                    <video src={url} controls className="w-full" />
+                  </figure>
+                ))}
+              </div>
+            )}
+
+            {/* Show fallback media if available */}
+            {fallbackMedia.length > 0 && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {fallbackMedia.map((item) => (
+                  <figure key={item.id} className="border rounded-lg overflow-hidden">
+                    {item.type === "video" ? (
+                      <video src={item.url} controls className="w-full" />
+                    ) : (
+                      <Image 
+                        src={item.url} 
+                        alt={project?.title || ''} 
+                        width={800} 
+                        height={600} 
+                        className="w-full" 
+                      />
+                    )}
+                  </figure>
+                ))}
+              </div>
+            )}
+
+            {/* Show message if no media found */}
+            {!hasEmbedded && fallbackMedia.length === 0 && (
+              <div className="text-center py-8 text-gray-500">
+                <p>No media available for this project.</p>
+              </div>
+            )}
+          </div>
         </>
       )}
     </section>
