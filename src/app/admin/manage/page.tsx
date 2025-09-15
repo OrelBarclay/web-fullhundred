@@ -79,7 +79,11 @@ function ManageContentWithSearchParams() {
     beforeImages: [] as File[],
     afterImages: [] as File[],
     beforeVideos: [] as File[],
-    afterVideos: [] as File[]
+    afterVideos: [] as File[],
+    existingBeforeImages: [] as string[],
+    existingAfterImages: [] as string[],
+    existingBeforeVideos: [] as string[],
+    existingAfterVideos: [] as string[]
   });
 
   useEffect(() => {
@@ -298,11 +302,11 @@ function ManageContentWithSearchParams() {
         clientName: selectedClient?.name || "",
         startDate: projectForm.startDate ? new Date(projectForm.startDate) : new Date(),
         endDate: projectForm.endDate ? new Date(projectForm.endDate) : new Date(),
-        // Only include media URLs, not File objects
-        beforeImages: mediaUrls.beforeImages,
-        afterImages: mediaUrls.afterImages,
-        beforeVideos: mediaUrls.beforeVideos,
-        afterVideos: mediaUrls.afterVideos
+        // Merge existing images with new ones
+        beforeImages: [...projectForm.existingBeforeImages, ...mediaUrls.beforeImages],
+        afterImages: [...projectForm.existingAfterImages, ...mediaUrls.afterImages],
+        beforeVideos: [...projectForm.existingBeforeVideos, ...mediaUrls.beforeVideos],
+        afterVideos: [...projectForm.existingAfterVideos, ...mediaUrls.afterVideos]
       };
 
       console.log('Project data being saved:', projectData);
@@ -337,7 +341,11 @@ function ManageContentWithSearchParams() {
         beforeImages: [],
         afterImages: [],
         beforeVideos: [],
-        afterVideos: []
+        afterVideos: [],
+        existingBeforeImages: [],
+        existingAfterImages: [],
+        existingBeforeVideos: [],
+        existingAfterVideos: []
       });
       await loadData();
     } catch (error) {
@@ -371,7 +379,11 @@ function ManageContentWithSearchParams() {
       beforeImages: [],
       afterImages: [],
       beforeVideos: [],
-      afterVideos: []
+      afterVideos: [],
+      existingBeforeImages: project.beforeImages || [],
+      existingAfterImages: project.afterImages || [],
+      existingBeforeVideos: project.beforeVideos || [],
+      existingAfterVideos: project.afterVideos || []
     });
   };
 
@@ -423,7 +435,11 @@ function ManageContentWithSearchParams() {
       beforeImages: [],
       afterImages: [],
       beforeVideos: [],
-      afterVideos: []
+      afterVideos: [],
+      existingBeforeImages: [],
+      existingAfterImages: [],
+      existingBeforeVideos: [],
+      existingAfterVideos: []
     });
   };
 
@@ -741,6 +757,33 @@ function ManageContentWithSearchParams() {
                     {/* Before Images */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">Before Images</label>
+                      
+                      {/* Existing Before Images */}
+                      {projectForm.existingBeforeImages.length > 0 && (
+                        <div className="mb-4">
+                          <label className="block text-xs font-medium text-gray-500 mb-2">Existing Images</label>
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                            {projectForm.existingBeforeImages.map((url, index) => (
+                              <div key={index} className="relative group">
+                                <img src={url} alt={`Before ${index + 1}`} className="w-full h-20 object-cover rounded border" />
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setProjectForm(prev => ({
+                                      ...prev,
+                                      existingBeforeImages: prev.existingBeforeImages.filter((_, i) => i !== index)
+                                    }));
+                                  }}
+                                  className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600"
+                                >
+                                  ×
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      
                       <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
                         <input
                           type="file"
@@ -792,6 +835,33 @@ function ManageContentWithSearchParams() {
                     {/* After Images */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">After Images</label>
+                      
+                      {/* Existing After Images */}
+                      {projectForm.existingAfterImages.length > 0 && (
+                        <div className="mb-4">
+                          <label className="block text-xs font-medium text-gray-500 mb-2">Existing Images</label>
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                            {projectForm.existingAfterImages.map((url, index) => (
+                              <div key={index} className="relative group">
+                                <img src={url} alt={`After ${index + 1}`} className="w-full h-20 object-cover rounded border" />
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setProjectForm(prev => ({
+                                      ...prev,
+                                      existingAfterImages: prev.existingAfterImages.filter((_, i) => i !== index)
+                                    }));
+                                  }}
+                                  className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600"
+                                >
+                                  ×
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      
                       <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
                         <input
                           type="file"
