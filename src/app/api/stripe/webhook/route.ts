@@ -98,6 +98,53 @@ async function saveOrderToDatabase(session: Stripe.Checkout.Session) {
   const orderRef = doc(db, 'orders', session.id);
   await setDoc(orderRef, orderData);
 
+  // Upsert client record based on order customer
+  let clientId: string | null = null;
+  try {
+    const clientEmail = session.customer_email || '';
+    if (clientEmail) {
+      clientId = clientEmail; // use email as client doc id for simplicity
+      const clientDocRef = doc(db, 'clients', clientId);
+      await setDoc(clientDocRef, {
+        id: clientId,
+        name: session.customer_details?.name || clientEmail.split('@')[0] || 'Customer',
+        email: clientEmail,
+        phone: session.customer_details?.phone || '',
+        address: (session.customer_details?.address && JSON.stringify(session.customer_details.address)) || '',
+        createdAt: new Date(),
+        lastContact: new Date(),
+        updatedAt: new Date(),
+      }, { merge: true });
+    }
+  } catch (_clientErr) {
+    // do not fail webhook on client upsert
+  }
+
+  // Create a corresponding project from this order
+  try {
+    const primaryTitle = Array.isArray(items) && items.length > 0 ? items[0]?.name || 'New Project' : 'New Project';
+    const clientName = session.customer_details?.name || session.customer_email || 'Customer';
+    const budget = typeof session.amount_total === 'number' ? Math.round(session.amount_total / 100) : 0; // dollars
+    const projectId = `proj-${session.id}`;
+
+    const projectDoc = doc(db, 'projects', projectId);
+    await setDoc(projectDoc, {
+      title: primaryTitle,
+      clientId: clientId || session.customer_email || '',
+      clientName,
+      status: 'planning',
+      startDate: new Date(),
+      endDate: null,
+      budget,
+      progress: 0,
+      createdFromOrderId: session.id,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }, { merge: true });
+  } catch (_err) {
+    // swallow project creation errors to not block webhook
+  }
+
   // If we have customer email, also save to user's orders
   if (session.customer_email) {
     try {

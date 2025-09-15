@@ -116,12 +116,12 @@ export default function RootLayout({
                 >
                   Contact
                 </Link>
-                <Link 
+                {/* <Link 
                   href="/#quote" 
                   className="px-4 py-2 text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 rounded-md transition-all duration-200 shadow-sm hover:shadow-md"
                 >
                   Get a Quote
-                </Link>
+                </Link> */}
                 <Link 
                   href="/shop" 
                   className="px-3 py-2 text-sm font-medium text-[color:var(--muted-foreground)] hover:text-[color:var(--foreground)] hover:bg-[color:var(--muted)] rounded-md transition-all duration-200"

@@ -52,6 +52,7 @@ export default function AdminDashboard() {
   const [clients, setClients] = useState<Client[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
   const [activeTab, setActiveTab] = useState<"overview" | "clients" | "projects" | "analytics">("overview");
+  const [recentOrders, setRecentOrders] = useState<Array<{ id: string; customerEmail: string; amountTotal: number; paymentStatus: string; createdAt: Date }>>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const router = useRouter();
@@ -167,6 +168,31 @@ export default function AdminDashboard() {
       }) as Project[];
       console.log('Processed projects:', projectsData);
       setProjects(projectsData);
+
+      // Load recent orders (latest 10)
+      try {
+        const res = await fetch('/api/orders?limit=10', { cache: 'no-store' });
+        if (res.ok) {
+          const data = await res.json();
+          const safeDate = (dateValue: unknown): Date => {
+            if (!dateValue) return new Date();
+            if (dateValue instanceof Date) return dateValue;
+            if (dateValue && typeof dateValue === 'object' && 'toDate' in dateValue && typeof (dateValue as { toDate: () => Date }).toDate === 'function') {
+              return (dateValue as { toDate: () => Date }).toDate();
+            }
+            if (typeof dateValue === 'string' || typeof dateValue === 'number') return new Date(dateValue);
+            return new Date();
+          };
+          const orders = (Array.isArray(data.orders) ? data.orders : []).map((o: Record<string, unknown>) => ({
+            id: String(o.id ?? ''),
+            customerEmail: String(o.customerEmail ?? ''),
+            amountTotal: Number(o.amountTotal ?? 0),
+            paymentStatus: String(o.paymentStatus ?? 'paid'),
+            createdAt: safeDate((o as { createdAt?: unknown }).createdAt),
+          }));
+          setRecentOrders(orders);
+        }
+      } catch (_e) {}
 
       // Calculate stats
       const activeProjects = projectsData.filter(p => p.status === "in-progress").length;
@@ -607,6 +633,46 @@ export default function AdminDashboard() {
                       </span>
                     </div>
                   ))}
+                </div>
+              </div>
+
+              {/* Recent Orders */}
+              <div className="bg-white rounded-lg shadow xl:col-span-2">
+                <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+                  <h3 className="text-lg font-medium text-gray-900">Recent Orders</h3>
+                  <span className="text-sm text-gray-500">Last 10</span>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Order ID</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {recentOrders.length === 0 ? (
+                        <tr>
+                          <td colSpan={5} className="px-6 py-6 text-center text-gray-500">No recent orders.</td>
+                        </tr>
+                      ) : (
+                        recentOrders.map((o) => (
+                          <tr key={o.id}>
+                            <td className="px-6 py-3 text-sm text-blue-600 break-all">{o.id}</td>
+                            <td className="px-6 py-3 text-sm text-gray-900">{o.customerEmail}</td>
+                            <td className="px-6 py-3 text-sm text-gray-700">{o.createdAt.toLocaleString()}</td>
+                            <td className="px-6 py-3 text-sm">
+                              <span className={`px-2 py-1 text-xs rounded-full ${o.paymentStatus === 'paid' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>{o.paymentStatus}</span>
+                            </td>
+                            <td className="px-6 py-3 text-sm text-right text-gray-900 font-medium">${(o.amountTotal / 100).toFixed(2)}</td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
                 </div>
               </div>
             </div>

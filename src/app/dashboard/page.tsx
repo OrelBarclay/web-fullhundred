@@ -50,13 +50,15 @@ export default function DashboardPage() {
     return new Date();
   };
 
-  const loadDashboardData = useCallback(async () => {
+  const loadDashboardData = useCallback(async (currentEmail: string) => {
     try {
-      // Load projects
-      const projectsRes = await fetch('/api/projects-fallback', { cache: 'no-store' });
+      // Load projects filtered by signed-in user (server-side filtering)
+      const emailParam = currentEmail ? `?email=${encodeURIComponent(currentEmail)}&limit=50` : '';
+      const projectsRes = await fetch(`/api/projects${emailParam}`, { cache: 'no-store' });
       if (projectsRes.ok) {
-        const projectsData = await projectsRes.json();
-        const processedProjects = (Array.isArray(projectsData) ? projectsData : []).map((project: unknown) => {
+        const payload = await projectsRes.json();
+        const list = Array.isArray(payload.projects) ? payload.projects : (Array.isArray(payload) ? payload : []);
+        const processedProjects = list.map((project: unknown) => {
           const p = project as Record<string, unknown>;
           return {
             ...p,
@@ -67,8 +69,8 @@ export default function DashboardPage() {
         setProjects(processedProjects);
       }
       // Load recent orders for the user
-      if (user?.email) {
-        const ordersRes = await fetch(`/api/orders?email=${encodeURIComponent(user.email)}&limit=5`, { cache: 'no-store' });
+      if (currentEmail) {
+        const ordersRes = await fetch(`/api/orders?email=${encodeURIComponent(currentEmail)}&limit=5`, { cache: 'no-store' });
         if (ordersRes.ok) {
           const { orders } = await ordersRes.json();
           const processedOrders = (Array.isArray(orders) ? orders : []).map((raw: Record<string, unknown>) => ({
@@ -89,10 +91,10 @@ export default function DashboardPage() {
 
   useEffect(() => {
     const auth = getAuthInstance();
-    const unsubscribe = auth.onAuthStateChanged(async (user) => {
-      if (user) {
-        setUser(user);
-        await loadDashboardData();
+    const unsubscribe = auth.onAuthStateChanged(async (u) => {
+      if (u) {
+        setUser(u);
+        await loadDashboardData(u.email || '');
         setIsLoading(false);
       } else {
         router.push('/login');

@@ -20,7 +20,7 @@ function ContactPageContent() {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<"idle" | "success" | "error">("idle");
-  const router = useRouter();
+  // const router = useRouter();
   const searchParams = useSearchParams();
 
   useEffect(() => {
