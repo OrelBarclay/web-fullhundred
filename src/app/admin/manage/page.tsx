@@ -21,17 +21,18 @@ interface Project {
   id: string;
   title: string;
   description: string;
-  clientId: string;
-  clientName: string;
+  clientId?: string;
+  clientName?: string;
   status: "planning" | "in-progress" | "completed" | "on-hold";
-  startDate: Date;
-  endDate: Date;
-  budget: number;
-  progress: number;
+  startDate?: Date;
+  endDate?: Date;
+  budget?: number;
+  progress?: number;
   beforeImages?: string[];
   afterImages?: string[];
   beforeVideos?: string[];
   afterVideos?: string[];
+  isPortfolioProject?: boolean;
 }
 
 function ManageContentWithSearchParams() {
@@ -39,9 +40,11 @@ function ManageContentWithSearchParams() {
   const [isLoading, setIsLoading] = useState(true);
   const [clients, setClients] = useState<Client[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
-  const [activeTab, setActiveTab] = useState<"clients" | "projects">("clients");
+  const [portfolioProjects, setPortfolioProjects] = useState<Project[]>([]);
+  const [activeTab, setActiveTab] = useState<"clients" | "projects" | "portfolio">("clients");
   const [editingClient, setEditingClient] = useState<Client | null>(null);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
+  const [editingPortfolioProject, setEditingPortfolioProject] = useState<Project | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -76,6 +79,24 @@ function ManageContentWithSearchParams() {
     endDate: "",
     budget: "",
     progress: "0",
+    beforeImages: [] as File[],
+    afterImages: [] as File[],
+    beforeVideos: [] as File[],
+    afterVideos: [] as File[],
+    existingBeforeImages: [] as string[],
+    existingAfterImages: [] as string[],
+    existingBeforeVideos: [] as string[],
+    existingAfterVideos: [] as string[]
+  });
+
+  const [portfolioForm, setPortfolioForm] = useState({
+    title: "",
+    description: "",
+    clientName: "",
+    status: "completed" as "planning" | "in-progress" | "completed" | "on-hold",
+    startDate: "",
+    endDate: "",
+    budget: "",
     beforeImages: [] as File[],
     afterImages: [] as File[],
     beforeVideos: [] as File[],
@@ -162,7 +183,7 @@ function ManageContentWithSearchParams() {
 
       // Load projects
       const projectsSnapshot = await getDocs(collection(db, "projects"));
-      const projectsData = projectsSnapshot.docs.map(doc => {
+      const allProjectsData = projectsSnapshot.docs.map(doc => {
         const data = doc.data();
         return {
           id: doc.id,
@@ -171,7 +192,13 @@ function ManageContentWithSearchParams() {
           endDate: safeDate(data.endDate)
         };
       }) as Project[];
-      setProjects(projectsData);
+      
+      // Separate regular projects from portfolio projects
+      const regularProjects = allProjectsData.filter(project => !project.isPortfolioProject);
+      const portfolioProjectsData = allProjectsData.filter(project => project.isPortfolioProject);
+      
+      setProjects(regularProjects);
+      setPortfolioProjects(portfolioProjectsData);
     } catch (error) {
       console.error("Error loading data:", error);
     }
@@ -370,7 +397,7 @@ function ManageContentWithSearchParams() {
     setProjectForm({
       title: project.title,
       description: project.description,
-      clientId: project.clientId,
+      clientId: project.clientId || "",
       status: project.status,
       startDate: safeDate(project.startDate).toISOString().split('T')[0],
       endDate: safeDate(project.endDate).toISOString().split('T')[0],
@@ -422,6 +449,7 @@ function ManageContentWithSearchParams() {
   const cancelEdit = () => {
     setEditingClient(null);
     setEditingProject(null);
+    setEditingPortfolioProject(null);
     setClientForm({ name: "", email: "", phone: "", address: "" });
     setProjectForm({
       title: "",
@@ -441,6 +469,148 @@ function ManageContentWithSearchParams() {
       existingBeforeVideos: [],
       existingAfterVideos: []
     });
+    setPortfolioForm({
+      title: "",
+      description: "",
+      clientName: "",
+      status: "completed",
+      startDate: "",
+      endDate: "",
+      budget: "",
+      beforeImages: [],
+      afterImages: [],
+      beforeVideos: [],
+      afterVideos: [],
+      existingBeforeImages: [],
+      existingAfterImages: [],
+      existingBeforeVideos: [],
+      existingAfterVideos: []
+    });
+  };
+
+  // Portfolio functions
+  const handlePortfolioSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    try {
+      const db = getDb();
+      
+      // Upload media files
+      const beforeImageUrls = await uploadFilesToCloudinary(portfolioForm.beforeImages, `portfolio/${Date.now()}/before/images`);
+      const afterImageUrls = await uploadFilesToCloudinary(portfolioForm.afterImages, `portfolio/${Date.now()}/after/images`);
+      const beforeVideoUrls = await uploadFilesToCloudinary(portfolioForm.beforeVideos, `portfolio/${Date.now()}/before/videos`);
+      const afterVideoUrls = await uploadFilesToCloudinary(portfolioForm.afterVideos, `portfolio/${Date.now()}/after/videos`);
+
+      const projectData = {
+        title: portfolioForm.title,
+        description: portfolioForm.description,
+        clientName: portfolioForm.clientName,
+        status: portfolioForm.status,
+        startDate: portfolioForm.startDate ? new Date(portfolioForm.startDate) : null,
+        endDate: portfolioForm.endDate ? new Date(portfolioForm.endDate) : null,
+        budget: portfolioForm.budget ? Number(portfolioForm.budget) : null,
+        beforeImages: [...portfolioForm.existingBeforeImages, ...beforeImageUrls],
+        afterImages: [...portfolioForm.existingAfterImages, ...afterImageUrls],
+        beforeVideos: [...portfolioForm.existingBeforeVideos, ...beforeVideoUrls],
+        afterVideos: [...portfolioForm.existingAfterVideos, ...afterVideoUrls],
+        isPortfolioProject: true, // Mark as portfolio project
+        updatedAt: new Date()
+      };
+
+      if (editingPortfolioProject) {
+        // Update existing portfolio project
+        const projectRef = doc(db, "projects", editingPortfolioProject.id);
+        await updateDoc(projectRef, projectData);
+        setEditingPortfolioProject(null);
+      } else {
+        // Create new portfolio project
+        await addDoc(collection(db, "projects"), {
+          ...projectData,
+          createdAt: new Date()
+        });
+      }
+
+      // Reset form
+      setPortfolioForm({
+        title: "",
+        description: "",
+        clientName: "",
+        status: "completed",
+        startDate: "",
+        endDate: "",
+        budget: "",
+        beforeImages: [],
+        afterImages: [],
+        beforeVideos: [],
+        afterVideos: [],
+        existingBeforeImages: [],
+        existingAfterImages: [],
+        existingBeforeVideos: [],
+        existingAfterVideos: []
+      });
+
+      // Reload data
+      await loadData();
+    } catch (error) {
+      console.error("Error saving portfolio project:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const editPortfolioProject = (project: Project) => {
+    setPortfolioForm({
+      title: project.title,
+      description: project.description,
+      clientName: project.clientName || "",
+      status: project.status,
+      startDate: project.startDate ? project.startDate.toISOString().split('T')[0] : "",
+      endDate: project.endDate ? project.endDate.toISOString().split('T')[0] : "",
+      budget: project.budget ? project.budget.toString() : "",
+      beforeImages: [],
+      afterImages: [],
+      beforeVideos: [],
+      afterVideos: [],
+      existingBeforeImages: project.beforeImages || [],
+      existingAfterImages: project.afterImages || [],
+      existingBeforeVideos: project.beforeVideos || [],
+      existingAfterVideos: project.afterVideos || []
+    });
+    setEditingPortfolioProject(project);
+  };
+
+  const deletePortfolioProject = async (projectId: string) => {
+    if (window.confirm("Are you sure you want to delete this portfolio project?")) {
+      try {
+        const db = getDb();
+        await deleteDoc(doc(db, "projects", projectId));
+        await loadData();
+      } catch (error) {
+        console.error("Error deleting portfolio project:", error);
+      }
+    }
+  };
+
+  const resetPortfolioForm = () => {
+    setPortfolioForm({
+      title: "",
+      description: "",
+      clientName: "",
+      status: "completed",
+      startDate: "",
+      endDate: "",
+      budget: "",
+      beforeImages: [],
+      afterImages: [],
+      beforeVideos: [],
+      afterVideos: [],
+      existingBeforeImages: [],
+      existingAfterImages: [],
+      existingBeforeVideos: [],
+      existingAfterVideos: []
+    });
+    setEditingPortfolioProject(null);
   };
 
   if (isLoading) {
@@ -482,11 +652,12 @@ function ManageContentWithSearchParams() {
           <nav className="flex space-x-8">
             {[
               { id: "clients", label: "Clients" },
-              { id: "projects", label: "Projects" }
+              { id: "projects", label: "Projects" },
+              { id: "portfolio", label: "Portfolio" }
             ].map((tab) => (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id as "clients" | "projects")}
+                onClick={() => setActiveTab(tab.id as "clients" | "projects" | "portfolio")}
                 className={`py-4 px-1 border-b-2 font-medium text-sm ${
                   activeTab === tab.id
                     ? "border-blue-500 text-blue-600"
@@ -1098,6 +1269,289 @@ function ManageContentWithSearchParams() {
                           </button>
                           <button 
                             onClick={() => deleteProject(project.id)}
+                            className="text-red-600 hover:text-red-900"
+                          >
+                            Delete
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Portfolio Tab */}
+        {activeTab === "portfolio" && (
+          <div className="space-y-8">
+            <div className="bg-white rounded-lg shadow p-6">
+              <h2 className="text-xl font-semibold text-gray-900 mb-6">
+                {editingPortfolioProject ? "Edit Portfolio Project" : "Add New Portfolio Project"}
+              </h2>
+              
+              <form onSubmit={handlePortfolioSubmit} className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Title *</label>
+                    <input
+                      type="text"
+                      value={portfolioForm.title}
+                      onChange={(e) => setPortfolioForm(prev => ({ ...prev, title: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Client Name</label>
+                    <input
+                      type="text"
+                      value={portfolioForm.clientName}
+                      onChange={(e) => setPortfolioForm(prev => ({ ...prev, clientName: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Description *</label>
+                  <textarea
+                    value={portfolioForm.description}
+                    onChange={(e) => setPortfolioForm(prev => ({ ...prev, description: e.target.value }))}
+                    rows={4}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                    <select
+                      value={portfolioForm.status}
+                      onChange={(e) => setPortfolioForm(prev => ({ ...prev, status: e.target.value as "planning" | "in-progress" | "completed" | "on-hold" }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="planning">Planning</option>
+                      <option value="in-progress">In Progress</option>
+                      <option value="completed">Completed</option>
+                      <option value="on-hold">On Hold</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
+                    <input
+                      type="date"
+                      value={portfolioForm.startDate}
+                      onChange={(e) => setPortfolioForm(prev => ({ ...prev, startDate: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">End Date</label>
+                    <input
+                      type="date"
+                      value={portfolioForm.endDate}
+                      onChange={(e) => setPortfolioForm(prev => ({ ...prev, endDate: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Budget</label>
+                  <input
+                    type="number"
+                    value={portfolioForm.budget}
+                    onChange={(e) => setPortfolioForm(prev => ({ ...prev, budget: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="0"
+                  />
+                </div>
+
+                {/* Media Upload Sections - Similar to project form but for portfolio */}
+                <div className="space-y-6">
+                  <div>
+                    <h3 className="text-lg font-medium text-gray-900 mb-4">Before Images</h3>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      {portfolioForm.existingBeforeImages.map((url, index) => (
+                        <div key={`existing-before-${index}`} className="relative">
+                          <img src={url} alt={`Before ${index + 1}`} className="w-full h-24 object-cover rounded" />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setPortfolioForm(prev => ({
+                                ...prev,
+                                existingBeforeImages: prev.existingBeforeImages.filter((_, i) => i !== index)
+                              }));
+                            }}
+                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ))}
+                      {portfolioForm.beforeImages.map((file, index) => (
+                        <div key={`before-${index}`} className="relative">
+                          <img src={URL.createObjectURL(file)} alt={`Before ${index + 1}`} className="w-full h-24 object-cover rounded" />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setPortfolioForm(prev => ({
+                                ...prev,
+                                beforeImages: prev.beforeImages.filter((_, i) => i !== index)
+                              }));
+                            }}
+                            className="ml-1 text-red-500 hover:text-red-700"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ))}
+                      <input
+                        type="file"
+                        multiple
+                        accept="image/*"
+                        onChange={(e) => {
+                          const files = Array.from(e.target.files || []);
+                          setPortfolioForm(prev => ({ ...prev, beforeImages: [...prev.beforeImages, ...files] }));
+                        }}
+                        className="hidden"
+                        id="portfolio-before-images"
+                      />
+                      <label
+                        htmlFor="portfolio-before-images"
+                        className="w-full h-24 border-2 border-dashed border-gray-300 rounded flex items-center justify-center cursor-pointer hover:border-gray-400"
+                      >
+                        <span className="text-gray-500">+ Add Images</span>
+                      </label>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h3 className="text-lg font-medium text-gray-900 mb-4">After Images</h3>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      {portfolioForm.existingAfterImages.map((url, index) => (
+                        <div key={`existing-after-${index}`} className="relative">
+                          <img src={url} alt={`After ${index + 1}`} className="w-full h-24 object-cover rounded" />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setPortfolioForm(prev => ({
+                                ...prev,
+                                existingAfterImages: prev.existingAfterImages.filter((_, i) => i !== index)
+                              }));
+                            }}
+                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ))}
+                      {portfolioForm.afterImages.map((file, index) => (
+                        <div key={`after-${index}`} className="relative">
+                          <img src={URL.createObjectURL(file)} alt={`After ${index + 1}`} className="w-full h-24 object-cover rounded" />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setPortfolioForm(prev => ({
+                                ...prev,
+                                afterImages: prev.afterImages.filter((_, i) => i !== index)
+                              }));
+                            }}
+                            className="ml-1 text-red-500 hover:text-red-700"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ))}
+                      <input
+                        type="file"
+                        multiple
+                        accept="image/*"
+                        onChange={(e) => {
+                          const files = Array.from(e.target.files || []);
+                          setPortfolioForm(prev => ({ ...prev, afterImages: [...prev.afterImages, ...files] }));
+                        }}
+                        className="hidden"
+                        id="portfolio-after-images"
+                      />
+                      <label
+                        htmlFor="portfolio-after-images"
+                        className="w-full h-24 border-2 border-dashed border-gray-300 rounded flex items-center justify-center cursor-pointer hover:border-gray-400"
+                      >
+                        <span className="text-gray-500">+ Add Images</span>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex justify-end space-x-4">
+                  <button
+                    type="button"
+                    onClick={resetPortfolioForm}
+                    className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+                  >
+                    {isSubmitting ? "Saving..." : editingPortfolioProject ? "Update Project" : "Add Project"}
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            {/* Portfolio Projects List */}
+            <div className="bg-white rounded-lg shadow">
+              <div className="px-6 py-4 border-b border-gray-200">
+                <h2 className="text-xl font-semibold text-gray-900">Portfolio Projects</h2>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Client</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Budget</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {portfolioProjects.map((project) => (
+                      <tr key={project.id}>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm font-medium text-gray-900">{project.title}</div>
+                          <div className="text-sm text-gray-500 truncate max-w-xs">{project.description}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{project.clientName || "N/A"}</td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                            project.status === "completed" ? "bg-green-100 text-green-800" :
+                            project.status === "in-progress" ? "bg-blue-100 text-blue-800" :
+                            project.status === "planning" ? "bg-yellow-100 text-yellow-800" :
+                            "bg-red-100 text-red-800"
+                          }`}>
+                            {project.status.replace("-", " ")}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {project.budget ? `$${Number(project.budget).toLocaleString()}` : "N/A"}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                          <button 
+                            onClick={() => editPortfolioProject(project)}
+                            className="text-blue-600 hover:text-blue-900"
+                          >
+                            Edit
+                          </button>
+                          <button 
+                            onClick={() => deletePortfolioProject(project.id)}
                             className="text-red-600 hover:text-red-900"
                           >
                             Delete
