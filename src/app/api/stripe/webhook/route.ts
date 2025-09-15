@@ -157,20 +157,8 @@ async function saveOrderToDatabase(session: Stripe.Checkout.Session) {
       }
     }
 
-    // Add order summary
-    projectDescription += `\nOrder Summary:\n`;
-    projectDescription += `- Total Items: ${items.length}\n`;
-    projectDescription += `- Order Total: $${budget}\n`;
-    projectDescription += `- Payment Status: ${session.payment_status}\n`;
-    projectDescription += `- Order Date: ${new Date().toLocaleDateString()}\n`;
-
-    // Add customer information
-    if (session.customer_details?.phone) {
-      projectDescription += `- Customer Phone: ${session.customer_details.phone}\n`;
-    }
-    if (session.customer_details?.address) {
-      projectDescription += `- Customer Address: ${JSON.stringify(session.customer_details.address)}\n`;
-    }
+    // Note: Order summary and customer details are stored separately in the project document
+    // and are only visible to project owners and admins for privacy protection
 
     // Calculate estimated end date based on timeline if available
     let estimatedEndDate = null;
@@ -207,6 +195,15 @@ async function saveOrderToDatabase(session: Stripe.Checkout.Session) {
       orderItems: items, // Store full order items for reference
       orderTotal: budget,
       paymentStatus: session.payment_status,
+      // Order summary fields (only visible to project owners and admins)
+      orderSummary: {
+        totalItems: items.length,
+        orderTotal: budget,
+        paymentStatus: session.payment_status,
+        orderDate: new Date().toLocaleDateString(),
+        customerPhone: session.customer_details?.phone || null,
+        customerAddress: session.customer_details?.address || null
+      },
       // Store additional metadata
       projectType: primaryItem?.category || 'general',
       complexity: primaryItem?.complexity || 'medium',

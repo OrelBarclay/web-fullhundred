@@ -26,6 +26,21 @@ type Project = {
   orderTotal?: number | null;
   paymentStatus?: string | null;
   createdFromOrderId?: string | null;
+  orderSummary?: {
+    totalItems: number;
+    orderTotal: number;
+    paymentStatus: string;
+    orderDate: string;
+    customerPhone?: string | null;
+    customerAddress?: {
+      line1?: string;
+      line2?: string;
+      city?: string;
+      state?: string;
+      postal_code?: string;
+      country?: string;
+    } | null;
+  };
   beforeImages?: string[];
   afterImages?: string[];
   beforeVideos?: string[];
@@ -325,6 +340,56 @@ export default function ProjectDetail() {
               {typeof project.orderTotal === "number" && (
                 <div className="text-right mt-2 text-sm font-medium">Total: ${Number(project.orderTotal).toFixed(2)}</div>
               )}
+            </div>
+          )}
+
+          {/* Order Summary - Only for project owners and admins */}
+          {hasAccess && project?.orderSummary && (
+            <div className="mb-8">
+              <h2 className="text-lg font-semibold mb-4">Order Summary</h2>
+              <div className="bg-white dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-700 p-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-gray-500">Total Items</p>
+                    <p className="text-lg font-medium">{project.orderSummary.totalItems}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Order Total</p>
+                    <p className="text-lg font-medium">${project.orderSummary.orderTotal.toLocaleString()}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Payment Status</p>
+                    <p className="text-lg font-medium capitalize">{project.orderSummary.paymentStatus}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Order Date</p>
+                    <p className="text-lg font-medium">{project.orderSummary.orderDate}</p>
+                  </div>
+                  {project.orderSummary.customerPhone && (
+                    <div>
+                      <p className="text-sm text-gray-500">Customer Phone</p>
+                      <p className="text-lg font-medium">{project.orderSummary.customerPhone}</p>
+                    </div>
+                  )}
+                  {project.orderSummary.customerAddress && (
+                    <div className="sm:col-span-2">
+                      <p className="text-sm text-gray-500">Customer Address</p>
+                      <div className="text-sm">
+                        {project.orderSummary.customerAddress.line1 && (
+                          <p>{project.orderSummary.customerAddress.line1}</p>
+                        )}
+                        {project.orderSummary.customerAddress.line2 && (
+                          <p>{project.orderSummary.customerAddress.line2}</p>
+                        )}
+                        <p>
+                          {project.orderSummary.customerAddress.city}, {project.orderSummary.customerAddress.state} {project.orderSummary.customerAddress.postal_code}
+                        </p>
+                        <p>{project.orderSummary.customerAddress.country}</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           )}
 
