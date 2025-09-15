@@ -105,6 +105,16 @@ export default function DashboardPage() {
     return () => unsubscribe();
   }, [router, loadDashboardData]);
 
+  // When an order is selected, scroll to the details panel after it renders
+  useEffect(() => {
+    if (selectedOrder) {
+      const el = document.getElementById('order-details');
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+  }, [selectedOrder]);
+
   // Filter projects based on search and status
   const filteredProjects = projects.filter(project => {
     const matchesSearch = project.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -396,9 +406,9 @@ export default function DashboardPage() {
                   {orders.map((o) => (
                     <tr key={o.id} className={`cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/40 ${selectedOrder?.id === o.id ? 'bg-gray-50 dark:bg-gray-700/40' : ''}`} onClick={() => setSelectedOrder(o)}>
                       <td className="px-4 py-3 text-sm text-blue-600 dark:text-blue-400 break-all">
-                        <button className="hover:underline" onClick={(e) => { e.stopPropagation(); setSelectedOrder(o); const el = document.getElementById('order-details'); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }}>
+                        <a href="#order-details" className="hover:underline" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSelectedOrder(o); }}>
                           {o.id}
-                        </button>
+                        </a>
                       </td>
                       <td className="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">{new Date(o.createdAt).toLocaleString()}</td>
                       <td className="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">{o.paymentStatus || 'paid'}</td>
