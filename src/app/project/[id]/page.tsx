@@ -195,8 +195,17 @@ export default function ProjectDetail() {
       <nav className="mb-6 text-sm text-gray-600">
         <Link href="/" className="text-blue-600 hover:underline">Home</Link>
         <span className="mx-2">/</span>
-        <Link href="/dashboard" className="text-blue-600 hover:underline">Dashboard</Link>
-        <span className="mx-2">/</span>
+        {hasAccess ? (
+          <>
+            <Link href="/dashboard" className="text-blue-600 hover:underline">Dashboard</Link>
+            <span className="mx-2">/</span>
+          </>
+        ) : (
+          <>
+            <Link href="/portfolio" className="text-blue-600 hover:underline">Our Work</Link>
+            <span className="mx-2">/</span>
+          </>
+        )}
         <span className="text-gray-900">{project?.title || 'Project'}</span>
       </nav>
 
@@ -205,7 +214,8 @@ export default function ProjectDetail() {
       ) : (
         <>
           <h1 className="text-3xl font-semibold mb-1">{project?.title}</h1>
-          {(project?.clientName || project?.clientEmail) && (
+          {/* Only show client info for project owners and admins */}
+          {hasAccess && (project?.clientName || project?.clientEmail) && (
             <p className="text-sm text-gray-600 mb-4">
               {project?.clientName}
               {project?.clientName && project?.clientEmail ? " • " : ""}
@@ -231,7 +241,7 @@ export default function ProjectDetail() {
                 </p>
               </div>
             )}
-            {typeof project?.budget === "number" && (
+            {hasAccess && typeof project?.budget === "number" && (
               <div className="bg-white dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-700 p-4">
                 <p className="text-xs text-gray-500">Budget</p>
                 <p className="text-sm font-medium">${Number(project.budget).toLocaleString()}</p>
@@ -255,13 +265,13 @@ export default function ProjectDetail() {
                 <p className="text-sm font-medium">{project.estimatedTimeline}</p>
               </div>
             )}
-            {project?.paymentStatus && (
+            {hasAccess && project?.paymentStatus && (
               <div className="bg-white dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-700 p-4">
                 <p className="text-xs text-gray-500">Payment Status</p>
                 <p className="text-sm font-medium">{project.paymentStatus}</p>
               </div>
             )}
-            {project?.createdFromOrderId && (
+            {hasAccess && project?.createdFromOrderId && (
               <div className="bg-white dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-700 p-4">
                 <p className="text-xs text-gray-500">Order</p>
                 <p className="text-sm font-medium break-all">{project.createdFromOrderId}</p>
@@ -273,8 +283,8 @@ export default function ProjectDetail() {
             <p className="opacity-80 mb-8 whitespace-pre-wrap">{project.description}</p>
           ) : null}
 
-          {/* Included Services */}
-          {project?.includedServices && project.includedServices.length > 0 && (
+          {/* Included Services - Only for project owners and admins */}
+          {hasAccess && project?.includedServices && project.includedServices.length > 0 && (
             <div className="mb-8">
               <h2 className="text-lg font-semibold mb-2">Included Services</h2>
               <ul className="list-disc pl-5 space-y-1">
@@ -288,8 +298,8 @@ export default function ProjectDetail() {
             </div>
           )}
 
-          {/* Order Items */}
-          {project?.orderItems && project.orderItems.length > 0 && (
+          {/* Order Items - Only for project owners and admins */}
+          {hasAccess && project?.orderItems && project.orderItems.length > 0 && (
             <div className="mb-8">
               <h2 className="text-lg font-semibold mb-2">Order Items</h2>
               <div className="overflow-hidden rounded-md border border-gray-200 dark:border-gray-700">
