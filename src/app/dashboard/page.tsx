@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { getAuthInstance, signOut } from '@/lib/firebase';
 import type { User } from 'firebase/auth';
 import Link from 'next/link';
+import DashboardProjects from '@/components/DashboardProjects';
 
 interface Project {
   id: string;
@@ -31,11 +32,9 @@ interface Order {
 export default function DashboardPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState<User | null>(null);
-  const [projects, setProjects] = useState<Project[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterStatus, setFilterStatus] = useState<string>('all');
+  const [isAdmin, setIsAdmin] = useState(false);
   const router = useRouter();
 
   // Helper function to safely convert dates
@@ -53,22 +52,6 @@ export default function DashboardPage() {
 
   const loadDashboardData = useCallback(async (currentEmail: string) => {
     try {
-      // Load projects filtered by signed-in user (server-side filtering)
-      const emailParam = currentEmail ? `?email=${encodeURIComponent(currentEmail)}&limit=50` : '';
-      const projectsRes = await fetch(`/api/projects${emailParam}`, { cache: 'no-store' });
-      if (projectsRes.ok) {
-        const payload = await projectsRes.json();
-        const list = Array.isArray(payload.projects) ? payload.projects : (Array.isArray(payload) ? payload : []);
-        const processedProjects = list.map((project: unknown) => {
-          const p = project as Record<string, unknown>;
-          return {
-            ...p,
-            startDate: safeDate(p.startDate),
-            endDate: safeDate(p.endDate)
-          } as Project;
-        });
-        setProjects(processedProjects);
-      }
       // Load recent orders for the user
       if (currentEmail) {
         const ordersRes = await fetch(`/api/orders?email=${encodeURIComponent(currentEmail)}&limit=50`, { cache: 'no-store' });
@@ -105,6 +88,25 @@ export default function DashboardPage() {
     return () => unsubscribe();
   }, [router, loadDashboardData]);
 
+  // Check admin status
+  useEffect(() => {
+    const checkAdminStatus = async () => {
+      try {
+        const response = await fetch('/api/auth/me');
+        if (response.ok) {
+          const data = await response.json();
+          setIsAdmin(data.isAdmin || false);
+        }
+      } catch (error) {
+        setIsAdmin(false);
+      }
+    };
+
+    if (user) {
+      checkAdminStatus();
+    }
+  }, [user]);
+
   // When an order is selected, scroll to the details panel after it renders
   useEffect(() => {
     if (selectedOrder) {
@@ -115,36 +117,11 @@ export default function DashboardPage() {
     }
   }, [selectedOrder]);
 
-  // Filter projects based on search and status
-  const filteredProjects = projects.filter(project => {
-    const matchesSearch = project.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         project.clientName.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = filterStatus === 'all' || project.status === filterStatus;
-    return matchesSearch && matchesStatus;
-  });
-
-  // Calculate statistics
+  // Calculate statistics for orders only
   const stats = {
-    totalProjects: projects.length,
-    activeProjects: projects.filter(p => p.status === 'in-progress').length,
-    completedProjects: projects.filter(p => p.status === 'completed').length,
-    totalBudget: projects.reduce((sum, p) => sum + (p.budget || 0), 0),
     ordersCount: orders.length,
     revenueCents: orders.reduce((sum, o) => sum + (o.amountTotal || 0), 0),
     averageOrderValueCents: orders.length > 0 ? Math.round(orders.reduce((sum, o) => sum + (o.amountTotal || 0), 0) / orders.length) : 0,
-    recentProjects: projects
-      .sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime())
-      .slice(0, 3)
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'completed': return 'bg-green-100 text-green-800';
-      case 'in-progress': return 'bg-blue-100 text-blue-800';
-      case 'planning': return 'bg-yellow-100 text-yellow-800';
-      case 'on-hold': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
   };
 
   const handleLogout = async () => {
@@ -197,56 +174,6 @@ export default function DashboardPage() {
       </header>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Project Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-blue-500 rounded-md flex items-center justify-center">
-                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                  </svg>
-                </div>
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Projects</p>
-                <p className="text-2xl font-semibold text-gray-900 dark:text-white">{stats.totalProjects}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-green-500 rounded-md flex items-center justify-center">
-                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Completed</p>
-                <p className="text-2xl font-semibold text-gray-900 dark:text-white">{stats.completedProjects}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-yellow-500 rounded-md flex items-center justify-center">
-                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Active</p>
-                <p className="text-2xl font-semibold text-gray-900 dark:text-white">{stats.activeProjects}</p>
-              </div>
-            </div>
-          </div>
-        </div>
 
         {/* Revenue & Orders KPIs */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
@@ -300,89 +227,8 @@ export default function DashboardPage() {
         </div>
 
         {/* Search and Filter */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow mb-8 p-6">
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-1">
-              <input
-                type="text"
-                placeholder="Search projects..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
-            <div className="sm:w-48">
-              <select
-                value={filterStatus}
-                onChange={(e) => setFilterStatus(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                <option value="all">All Status</option>
-                <option value="planning">Planning</option>
-                <option value="in-progress">In Progress</option>
-                <option value="completed">Completed</option>
-                <option value="on-hold">On Hold</option>
-              </select>
-            </div>
-          </div>
-        </div>
-
-        {/* Projects Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-          {filteredProjects.length === 0 ? (
-            <div className="col-span-full text-center py-12">
-              <svg className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-              </svg>
-              <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-white">No projects found</h3>
-              <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                {searchTerm || filterStatus !== 'all' 
-                  ? 'Try adjusting your search or filter criteria.' 
-                  : 'Get started by creating your first project.'}
-              </p>
-            </div>
-          ) : (
-            filteredProjects.map((project) => (
-              <div key={project.id} className="bg-white dark:bg-gray-800 rounded-lg shadow hover:shadow-lg transition-shadow">
-                <div className="p-6">
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex-1">
-                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">{project.title}</h3>
-                      <p className="text-sm text-gray-600 dark:text-gray-300">{project.clientName}</p>
-                    </div>
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(project.status)}`}>
-                      {project.status.replace('-', ' ')}
-                    </span>
-                  </div>
-                  
-                  <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 line-clamp-2">{project.description}</p>
-                  
-                  <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400 mb-4">
-                    <span>Budget: ${project.budget?.toLocaleString() || '0'}</span>
-                    <span>{project.startDate.toLocaleDateString()}</span>
-                  </div>
-                  
-                  <div className="flex items-center justify-between">
-                    <Link
-                      href={`/project/${project.id}`}
-                      className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium text-sm"
-                    >
-                      View Details →
-                    </Link>
-                    {project.beforeImages && project.beforeImages.length > 0 && (
-                        <div className="flex items-center text-xs text-gray-500 dark:text-gray-400">
-                        <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
-                        {project.beforeImages.length + (project.afterImages?.length || 0)} photos
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))
-          )}
-        </div>
+        {/* Projects Section */}
+        <DashboardProjects userEmail={user?.email || null} isAdmin={isAdmin} />
 
         {/* Recent Orders */}
         <div className="mt-10">
