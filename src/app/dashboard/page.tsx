@@ -18,11 +18,21 @@ interface Project {
   afterImages?: string[];
 }
 
+interface OrderItem { id: string; name: string; price: number; quantity: number; image?: string }
+interface Order {
+  id: string;
+  customerEmail: string;
+  amountTotal: number;
+  paymentStatus: string;
+  createdAt: string | Date;
+  items?: OrderItem[];
+}
 
 export default function DashboardPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState<User | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
+  const [orders, setOrders] = useState<Order[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const router = useRouter();
@@ -52,42 +62,39 @@ export default function DashboardPage() {
             ...p,
             startDate: safeDate(p.startDate),
             endDate: safeDate(p.endDate)
-          };
-        }) as Project[];
+          } as Project;
+        });
         setProjects(processedProjects);
+      }
+      // Load recent orders for the user
+      if (user?.email) {
+        const ordersRes = await fetch(`/api/orders?email=${encodeURIComponent(user.email)}&limit=5`, { cache: 'no-store' });
+        if (ordersRes.ok) {
+          const { orders } = await ordersRes.json();
+          const processedOrders = (Array.isArray(orders) ? orders : []).map((raw: Record<string, unknown>) => ({
+            id: String(raw.id ?? ''),
+            customerEmail: String(raw.customerEmail ?? ''),
+            amountTotal: Number(raw.amountTotal ?? 0),
+            paymentStatus: String(raw.paymentStatus ?? 'paid'),
+            createdAt: safeDate(raw.createdAt),
+            items: Array.isArray((raw as { items?: unknown }).items) ? (raw as { items: OrderItem[] }).items : []
+          })) as Order[];
+          setOrders(processedOrders);
+        }
       }
     } catch (error) {
       console.error('Error loading dashboard data:', error);
     }
-  }, []);
+  }, [user?.email]);
 
   useEffect(() => {
     const auth = getAuthInstance();
     const unsubscribe = auth.onAuthStateChanged(async (user) => {
       if (user) {
-        console.log('Dashboard: User authenticated:', user.email);
-        
-        // Check if user is admin by checking their role in Firestore
-        // This is a fallback check in case middleware didn't catch it
-        try {
-          const response = await fetch('/api/auth/me');
-          if (response.ok) {
-            const userData = await response.json();
-            if (userData.isAdmin) {
-              console.log('Dashboard: User is admin, redirecting to admin dashboard');
-              router.push('/admin');
-              return;
-            }
-          }
-        } catch (error) {
-          console.log('Dashboard: Could not check admin status, continuing with user dashboard');
-        }
-        
         setUser(user);
         await loadDashboardData();
         setIsLoading(false);
       } else {
-        console.log('Dashboard: No user, redirecting to login');
         router.push('/login');
       }
     });
@@ -148,7 +155,7 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header */}
-      <header className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
+      <header className="bg-white dark:bg-gray-800 shadow_sm border-b border-gray-200 dark:border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-6">
             <div>
@@ -307,6 +314,39 @@ export default function DashboardPage() {
                 </div>
               </div>
             ))
+          )}
+        </div>
+
+        {/* Recent Orders */}
+        <div className="mt-10">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Recent Orders</h2>
+          {orders.length === 0 ? (
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 text-sm text-gray-600 dark:text-gray-300">
+              No orders yet.
+            </div>
+          ) : (
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
+              <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                <thead className="bg-gray-50 dark:bg-gray-900/40">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Order ID</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                    <th className="px-4 py-3 text_left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
+                  </tr>
+                </thead>
+                <tbody className="bg_white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                  {orders.map((o) => (
+                    <tr key={o.id}>
+                      <td className="px-4 py-3 text-sm text-blue-600 dark:text-blue-400 break-all">{o.id}</td>
+                      <td className="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">{new Date(o.createdAt).toLocaleString()}</td>
+                      <td className="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">{o.paymentStatus || 'paid'}</td>
+                      <td className="px-4 py-3 text-sm text-right text-gray-900 dark:text-white font-medium">${((o.amountTotal || 0) / 100).toFixed(2)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
       </div>

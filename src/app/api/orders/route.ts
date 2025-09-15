@@ -7,6 +7,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const limitParam = searchParams.get('limit');
     const status = searchParams.get('status');
+    const email = searchParams.get('email');
     
     const db = getDb();
     const ordersRef = collection(db, 'orders');
@@ -15,6 +16,10 @@ export async function GET(request: NextRequest) {
     
     if (status) {
       q = query(ordersRef, where('status', '==', status), orderBy('createdAt', 'desc'));
+    }
+    
+    if (email) {
+      q = query(ordersRef, where('customerEmail', '==', email), orderBy('createdAt', 'desc'));
     }
     
     if (limitParam) {
