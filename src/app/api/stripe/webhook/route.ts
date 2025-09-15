@@ -120,24 +120,98 @@ async function saveOrderToDatabase(session: Stripe.Checkout.Session) {
     // do not fail webhook on client upsert
   }
 
-  // Create a corresponding project from this order
+  // Create a corresponding project from this order with detailed information
   try {
-    const primaryTitle = Array.isArray(items) && items.length > 0 ? items[0]?.name || 'New Project' : 'New Project';
+    const primaryItem = Array.isArray(items) && items.length > 0 ? items[0] : null;
+    const primaryTitle = primaryItem?.name || 'New Project';
     const clientName = session.customer_details?.name || session.customer_email || 'Customer';
     const budget = typeof session.amount_total === 'number' ? Math.round(session.amount_total / 100) : 0; // dollars
     const projectId = `proj-${session.id}`;
 
+    // Build comprehensive project description from order details
+    let projectDescription = `Project created from order ${session.id}.\n\n`;
+    
+    if (primaryItem) {
+      projectDescription += `Primary Service: ${primaryItem.name}\n`;
+      if (primaryItem.description) {
+        projectDescription += `Description: ${primaryItem.description}\n`;
+      }
+      if (primaryItem.category) {
+        projectDescription += `Category: ${primaryItem.category}\n`;
+      }
+      if (primaryItem.estimatedTimeline) {
+        projectDescription += `Estimated Timeline: ${primaryItem.estimatedTimeline}\n`;
+      }
+      if (primaryItem.complexity) {
+        projectDescription += `Complexity: ${primaryItem.complexity}\n`;
+      }
+      if (primaryItem.includedServices && Array.isArray(primaryItem.includedServices)) {
+        projectDescription += `\nIncluded Services:\n`;
+        primaryItem.includedServices.forEach((service: { title: string; estimatedPrice?: number }, index: number) => {
+          projectDescription += `${index + 1}. ${service.title}`;
+          if (service.estimatedPrice) {
+            projectDescription += ` ($${service.estimatedPrice})`;
+          }
+          projectDescription += `\n`;
+        });
+      }
+    }
+
+    // Add order summary
+    projectDescription += `\nOrder Summary:\n`;
+    projectDescription += `- Total Items: ${items.length}\n`;
+    projectDescription += `- Order Total: $${budget}\n`;
+    projectDescription += `- Payment Status: ${session.payment_status}\n`;
+    projectDescription += `- Order Date: ${new Date().toLocaleDateString()}\n`;
+
+    // Add customer information
+    if (session.customer_details?.phone) {
+      projectDescription += `- Customer Phone: ${session.customer_details.phone}\n`;
+    }
+    if (session.customer_details?.address) {
+      projectDescription += `- Customer Address: ${JSON.stringify(session.customer_details.address)}\n`;
+    }
+
+    // Calculate estimated end date based on timeline if available
+    let estimatedEndDate = null;
+    if (primaryItem?.estimatedTimeline) {
+      const timeline = primaryItem.estimatedTimeline.toLowerCase();
+      const now = new Date();
+      
+      if (timeline.includes('week')) {
+        const weeks = parseInt(timeline.match(/\d+/)?.[0] || '1');
+        estimatedEndDate = new Date(now.getTime() + (weeks * 7 * 24 * 60 * 60 * 1000));
+      } else if (timeline.includes('month')) {
+        const months = parseInt(timeline.match(/\d+/)?.[0] || '1');
+        estimatedEndDate = new Date(now.getTime() + (months * 30 * 24 * 60 * 60 * 1000));
+      } else if (timeline.includes('day')) {
+        const days = parseInt(timeline.match(/\d+/)?.[0] || '1');
+        estimatedEndDate = new Date(now.getTime() + (days * 24 * 60 * 60 * 1000));
+      }
+    }
+
     const projectDoc = doc(db, 'projects', projectId);
     await setDoc(projectDoc, {
       title: primaryTitle,
+      description: projectDescription,
       clientId: clientId || session.customer_email || '',
       clientName,
+      clientEmail: session.customer_email || '',
+      customerEmail: session.customer_email || '',
       status: 'planning',
       startDate: new Date(),
-      endDate: null,
+      endDate: estimatedEndDate,
       budget,
       progress: 0,
       createdFromOrderId: session.id,
+      orderItems: items, // Store full order items for reference
+      orderTotal: budget,
+      paymentStatus: session.payment_status,
+      // Store additional metadata
+      projectType: primaryItem?.category || 'general',
+      complexity: primaryItem?.complexity || 'medium',
+      estimatedTimeline: primaryItem?.estimatedTimeline || 'TBD',
+      includedServices: primaryItem?.includedServices || [],
       createdAt: new Date(),
       updatedAt: new Date(),
     }, { merge: true });
