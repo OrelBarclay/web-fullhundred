@@ -180,7 +180,7 @@ export default function DashboardProjects({ userEmail, isAdmin }: DashboardProje
                 )}
                 <div className="p-4">
                   <div className="flex items-center justify-between mb-2">
-                    <h3 className="text-lg font-medium">{project.title}</h3>
+                    <h3 className="text-lg font-medium text-[color:var(--foreground)]">{project.title}</h3>
                     {project.status && (
                       <span className={`text-xs px-2 py-1 rounded capitalize ${getStatusChipClass(project.status)}`}>
                         {project.status.replace('_',' ')}
@@ -195,39 +195,39 @@ export default function DashboardProjects({ userEmail, isAdmin }: DashboardProje
                   )}
 
                   {/* Project Details - Only for authenticated users */}
-                  <div className="space-y-2 text-sm">
+                  <div className="space-y-2 text-sm text-[color:var(--foreground)]">
                     {project.clientName && (
                       <div className="flex justify-between">
                         <span className="text-[color:var(--muted-foreground)]">Client:</span>
-                        <span className="font-medium">{project.clientName}</span>
+                        <span className="font-medium text-[color:var(--foreground)]">{project.clientName}</span>
                       </div>
                     )}
                     
                     {project.budget && (
                       <div className="flex justify-between">
                         <span className="text-[color:var(--muted-foreground)]">Budget:</span>
-                        <span className="font-medium">{formatCurrency(project.budget)}</span>
+                        <span className="font-medium text-[color:var(--foreground)]">{formatCurrency(project.budget)}</span>
                       </div>
                     )}
                     
                     {project.projectType && (
                       <div className="flex justify-between">
                         <span className="text-[color:var(--muted-foreground)]">Type:</span>
-                        <span className="font-medium capitalize">{project.projectType}</span>
+                        <span className="font-medium capitalize text-[color:var(--foreground)]">{project.projectType}</span>
                       </div>
                     )}
                     
                     {project.complexity && (
                       <div className="flex justify-between">
                         <span className="text-[color:var(--muted-foreground)]">Complexity:</span>
-                        <span className="font-medium capitalize">{project.complexity}</span>
+                        <span className="font-medium capitalize text-[color:var(--foreground)]">{project.complexity}</span>
                       </div>
                     )}
                     
                     {project.estimatedTimeline && (
                       <div className="flex justify-between">
                         <span className="text-[color:var(--muted-foreground)]">Timeline:</span>
-                        <span className="font-medium">{project.estimatedTimeline}</span>
+                        <span className="font-medium text-[color:var(--foreground)]">{project.estimatedTimeline}</span>
                       </div>
                     )}
                     
@@ -246,12 +246,12 @@ export default function DashboardProjects({ userEmail, isAdmin }: DashboardProje
                     
                     <div className="flex justify-between">
                       <span className="text-[color:var(--muted-foreground)]">Start Date:</span>
-                      <span className="font-medium">{formatDate(project.startDate)}</span>
+                      <span className="font-medium text-[color:var(--foreground)]">{formatDate(project.startDate)}</span>
                     </div>
                     
                     <div className="flex justify-between">
                       <span className="text-[color:var(--muted-foreground)]">End Date:</span>
-                      <span className="font-medium">{formatDate(project.endDate)}</span>
+                      <span className="font-medium text-[color:var(--foreground)]">{formatDate(project.endDate)}</span>
                     </div>
                   </div>
                 </div>
@@ -260,7 +260,7 @@ export default function DashboardProjects({ userEmail, isAdmin }: DashboardProje
           })}
           {filtered.length === 0 && (
             <div className="col-span-full text-center py-16 border border-dashed border-[color:var(--border)] rounded-lg">
-              <h3 className="text-lg font-semibold">No projects found</h3>
+              <h3 className="text-lg font-semibold text-[color:var(--foreground)]">No projects found</h3>
               <p className="text-sm text-[color:var(--muted-foreground)] mt-1">
                 {isAdmin ? "No projects have been created yet." : "You don't have any projects yet."}
               </p>
