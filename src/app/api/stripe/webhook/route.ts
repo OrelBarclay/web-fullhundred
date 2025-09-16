@@ -123,13 +123,16 @@ async function saveOrderToDatabase(session: Stripe.Checkout.Session) {
   // Create a corresponding project from this order with detailed information
   try {
     const primaryItem = Array.isArray(items) && items.length > 0 ? items[0] : null;
-    const primaryTitle = primaryItem?.name || 'New Project';
+    const isVisualizer = (session.metadata?.type || '') === 'visualizer';
+    const primaryTitle = isVisualizer ? (primaryItem?.name || 'Visualizer Project') : (primaryItem?.name || 'New Project');
     const clientName = session.customer_details?.name || session.customer_email || 'Customer';
     const budget = typeof session.amount_total === 'number' ? Math.round(session.amount_total / 100) : 0; // dollars
-    const projectId = `proj-${session.id}`;
+    const projectId = isVisualizer ? `viz-${session.id}` : `proj-${session.id}`;
 
     // Build comprehensive project description from order details
-    let projectDescription = `Project created from order ${session.id}.\n\n`;
+    let projectDescription = isVisualizer
+      ? `Project created from Visualizer order ${session.id}.\n\n`
+      : `Project created from order ${session.id}.\n\n`;
     
     if (primaryItem) {
       projectDescription += `Primary Service: ${primaryItem.name}\n`;
@@ -179,7 +182,7 @@ async function saveOrderToDatabase(session: Stripe.Checkout.Session) {
     }
 
     const projectDoc = doc(db, 'projects', projectId);
-    await setDoc(projectDoc, {
+    const baseProject: Record<string, unknown> = {
       title: primaryTitle,
       description: projectDescription,
       clientId: clientId || session.customer_email || '',
@@ -211,7 +214,18 @@ async function saveOrderToDatabase(session: Stripe.Checkout.Session) {
       includedServices: primaryItem?.includedServices || [],
       createdAt: new Date(),
       updatedAt: new Date(),
-    }, { merge: true });
+    };
+
+    // For visualizer, attach before/after images from metadata
+    if (isVisualizer) {
+      const beforeUrl = session.metadata?.beforeImageUrl || '';
+      const resultImageUrl = session.metadata?.resultImageUrl || '';
+      baseProject['projectType'] = 'visualizer';
+      baseProject['beforeImages'] = beforeUrl ? [beforeUrl] : [];
+      baseProject['afterImages'] = resultImageUrl ? [resultImageUrl] : [];
+    }
+
+    await setDoc(projectDoc, baseProject, { merge: true });
   } catch (_err) {
     // swallow project creation errors to not block webhook
   }

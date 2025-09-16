@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const STYLES = [
   { id: "modern", label: "Modern Minimal", prompt: "modern minimalist bathroom, clean lines, neutral palette, matte black fixtures, large tiles, frameless glass" },
@@ -17,6 +17,13 @@ export default function VisualizerPage() {
   const [resultUrl, setResultUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [isCheckingRole, setIsCheckingRole] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [priceCents, setPriceCents] = useState<number>(() => {
+    const envVal = Number(process.env.NEXT_PUBLIC_VISUALIZER_PRICE_CENTS || 499);
+    return Number.isFinite(envVal) && envVal > 0 ? Math.floor(envVal) : 499;
+  });
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   function onPickFile() {
@@ -35,6 +42,37 @@ export default function VisualizerPage() {
     } else {
       setImagePreview(null);
     }
+  }
+
+  // Check admin status (admins do not pay)
+  useEffect(() => {
+    async function checkRole() {
+      try {
+        const res = await fetch('/api/auth/me', { cache: 'no-store' });
+        if (res.ok) {
+          const data = await res.json();
+          setIsAdmin(Boolean(data?.isAdmin));
+        }
+      } catch (_) {
+        setIsAdmin(false);
+      } finally {
+        setIsCheckingRole(false);
+      }
+    }
+    checkRole();
+  }, []);
+
+  async function uploadToCloudinaryIfNeeded(dataUrlOrUrl: string | null): Promise<string | null> {
+    if (!dataUrlOrUrl) return null;
+    if (!dataUrlOrUrl.startsWith('data:')) return dataUrlOrUrl;
+    const blob = await (await fetch(dataUrlOrUrl)).blob();
+    const formData = new FormData();
+    formData.append('file', new File([blob], 'before.png', { type: blob.type || 'image/png' }));
+    formData.append('folder', 'visualizer/uploads');
+    const res = await fetch('/api/cloudinary-upload', { method: 'POST', body: formData });
+    if (!res.ok) throw new Error('Failed to upload image');
+    const data = await res.json();
+    return data.secure_url as string;
   }
 
   async function onVisualize() {
@@ -64,6 +102,75 @@ export default function VisualizerPage() {
       setError(msg);
     } finally {
       setIsLoading(false);
+    }
+  }
+
+  // Pay for generated image (non-admins)
+  async function onPayForDesign() {
+    if (!resultUrl) {
+      setError('Generate a design first');
+      return;
+    }
+    setIsSubmitting(true);
+    setError(null);
+    try {
+      const beforeUrl = await uploadToCloudinaryIfNeeded(imagePreview);
+      const payload = {
+        priceCents,
+        beforeImageUrl: beforeUrl,
+        resultImageUrl: resultUrl,
+        styleId: selectedStyle,
+        styleLabel: STYLES.find(s => s.id === selectedStyle)?.label || selectedStyle,
+      };
+      const res = await fetch('/api/visualizer/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to start checkout');
+      if (data.url) {
+        window.location.href = data.url as string;
+      }
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Failed to start checkout';
+      setError(msg);
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  // Admins can save visualizer result as project directly without payment
+  async function onAdminSaveProject() {
+    if (!resultUrl) {
+      setError('Generate a design first');
+      return;
+    }
+    setIsSubmitting(true);
+    setError(null);
+    try {
+      const beforeUrl = await uploadToCloudinaryIfNeeded(imagePreview);
+      const res = await fetch('/api/visualizer/create-project', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          beforeImageUrl: beforeUrl,
+          resultImageUrl: resultUrl,
+          styleId: selectedStyle,
+          styleLabel: STYLES.find(s => s.id === selectedStyle)?.label || selectedStyle,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to create project');
+      // redirect to project page
+      if (data.projectId) {
+        window.location.href = `/project/${data.projectId}`;
+      }
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Failed to create project';
+      setError(msg);
+    } finally {
+      setIsSubmitting(false);
     }
   }
 
@@ -107,12 +214,32 @@ export default function VisualizerPage() {
           {error && <div className="text-red-600 text-sm">{error}</div>}
         </div>
 
-        <div className="border border-[color:var(--border)] rounded-lg p-4 bg-[color:var(--card)] min-h-[320px] flex items-center justify-center">
-          {resultUrl ? (
-            <img src={resultUrl} alt="AI result" className="rounded-md max-h-[70vh] object-contain" />
-          ) : (
-            <div className="text-[color:var(--muted-foreground)]">Your AI-enhanced design will appear here.</div>
-          )}
+        <div className="border border-[color:var(--border)] rounded-lg p-4 bg-[color:var(--card)] min-h-[320px] flex flex-col items-center justify-between">
+          <div className="w-full flex-1 flex items-center justify-center">
+            {resultUrl ? (
+              <img src={resultUrl} alt="AI result" className="rounded-md max-h-[60vh] object-contain" />
+            ) : (
+              <div className="text-[color:var(--muted-foreground)]">Your AI-enhanced design will appear here.</div>
+            )}
+          </div>
+
+          {/* Actions for payment / save */}
+          <div className="w-full mt-4 flex items-center justify-between">
+            <div className="text-sm text-[color:var(--muted-foreground)]">
+              Recommended cost per generated image: <span className="font-semibold text-[color:var(--foreground)]">${(priceCents/100).toFixed(2)}</span>
+            </div>
+            <div className="flex gap-3">
+              {isAdmin ? (
+                <button onClick={onAdminSaveProject} disabled={isCheckingRole || !resultUrl || isSubmitting} className="px-4 py-2 rounded bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-50 transition">
+                  {isSubmitting ? 'Saving…' : 'Save as Project (Admin)'}
+                </button>
+              ) : (
+                <button onClick={onPayForDesign} disabled={!resultUrl || isSubmitting} className="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 transition">
+                  {isSubmitting ? 'Redirecting…' : `Pay $${(priceCents/100).toFixed(2)} for this design`}
+                </button>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </section>
