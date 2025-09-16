@@ -450,26 +450,26 @@ export default function AdminDashboard() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900/40 dark:bg-gray-900">
         <div className="text-center">
           <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading admin dashboard...</p>
+          <p className="mt-4 text-gray-600 dark:text-gray-300">Loading admin dashboard...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900/40 dark:bg-gray-900">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b border-gray-200">
+      <header className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 dark:border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center py-4 space-y-4 lg:space-y-0">
             <div>
-              <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white dark:text-white dark:text-white">
                 Admin Dashboard
               </h1>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-gray-600 dark:text-gray-400 dark:text-gray-300">
                 Welcome back, {user?.email}
               </p>
             </div>
@@ -552,7 +552,7 @@ export default function AdminDashboard() {
       </header>
 
       {/* Navigation Tabs */}
-      <div className="bg-white border-b border-gray-200">
+      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 dark:border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <nav className="flex overflow-x-auto space-x-4 sm:space-x-8">
             {[
@@ -570,8 +570,8 @@ export default function AdminDashboard() {
                 }
                 className={`py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${
                   activeTab === tab.id
-                    ? "border-blue-500 text-blue-600"
-                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                    ? "border-blue-500 text-blue-600 dark:text-blue-400"
+                    : "border-transparent text-gray-500 dark:text-gray-400 dark:text-gray-400 hover:text-gray-700 dark:text-gray-300 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600"
                 }`}
               >
                 {tab.label}
@@ -587,7 +587,7 @@ export default function AdminDashboard() {
           <div className="space-y-8">
             {/* Stats Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 sm:gap-6">
-              <div className="bg-white rounded-lg shadow p-6">
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
                 <div className="flex items-center">
                   <div className="p-2 bg-blue-100 rounded-lg">
                     <svg
@@ -605,19 +605,19 @@ export default function AdminDashboard() {
                     </svg>
                   </div>
                   <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-600">
+                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400 dark:text-gray-400">
                       Total Clients
                     </p>
-                    <p className="text-2xl font-semibold text-gray-900">
+                    <p className="text-2xl font-semibold text-gray-900 dark:text-white dark:text-white dark:text-white">
                       {stats.totalClients}
                     </p>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-white rounded-lg shadow p-6">
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
                 <div className="flex items-center">
-                  <div className="p-2 bg-green-100 rounded-lg">
+                  <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
                     <svg
                       className="w-6 h-6 text-green-600"
                       fill="none"
@@ -633,19 +633,19 @@ export default function AdminDashboard() {
                     </svg>
                   </div>
                   <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-600">
+                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400 dark:text-gray-400">
                       Active Projects
                     </p>
-                    <p className="text-2xl font-semibold text-gray-900">
+                    <p className="text-2xl font-semibold text-gray-900 dark:text-white dark:text-white dark:text-white">
                       {stats.activeProjects}
                     </p>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-white rounded-lg shadow p-6">
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
                 <div className="flex items-center">
-                  <div className="p-2 bg-purple-100 rounded-lg">
+                  <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
                     <svg
                       className="w-6 h-6 text-purple-600"
                       fill="none"
@@ -661,19 +661,19 @@ export default function AdminDashboard() {
                     </svg>
                   </div>
                   <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-600">
+                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
                       Total Revenue
                     </p>
-                    <p className="text-2xl font-semibold text-gray-900">
+                    <p className="text-2xl font-semibold text-gray-900 dark:text-white dark:text-white">
                       ${stats.totalRevenue.toLocaleString()}
                     </p>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-white rounded-lg shadow p-6">
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
                 <div className="flex items-center">
-                  <div className="p-2 bg-yellow-100 rounded-lg">
+                  <div className="p-2 bg-yellow-100 dark:bg-yellow-900/30 rounded-lg">
                     <svg
                       className="w-6 h-6 text-yellow-600"
                       fill="none"
@@ -689,19 +689,19 @@ export default function AdminDashboard() {
                     </svg>
                   </div>
                   <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-600">
+                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
                       Pending Quotes
                     </p>
-                    <p className="text-2xl font-semibold text-gray-900">
+                    <p className="text-2xl font-semibold text-gray-900 dark:text-white dark:text-white">
                       {stats.pendingQuotes}
                     </p>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-white rounded-lg shadow p-6">
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
                 <div className="flex items-center">
-                  <div className="p-2 bg-red-100 rounded-lg">
+                  <div className="p-2 bg-red-100 dark:bg-red-900/30 rounded-lg">
                     <svg
                       className="w-6 h-6 text-red-600"
                       fill="none"
@@ -717,19 +717,19 @@ export default function AdminDashboard() {
                     </svg>
                   </div>
                   <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-600">
+                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
                       Upcoming Deadlines
                     </p>
-                    <p className="text-2xl font-semibold text-gray-900">
+                    <p className="text-2xl font-semibold text-gray-900 dark:text-white dark:text-white">
                       {stats.upcomingDeadlines}
                     </p>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-white rounded-lg shadow p-6">
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
                 <div className="flex items-center">
-                  <div className="p-2 bg-indigo-100 rounded-lg">
+                  <div className="p-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg">
                     <svg
                       className="w-6 h-6 text-indigo-600"
                       fill="none"
@@ -745,10 +745,10 @@ export default function AdminDashboard() {
                     </svg>
                   </div>
                   <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-600">
+                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
                       Completed Projects
                     </p>
-                    <p className="text-2xl font-semibold text-gray-900">
+                    <p className="text-2xl font-semibold text-gray-900 dark:text-white dark:text-white">
                       {stats.completedProjects}
                     </p>
                   </div>
@@ -759,8 +759,8 @@ export default function AdminDashboard() {
             {/* Recent Activity */}
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 lg:gap-8">
               <div className="bg-white rounded-lg shadow">
-                <div className="px-6 py-4 border-b border-gray-200">
-                  <h3 className="text-lg font-medium text-gray-900">
+                <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                  <h3 className="text-lg font-medium text-gray-900 dark:text-white">
                     Recent Projects
                   </h3>
                 </div>
@@ -771,10 +771,10 @@ export default function AdminDashboard() {
                       className="flex items-center justify-between py-3 border-b border-gray-100 last:border-b-0"
                     >
                       <div>
-                        <p className="font-medium text-gray-900">
+                        <p className="font-medium text-gray-900 dark:text-white">
                           {project.title}
                         </p>
-                        <p className="text-sm text-gray-600">
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
                           {project.clientName}
                         </p>
                       </div>
@@ -797,8 +797,8 @@ export default function AdminDashboard() {
               </div>
 
               <div className="bg-white rounded-lg shadow">
-                <div className="px-6 py-4 border-b border-gray-200">
-                  <h3 className="text-lg font-medium text-gray-900">
+                <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                  <h3 className="text-lg font-medium text-gray-900 dark:text-white">
                     Recent Clients
                   </h3>
                 </div>
@@ -809,12 +809,12 @@ export default function AdminDashboard() {
                       className="flex items-center justify-between py-3 border-b border-gray-100 last:border-b-0"
                     >
                       <div>
-                        <p className="font-medium text-gray-900">
+                        <p className="font-medium text-gray-900 dark:text-white">
                           {client.name}
                         </p>
-                        <p className="text-sm text-gray-600">{client.email}</p>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">{client.email}</p>
                       </div>
-                      <span className="text-sm text-gray-500">
+                      <span className="text-sm text-gray-500 dark:text-gray-400">
                         {client.createdAt.toLocaleDateString()}
                       </span>
                     </div>
@@ -824,32 +824,32 @@ export default function AdminDashboard() {
 
               {/* Recent Orders */}
               <div className="bg-white rounded-lg shadow xl:col-span-2">
-                <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-                  <h3 className="text-lg font-medium text-gray-900">
+                <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+                  <h3 className="text-lg font-medium text-gray-900 dark:text-white">
                     Recent Orders
                   </h3>
-                  <span className="text-sm text-gray-500">Last 10</span>
+                  <span className="text-sm text-gray-500 dark:text-gray-400">Last 10</span>
                 </div>
                 <div className="overflow-x-auto">
                   <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
+                    <thead className="bg-gray-50 dark:bg-gray-900/40">
                       <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                           Order ID
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                           Customer
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                           Date
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                           Status
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                           Project
                         </th>
-                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                           Total
                         </th>
                       </tr>
@@ -859,7 +859,7 @@ export default function AdminDashboard() {
                         <tr>
                           <td
                             colSpan={6}
-                            className="px-6 py-6 text-center text-gray-500"
+                            className="px-6 py-6 text-center text-gray-500 dark:text-gray-400"
                           >
                             No recent orders.
                           </td>
@@ -881,10 +881,10 @@ export default function AdminDashboard() {
                                 {o.id}
                               </Link>
                             </td>
-                            <td className="px-6 py-3 text-sm text-gray-900">
+                            <td className="px-6 py-3 text-sm text-gray-900 dark:text-white">
                               {o.customerEmail}
                             </td>
-                            <td className="px-6 py-3 text-sm text-gray-700">
+                            <td className="px-6 py-3 text-sm text-gray-700 dark:text-gray-300">
                               {o.createdAt.toLocaleString()}
                             </td>
                             <td className="px-6 py-3 text-sm">
@@ -903,7 +903,7 @@ export default function AdminDashboard() {
                                 View Project
                               </Link>
                             </td>
-                            <td className="px-6 py-3 text-sm text-right text-gray-900 font-medium">
+                            <td className="px-6 py-3 text-sm text-right text-gray-900 dark:text-white font-medium">
                               ${(o.amountTotal / 100).toFixed(2)}
                             </td>
                           </tr>
@@ -921,7 +921,7 @@ export default function AdminDashboard() {
         {activeTab === "clients" && (
           <div className="space-y-6">
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-4 sm:space-y-0">
-              <h2 className="text-xl sm:text-2xl font-bold text-gray-900">
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white dark:text-white">
                 Client Management
               </h2>
               <button
@@ -933,7 +933,7 @@ export default function AdminDashboard() {
             </div>
 
             <div className="bg-white rounded-lg shadow">
-              <div className="px-6 py-4 border-b border-gray-200">
+              <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
                 <input
                   type="text"
                   placeholder="Search clients..."
@@ -944,21 +944,21 @@ export default function AdminDashboard() {
               </div>
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
+                  <thead className="bg-gray-50 dark:bg-gray-900/40">
                     <tr>
-                      <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                         Client
                       </th>
-                      <th className="hidden sm:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="hidden sm:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                         Contact
                       </th>
-                      <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                         Projects
                       </th>
-                      <th className="hidden md:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="hidden md:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                         Joined
                       </th>
-                      <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                         Actions
                       </th>
                     </tr>
@@ -972,22 +972,22 @@ export default function AdminDashboard() {
                         <tr key={client.id}>
                           <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
                             <div>
-                              <div className="text-sm font-medium text-gray-900">
+                              <div className="text-sm font-medium text-gray-900 dark:text-white">
                                 {client.name}
                               </div>
-                              <div className="text-xs sm:text-sm text-gray-500">
+                              <div className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
                                 {client.address}
                               </div>
-                              <div className="sm:hidden text-xs text-gray-500 mt-1">
+                              <div className="sm:hidden text-xs text-gray-500 dark:text-gray-400 mt-1">
                                 {client.email}
                               </div>
                             </div>
                           </td>
                           <td className="hidden sm:table-cell px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm text-gray-900">
+                            <div className="text-sm text-gray-900 dark:text-white">
                               {client.email}
                             </div>
-                            <div className="text-sm text-gray-500">
+                            <div className="text-sm text-gray-500 dark:text-gray-400">
                               {client.phone}
                             </div>
                           </td>
@@ -996,7 +996,7 @@ export default function AdminDashboard() {
                               {clientProjects.length} projects
                             </span>
                           </td>
-                          <td className="hidden md:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          <td className="hidden md:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                             {client.createdAt.toLocaleDateString()}
                           </td>
                           <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm font-medium">
@@ -1023,7 +1023,7 @@ export default function AdminDashboard() {
         {activeTab === "projects" && (
           <div className="space-y-6">
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-4 sm:space-y-0">
-              <h2 className="text-xl sm:text-2xl font-bold text-gray-900">
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white dark:text-white">
                 Project Management
               </h2>
               <button
@@ -1058,27 +1058,27 @@ export default function AdminDashboard() {
             <div className="bg-white rounded-lg shadow">
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
+                  <thead className="bg-gray-50 dark:bg-gray-900/40">
                     <tr>
-                      <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                         Project
                       </th>
-                      <th className="hidden sm:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="hidden sm:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                         Client
                       </th>
-                      <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                         Status
                       </th>
-                      <th className="hidden md:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="hidden md:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                         Progress
                       </th>
-                      <th className="hidden lg:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="hidden lg:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                         Budget
                       </th>
-                      <th className="hidden xl:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="hidden xl:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                         Timeline
                       </th>
-                      <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                         Actions
                       </th>
                     </tr>
@@ -1088,7 +1088,7 @@ export default function AdminDashboard() {
                       <tr>
                         <td
                           colSpan={7}
-                          className="px-6 py-12 text-center text-gray-500"
+                          className="px-6 py-12 text-center text-gray-500 dark:text-gray-400"
                         >
                           <div className="flex flex-col items-center">
                             <svg
@@ -1104,10 +1104,10 @@ export default function AdminDashboard() {
                                 d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                               />
                             </svg>
-                            <p className="text-lg font-medium text-gray-900 mb-2">
+                            <p className="text-lg font-medium text-gray-900 dark:text-white mb-2">
                               No projects found
                             </p>
-                            <p className="text-sm text-gray-500 mb-4">
+                            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
                               {projects.length === 0
                                 ? "You haven't created any projects yet. Click 'Add New Project' to get started."
                                 : "No projects match your current search or filter criteria."}
@@ -1128,18 +1128,18 @@ export default function AdminDashboard() {
                         <tr key={project.id}>
                           <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
                             <div>
-                              <div className="text-sm font-medium text-gray-900">
+                              <div className="text-sm font-medium text-gray-900 dark:text-white">
                                 {project.title}
                               </div>
-                              <div className="text-xs sm:text-sm text-gray-500">
+                              <div className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
                                 ID: {project.id}
                               </div>
-                              <div className="sm:hidden text-xs text-gray-500 mt-1">
+                              <div className="sm:hidden text-xs text-gray-500 dark:text-gray-400 mt-1">
                                 {project.clientName}
                               </div>
                             </div>
                           </td>
-                          <td className="hidden sm:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          <td className="hidden sm:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
                             {project.clientName}
                           </td>
                           <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
@@ -1172,15 +1172,15 @@ export default function AdminDashboard() {
                                   style={{ width: `${project.progress || 0}%` }}
                                 ></div>
                               </div>
-                              <span className="text-sm text-gray-900">
+                              <span className="text-sm text-gray-900 dark:text-white">
                                 {project.progress || 0}%
                               </span>
                             </div>
                           </td>
-                          <td className="hidden lg:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          <td className="hidden lg:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
                             ${project.budget?.toLocaleString() || "0"}
                           </td>
-                          <td className="hidden xl:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          <td className="hidden xl:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                             <div>{project.startDate.toLocaleDateString()}</div>
                             <div>to {project.endDate.toLocaleDateString()}</div>
                           </td>
@@ -1213,13 +1213,13 @@ export default function AdminDashboard() {
         {/* Analytics Tab */}
         {activeTab === "analytics" && (
           <div className="space-y-8">
-            <h2 className="text-xl sm:text-2xl font-bold text-gray-900">
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white dark:text-white">
               Business Analytics
             </h2>
 
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 lg:gap-8">
-              <div className="bg-white rounded-lg shadow p-6">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+                <h3 className="text-lg font-medium text-gray-900 dark:text-white dark:text-white mb-4">
                   Project Status Distribution
                 </h3>
                 <div className="space-y-3">
@@ -1246,7 +1246,7 @@ export default function AdminDashboard() {
                       status: "On Hold",
                       count: projects.filter((p) => p.status === "on-hold")
                         .length,
-                      color: "bg-gray-500",
+                      color: "bg-gray-50 dark:bg-gray-900/400",
                     },
                   ].map((item) => (
                     <div
@@ -1257,11 +1257,11 @@ export default function AdminDashboard() {
                         <div
                           className={`w-3 h-3 rounded-full ${item.color} mr-3`}
                         ></div>
-                        <span className="text-sm text-gray-600">
+                        <span className="text-sm text-gray-600 dark:text-gray-400">
                           {item.status}
                         </span>
                       </div>
-                      <span className="text-sm font-medium text-gray-900">
+                      <span className="text-sm font-medium text-gray-900 dark:text-white">
                         {item.count}
                       </span>
                     </div>
@@ -1269,22 +1269,22 @@ export default function AdminDashboard() {
                 </div>
               </div>
 
-              <div className="bg-white rounded-lg shadow p-6">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+                <h3 className="text-lg font-medium text-gray-900 dark:text-white dark:text-white mb-4">
                   Revenue Overview
                 </h3>
                 <div className="space-y-4">
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">Total Revenue</span>
-                    <span className="text-lg font-semibold text-gray-900">
+                    <span className="text-sm text-gray-600 dark:text-gray-400">Total Revenue</span>
+                    <span className="text-lg font-semibold text-gray-900 dark:text-white dark:text-white">
                       ${stats.totalRevenue.toLocaleString()}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">
+                    <span className="text-sm text-gray-600 dark:text-gray-400">
                       Average Project Value
                     </span>
-                    <span className="text-sm font-medium text-gray-900">
+                    <span className="text-sm font-medium text-gray-900 dark:text-white">
                       $
                       {stats.completedProjects > 0
                         ? Math.round(
@@ -1294,10 +1294,10 @@ export default function AdminDashboard() {
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">
+                    <span className="text-sm text-gray-600 dark:text-gray-400">
                       Completion Rate
                     </span>
-                    <span className="text-sm font-medium text-gray-900">
+                    <span className="text-sm font-medium text-gray-900 dark:text-white">
                       {projects.length > 0
                         ? Math.round(
                             (stats.completedProjects / projects.length) * 100
@@ -1310,8 +1310,8 @@ export default function AdminDashboard() {
               </div>
             </div>
 
-            <div className="bg-white rounded-lg shadow p-6">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white dark:text-white mb-4">
                 Recent Activity Timeline
               </h3>
               <div className="space-y-4">
@@ -1319,10 +1319,10 @@ export default function AdminDashboard() {
                   <div key={project.id} className="flex items-center space-x-4">
                     <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
                     <div className="flex-1">
-                      <p className="text-sm font-medium text-gray-900">
+                      <p className="text-sm font-medium text-gray-900 dark:text-white">
                         {project.title}
                       </p>
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
                         Status changed to {project.status} •{" "}
                         {project.startDate.toLocaleDateString()}
                       </p>

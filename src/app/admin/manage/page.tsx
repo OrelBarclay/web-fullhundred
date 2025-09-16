@@ -615,24 +615,24 @@ function ManageContentWithSearchParams() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900/40 dark:bg-gray-900">
         <div className="text-center">
           <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading content management...</p>
+          <p className="mt-4 text-gray-600 dark:text-gray-300 dark:text-gray-300">Loading content management...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900/40 dark:bg-gray-900">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b border-gray-200">
+      <header className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 dark:border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Content Management</h1>
-              <p className="text-sm text-gray-600">Manage clients and projects</p>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white dark:text-white">Content Management</h1>
+              <p className="text-sm text-gray-600 dark:text-gray-300 dark:text-gray-300">Manage clients and projects</p>
             </div>
             <div className="flex items-center space-x-4">
               <button
@@ -647,7 +647,7 @@ function ManageContentWithSearchParams() {
       </header>
 
       {/* Navigation Tabs */}
-      <div className="bg-white border-b border-gray-200">
+      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 dark:border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <nav className="flex space-x-8">
             {[
@@ -660,8 +660,8 @@ function ManageContentWithSearchParams() {
                 onClick={() => setActiveTab(tab.id as "clients" | "projects" | "portfolio")}
                 className={`py-4 px-1 border-b-2 font-medium text-sm ${
                   activeTab === tab.id
-                    ? "border-blue-500 text-blue-600"
-                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                    ? "border-blue-500 text-blue-600 dark:text-blue-400"
+                    : "border-transparent text-gray-500 dark:text-gray-400 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600"
                 }`}
               >
                 {tab.label}
@@ -675,8 +675,8 @@ function ManageContentWithSearchParams() {
         {/* Clients Tab */}
         {activeTab === "clients" && (
           <div className="space-y-8">
-            <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-6">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">
                 {editingClient ? "Edit Client" : "Add New Client"}
               </h2>
               
@@ -751,19 +751,19 @@ function ManageContentWithSearchParams() {
             </div>
 
             {/* Clients List */}
-            <div className="bg-white rounded-lg shadow">
-              <div className="px-6 py-4 border-b border-gray-200">
-                <h3 className="text-lg font-medium text-gray-900">All Clients ({clients.length})</h3>
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
+              <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                <h3 className="text-lg font-medium text-gray-900 dark:text-white">All Clients ({clients.length})</h3>
               </div>
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
+                  <thead className="bg-gray-50 dark:bg-gray-900/40">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Client</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Projects</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Joined</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Client</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Contact</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Projects</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Joined</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
@@ -773,20 +773,20 @@ function ManageContentWithSearchParams() {
                         <tr key={client.id}>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div>
-                              <div className="text-sm font-medium text-gray-900">{client.name}</div>
-                              <div className="text-sm text-gray-500">{client.address}</div>
+                              <div className="text-sm font-medium text-gray-900 dark:text-white">{client.name}</div>
+                              <div className="text-sm text-gray-500 dark:text-gray-400">{client.address}</div>
                             </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm text-gray-900">{client.email}</div>
-                            <div className="text-sm text-gray-500">{client.phone}</div>
+                            <div className="text-sm text-gray-900 dark:text-white">{client.email}</div>
+                            <div className="text-sm text-gray-500 dark:text-gray-400">{client.phone}</div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                               {clientProjects.length} projects
                             </span>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                             {client.createdAt.toLocaleDateString()}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
@@ -816,8 +816,8 @@ function ManageContentWithSearchParams() {
         {/* Projects Tab */}
         {activeTab === "projects" && (
           <div className="space-y-8">
-            <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-6">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">
                 {editingProject ? "Edit Project" : "Add New Project"}
               </h2>
               
@@ -922,7 +922,7 @@ function ManageContentWithSearchParams() {
 
                 {/* Media Upload Section */}
                 <div className="border-t pt-6">
-                  <h3 className="text-lg font-medium text-gray-900 mb-4">Project Media</h3>
+                  <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Project Media</h3>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {/* Before Images */}
@@ -932,7 +932,7 @@ function ManageContentWithSearchParams() {
                       {/* Existing Before Images */}
                       {projectForm.existingBeforeImages.length > 0 && (
                         <div className="mb-4">
-                          <label className="block text-xs font-medium text-gray-500 mb-2">Existing Images</label>
+                          <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">Existing Images</label>
                           <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                             {projectForm.existingBeforeImages.map((url, index) => (
                               <div key={index} className="relative group">
@@ -974,11 +974,11 @@ function ManageContentWithSearchParams() {
                           <svg className="w-8 h-8 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                           </svg>
-                          <span className="text-sm text-gray-600">Click to upload before images</span>
+                          <span className="text-sm text-gray-600 dark:text-gray-300">Click to upload before images</span>
                         </label>
                         {projectForm.beforeImages.length > 0 && (
                           <div className="mt-2">
-                            <p className="text-xs text-gray-500 mb-2">{projectForm.beforeImages.length} file(s) selected</p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">{projectForm.beforeImages.length} file(s) selected</p>
                             <div className="flex flex-wrap gap-2">
                               {projectForm.beforeImages.map((file, index) => (
                                 <div key={index} className="flex items-center bg-blue-50 px-2 py-1 rounded text-xs">
@@ -1010,7 +1010,7 @@ function ManageContentWithSearchParams() {
                       {/* Existing After Images */}
                       {projectForm.existingAfterImages.length > 0 && (
                         <div className="mb-4">
-                          <label className="block text-xs font-medium text-gray-500 mb-2">Existing Images</label>
+                          <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">Existing Images</label>
                           <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                             {projectForm.existingAfterImages.map((url, index) => (
                               <div key={index} className="relative group">
@@ -1052,11 +1052,11 @@ function ManageContentWithSearchParams() {
                           <svg className="w-8 h-8 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                           </svg>
-                          <span className="text-sm text-gray-600">Click to upload after images</span>
+                          <span className="text-sm text-gray-600 dark:text-gray-300">Click to upload after images</span>
                         </label>
                         {projectForm.afterImages.length > 0 && (
                           <div className="mt-2">
-                            <p className="text-xs text-gray-500 mb-2">{projectForm.afterImages.length} file(s) selected</p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">{projectForm.afterImages.length} file(s) selected</p>
                             <div className="flex flex-wrap gap-2">
                               {projectForm.afterImages.map((file, index) => (
                                 <div key={index} className="flex items-center bg-green-50 px-2 py-1 rounded text-xs">
@@ -1103,11 +1103,11 @@ function ManageContentWithSearchParams() {
                           <svg className="w-8 h-8 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
                           </svg>
-                          <span className="text-sm text-gray-600">Click to upload before videos</span>
+                          <span className="text-sm text-gray-600 dark:text-gray-300">Click to upload before videos</span>
                         </label>
                         {projectForm.beforeVideos.length > 0 && (
                           <div className="mt-2">
-                            <p className="text-xs text-gray-500 mb-2">{projectForm.beforeVideos.length} file(s) selected</p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">{projectForm.beforeVideos.length} file(s) selected</p>
                             <div className="flex flex-wrap gap-2">
                               {projectForm.beforeVideos.map((file, index) => (
                                 <div key={index} className="flex items-center bg-blue-50 px-2 py-1 rounded text-xs">
@@ -1154,11 +1154,11 @@ function ManageContentWithSearchParams() {
                           <svg className="w-8 h-8 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
                           </svg>
-                          <span className="text-sm text-gray-600">Click to upload after videos</span>
+                          <span className="text-sm text-gray-600 dark:text-gray-300">Click to upload after videos</span>
                         </label>
                         {projectForm.afterVideos.length > 0 && (
                           <div className="mt-2">
-                            <p className="text-xs text-gray-500 mb-2">{projectForm.afterVideos.length} file(s) selected</p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">{projectForm.afterVideos.length} file(s) selected</p>
                             <div className="flex flex-wrap gap-2">
                               {projectForm.afterVideos.map((file, index) => (
                                 <div key={index} className="flex items-center bg-green-50 px-2 py-1 rounded text-xs">
@@ -1208,20 +1208,20 @@ function ManageContentWithSearchParams() {
             </div>
 
             {/* Projects List */}
-            <div className="bg-white rounded-lg shadow">
-              <div className="px-6 py-4 border-b border-gray-200">
-                <h3 className="text-lg font-medium text-gray-900">All Projects ({projects.length})</h3>
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
+              <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                <h3 className="text-lg font-medium text-gray-900 dark:text-white">All Projects ({projects.length})</h3>
               </div>
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
+                  <thead className="bg-gray-50 dark:bg-gray-900/40">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Project</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Client</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Progress</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Budget</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Project</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Client</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Progress</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Budget</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
@@ -1229,11 +1229,11 @@ function ManageContentWithSearchParams() {
                       <tr key={project.id}>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div>
-                            <div className="text-sm font-medium text-gray-900">{project.title}</div>
-                            <div className="text-sm text-gray-500">{project.description}</div>
+                            <div className="text-sm font-medium text-gray-900 dark:text-white">{project.title}</div>
+                            <div className="text-sm text-gray-500 dark:text-gray-400">{project.description}</div>
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
                           {project.clientName}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
@@ -1254,10 +1254,10 @@ function ManageContentWithSearchParams() {
                                 style={{ width: `${project.progress || 0}%` }}
                               ></div>
                             </div>
-                            <span className="text-sm text-gray-900">{project.progress || 0}%</span>
+                            <span className="text-sm text-gray-900 dark:text-white">{project.progress || 0}%</span>
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
                           ${project.budget?.toLocaleString() || "0"}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
@@ -1286,8 +1286,8 @@ function ManageContentWithSearchParams() {
         {/* Portfolio Tab */}
         {activeTab === "portfolio" && (
           <div className="space-y-8">
-            <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-6">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">
                 {editingPortfolioProject ? "Edit Portfolio Project" : "Add New Portfolio Project"}
               </h2>
               
@@ -1373,7 +1373,7 @@ function ManageContentWithSearchParams() {
                 {/* Media Upload Sections - Similar to project form but for portfolio */}
                 <div className="space-y-6">
                   <div>
-                    <h3 className="text-lg font-medium text-gray-900 mb-4">Before Images</h3>
+                    <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Before Images</h3>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                       {portfolioForm.existingBeforeImages.map((url, index) => (
                         <div key={`existing-before-${index}`} className="relative">
@@ -1424,13 +1424,13 @@ function ManageContentWithSearchParams() {
                         htmlFor="portfolio-before-images"
                         className="w-full h-24 border-2 border-dashed border-gray-300 rounded flex items-center justify-center cursor-pointer hover:border-gray-400"
                       >
-                        <span className="text-gray-500">+ Add Images</span>
+                        <span className="text-gray-500 dark:text-gray-400">+ Add Images</span>
                       </label>
                     </div>
                   </div>
 
                   <div>
-                    <h3 className="text-lg font-medium text-gray-900 mb-4">After Images</h3>
+                    <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">After Images</h3>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                       {portfolioForm.existingAfterImages.map((url, index) => (
                         <div key={`existing-after-${index}`} className="relative">
@@ -1481,7 +1481,7 @@ function ManageContentWithSearchParams() {
                         htmlFor="portfolio-after-images"
                         className="w-full h-24 border-2 border-dashed border-gray-300 rounded flex items-center justify-center cursor-pointer hover:border-gray-400"
                       >
-                        <span className="text-gray-500">+ Add Images</span>
+                        <span className="text-gray-500 dark:text-gray-400">+ Add Images</span>
                       </label>
                     </div>
                   </div>
@@ -1491,7 +1491,7 @@ function ManageContentWithSearchParams() {
                   <button
                     type="button"
                     onClick={resetPortfolioForm}
-                    className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+                    className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 dark:bg-gray-900/40"
                   >
                     Cancel
                   </button>
@@ -1507,29 +1507,29 @@ function ManageContentWithSearchParams() {
             </div>
 
             {/* Portfolio Projects List */}
-            <div className="bg-white rounded-lg shadow">
-              <div className="px-6 py-4 border-b border-gray-200">
-                <h2 className="text-xl font-semibold text-gray-900">Portfolio Projects</h2>
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
+              <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Portfolio Projects</h2>
               </div>
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
+                  <thead className="bg-gray-50 dark:bg-gray-900/40">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Client</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Budget</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Title</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Client</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Budget</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {portfolioProjects.map((project) => (
                       <tr key={project.id}>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900">{project.title}</div>
-                          <div className="text-sm text-gray-500 truncate max-w-xs">{project.description}</div>
+                          <div className="text-sm font-medium text-gray-900 dark:text-white">{project.title}</div>
+                          <div className="text-sm text-gray-500 dark:text-gray-400 truncate max-w-xs">{project.description}</div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{project.clientName || "N/A"}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">{project.clientName || "N/A"}</td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
                             project.status === "completed" ? "bg-green-100 text-green-800" :
@@ -1540,7 +1540,7 @@ function ManageContentWithSearchParams() {
                             {project.status.replace("-", " ")}
                           </span>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
                           {project.budget ? `$${Number(project.budget).toLocaleString()}` : "N/A"}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
