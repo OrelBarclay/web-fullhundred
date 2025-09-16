@@ -3,7 +3,7 @@ import { stripe } from '@/lib/stripe';
 
 export async function POST(req: NextRequest) {
   try {
-    const { priceCents, beforeImageUrl, resultImageUrl, styleId, styleLabel } = await req.json();
+    const { priceCents, beforeImageUrl, resultImageUrl, styleId, styleLabel, spaceType, spaceLabel } = await req.json();
 
     const amount = Number(priceCents);
     if (!Number.isFinite(amount) || amount <= 0) {
@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
             currency: 'usd',
             unit_amount: Math.floor(amount),
             product_data: {
-              name: `Visualizer Design - ${styleLabel || styleId || 'Custom'}`,
+              name: `Visualizer ${spaceLabel || spaceType || ''} - ${styleLabel || styleId || 'Design'}`.trim(),
               description: 'AI-generated design preview',
               images: resultImageUrl ? [resultImageUrl] : undefined,
             },
@@ -38,6 +38,8 @@ export async function POST(req: NextRequest) {
         resultImageUrl: resultImageUrl,
         styleId: styleId || '',
         styleLabel: styleLabel || '',
+        spaceType: spaceType || '',
+        spaceLabel: spaceLabel || '',
       },
     });
 

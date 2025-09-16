@@ -223,6 +223,10 @@ async function saveOrderToDatabase(session: Stripe.Checkout.Session) {
       baseProject['projectType'] = 'visualizer';
       baseProject['beforeImages'] = beforeUrl ? [beforeUrl] : [];
       baseProject['afterImages'] = resultImageUrl ? [resultImageUrl] : [];
+      baseProject['spaceType'] = session.metadata?.spaceType || 'unknown';
+      if (session.metadata?.spaceLabel) {
+        baseProject['title'] = `Visualizer ${session.metadata.spaceLabel} - ${primaryTitle}`;
+      }
     }
 
     await setDoc(projectDoc, baseProject, { merge: true });

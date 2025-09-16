@@ -5,7 +5,7 @@ import { getAuthInstance } from '@/lib/firebase';
 
 export async function POST(req: NextRequest) {
   try {
-    const { beforeImageUrl, resultImageUrl, styleId, styleLabel } = await req.json();
+    const { beforeImageUrl, resultImageUrl, styleId, styleLabel, spaceType, spaceLabel } = await req.json();
     if (!resultImageUrl) {
       return NextResponse.json({ error: 'Missing result image' }, { status: 400 });
     }
@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
     const projectId = `viz-${Date.now()}`;
     await setDoc(doc(db, 'projects', projectId), {
       id: projectId,
-      title: `Visualizer Project - ${styleLabel || styleId || 'Design'}`,
+      title: `Visualizer ${spaceLabel || spaceType || ''} - ${styleLabel || styleId || 'Design'}`.trim(),
       description: 'Project created from AI Visualizer (admin)'.trim(),
       status: 'planning',
       startDate: new Date(),
@@ -23,6 +23,7 @@ export async function POST(req: NextRequest) {
       beforeImages: beforeImageUrl ? [beforeImageUrl] : [],
       afterImages: [resultImageUrl],
       projectType: 'visualizer',
+      spaceType: spaceType || 'unknown',
       createdAt: new Date(),
       updatedAt: new Date(),
       isPortfolioProject: false,

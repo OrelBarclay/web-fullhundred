@@ -10,8 +10,7 @@ export async function POST(request: NextRequest) {
     // Use Replicate image-to-image as a simple, elegant backend
     const token = process.env.REPLICATE_API_TOKEN;
     if (!token) {
-      // Fallback: echo original image or return placeholder
-      return NextResponse.json({ imageUrl: imageBase64 || null });
+      return NextResponse.json({ error: 'Missing REPLICATE_API_TOKEN' }, { status: 500 });
     }
 
     const body: { input: { prompt: string; strength: number; image?: string } } = {
@@ -25,9 +24,11 @@ export async function POST(request: NextRequest) {
       body.input.image = imageBase64;
     }
 
-    // Resolve model reference. Prefer model (auto-latest) when provided; otherwise a version hash
-    const modelRef = process.env.REPLICATE_MODEL || 'stability-ai/sdxl';
-    const modelVersion = process.env.REPLICATE_MODEL_VERSION; // optional
+    // Replicate requires a version. Do not send `model` here.
+    const modelVersion = process.env.REPLICATE_MODEL_VERSION; // e.g. "<version-hash>"
+    if (!modelVersion) {
+      return NextResponse.json({ error: 'Missing REPLICATE_MODEL_VERSION (Replicate requires `version`)' }, { status: 500 });
+    }
 
     // Replicate standard v1 predictions API
     const resp = await fetch('https://api.replicate.com/v1/predictions', {
@@ -36,7 +37,7 @@ export async function POST(request: NextRequest) {
         'Content-Type': 'application/json',
         Authorization: `Token ${token}`,
       },
-      body: JSON.stringify(modelVersion ? { version: modelVersion, ...body } : { model: modelRef, ...body }),
+      body: JSON.stringify({ version: modelVersion, ...body }),
     });
 
     const pred = await resp.json();

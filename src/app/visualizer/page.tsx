@@ -1,6 +1,13 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
+
+const SPACE_TYPES = [
+  { id: "bathroom", label: "Bathroom" },
+  { id: "kitchen", label: "Kitchen" },
+  { id: "patio", label: "Patio" },
+];
 
 const STYLES = [
   { id: "modern", label: "Modern Minimal", prompt: "modern minimalist bathroom, clean lines, neutral palette, matte black fixtures, large tiles, frameless glass" },
@@ -13,6 +20,7 @@ const STYLES = [
 export default function VisualizerPage() {
   const [file, setFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [spaceType, setSpaceType] = useState<string>(SPACE_TYPES[0].id);
   const [selectedStyle, setSelectedStyle] = useState(STYLES[0].id);
   const [resultUrl, setResultUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -20,11 +28,14 @@ export default function VisualizerPage() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [isCheckingRole, setIsCheckingRole] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [priceCents, setPriceCents] = useState<number>(() => {
+  const priceCents: number = (() => {
     const envVal = Number(process.env.NEXT_PUBLIC_VISUALIZER_PRICE_CENTS || 499);
     return Number.isFinite(envVal) && envVal > 0 ? Math.floor(envVal) : 499;
-  });
+  })();
   const inputRef = useRef<HTMLInputElement | null>(null);
+
+  // Derived label for current space type
+  const spaceLabel = (SPACE_TYPES.find(s => s.id === spaceType)?.label || spaceType);
 
   function onPickFile() {
     inputRef.current?.click();
@@ -53,7 +64,7 @@ export default function VisualizerPage() {
           const data = await res.json();
           setIsAdmin(Boolean(data?.isAdmin));
         }
-      } catch (_) {
+      } catch {
         setIsAdmin(false);
       } finally {
         setIsCheckingRole(false);
@@ -85,6 +96,7 @@ export default function VisualizerPage() {
     setResultUrl(null);
     try {
       const style = STYLES.find((s) => s.id === selectedStyle)!;
+      const spaceLabel = SPACE_TYPES.find(s => s.id === spaceType)?.label || spaceType;
       let base64: string | undefined = undefined;
       if (imagePreview?.startsWith("data:")) {
         base64 = imagePreview;
@@ -92,7 +104,7 @@ export default function VisualizerPage() {
       const res = await fetch("/api/visualize", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ imageBase64: base64, stylePrompt: style.prompt }),
+        body: JSON.stringify({ imageBase64: base64, stylePrompt: `${spaceLabel.toLowerCase()} ${style.prompt}` }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Visualization failed");
@@ -121,6 +133,8 @@ export default function VisualizerPage() {
         resultImageUrl: resultUrl,
         styleId: selectedStyle,
         styleLabel: STYLES.find(s => s.id === selectedStyle)?.label || selectedStyle,
+        spaceType,
+        spaceLabel: SPACE_TYPES.find(s => s.id === spaceType)?.label || spaceType,
       };
       const res = await fetch('/api/visualizer/checkout', {
         method: 'POST',
@@ -158,6 +172,8 @@ export default function VisualizerPage() {
           resultImageUrl: resultUrl,
           styleId: selectedStyle,
           styleLabel: STYLES.find(s => s.id === selectedStyle)?.label || selectedStyle,
+          spaceType,
+          spaceLabel: SPACE_TYPES.find(s => s.id === spaceType)?.label || spaceType,
         }),
       });
       const data = await res.json();
@@ -181,18 +197,33 @@ export default function VisualizerPage() {
       <div className="grid gap-8 md:grid-cols-2">
         <div className="space-y-4">
           <div className="border border-[color:var(--border)] rounded-lg p-4 bg-[color:var(--card)]">
-            <h2 className="font-medium mb-2">1) Upload your current bathroom</h2>
+            <h2 className="font-medium mb-2">0) Choose space type</h2>
+            <div className="flex gap-2 flex-wrap">
+              {SPACE_TYPES.map((t) => (
+                <button
+                  key={t.id}
+                  onClick={() => setSpaceType(t.id)}
+                  className={`px-3 py-2 rounded border transition ${spaceType === t.id ? 'border-primary bg-primary/10' : 'border-[color:var(--border)] hover:bg-[color:var(--muted)]'}`}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="border border-[color:var(--border)] rounded-lg p-4 bg-[color:var(--card)]">
+            <h2 className="font-medium mb-2">1) Upload your current {spaceLabel}</h2>
             <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={onFileChange} />
             <button onClick={onPickFile} className="px-4 py-2 rounded border border-[color:var(--border)] hover:bg-[color:var(--muted)] transition">Upload Photo</button>
             {imagePreview && (
               <div className="mt-4">
-                <img src={imagePreview} alt="preview" className="rounded-md max-h-80 object-contain" />
+                <Image src={imagePreview} alt="preview" width={800} height={600} className="rounded-md max-h-80 object-contain" />
               </div>
             )}
           </div>
 
           <div className="border border-[color:var(--border)] rounded-lg p-4 bg-[color:var(--card)]">
-            <h2 className="font-medium mb-2">2) Or choose a design style</h2>
+            <h2 className="font-medium mb-2">2) Choose a design style for your {spaceLabel}</h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
               {STYLES.map((s) => (
                 <button
@@ -217,7 +248,7 @@ export default function VisualizerPage() {
         <div className="border border-[color:var(--border)] rounded-lg p-4 bg-[color:var(--card)] min-h-[320px] flex flex-col items-center justify-between">
           <div className="w-full flex-1 flex items-center justify-center">
             {resultUrl ? (
-              <img src={resultUrl} alt="AI result" className="rounded-md max-h-[60vh] object-contain" />
+              <Image src={resultUrl} alt="AI result" width={1200} height={900} className="rounded-md max-h-[60vh] object-contain" />
             ) : (
               <div className="text-[color:var(--muted-foreground)]">Your AI-enhanced design will appear here.</div>
             )}
