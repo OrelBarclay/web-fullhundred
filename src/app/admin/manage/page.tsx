@@ -683,7 +683,7 @@ function ManageContentWithSearchParams() {
               <form onSubmit={handleClientSubmit} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Name *</label>
+                    <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">Name *</label>
                     <input
                       type="text"
                       required
@@ -695,7 +695,7 @@ function ManageContentWithSearchParams() {
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                    <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">Email</label>
                     <input
                       type="email"
                       value={clientForm.email}
@@ -706,7 +706,7 @@ function ManageContentWithSearchParams() {
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                    <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">Phone</label>
                     <input
                       type="tel"
                       value={clientForm.phone}
@@ -717,7 +717,7 @@ function ManageContentWithSearchParams() {
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
+                    <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">Address</label>
                     <input
                       type="text"
                       value={clientForm.address}
@@ -759,11 +759,11 @@ function ManageContentWithSearchParams() {
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50 dark:bg-gray-900/40">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Client</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Contact</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Projects</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Joined</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">Client</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">Contact</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">Projects</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">Joined</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
@@ -824,7 +824,7 @@ function ManageContentWithSearchParams() {
               <form onSubmit={handleProjectSubmit} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Title *</label>
+                    <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">Title *</label>
                     <input
                       type="text"
                       required
@@ -836,7 +836,7 @@ function ManageContentWithSearchParams() {
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Client *</label>
+                    <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">Client *</label>
                     <select
                       required
                       value={projectForm.clientId}
@@ -851,7 +851,7 @@ function ManageContentWithSearchParams() {
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                    <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">Status</label>
                     <select
                       value={projectForm.status}
                       onChange={(e) => setProjectForm(prev => ({ ...prev, status: e.target.value as "planning" | "in-progress" | "completed" | "on-hold" }))}
@@ -865,7 +865,7 @@ function ManageContentWithSearchParams() {
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Budget ($)</label>
+                    <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">Budget ($)</label>
                     <input
                       type="number"
                       value={projectForm.budget}
@@ -876,7 +876,7 @@ function ManageContentWithSearchParams() {
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
+                    <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">Start Date</label>
                     <input
                       type="date"
                       value={projectForm.startDate}
@@ -886,7 +886,7 @@ function ManageContentWithSearchParams() {
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">End Date</label>
+                    <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">End Date</label>
                     <input
                       type="date"
                       value={projectForm.endDate}
@@ -896,7 +896,7 @@ function ManageContentWithSearchParams() {
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Progress (%)</label>
+                    <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">Progress (%)</label>
                     <input
                       type="number"
                       min="0"
@@ -910,7 +910,7 @@ function ManageContentWithSearchParams() {
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                  <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">Description</label>
                   <textarea
                     rows={4}
                     value={projectForm.description}
@@ -927,12 +927,12 @@ function ManageContentWithSearchParams() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {/* Before Images */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Before Images</label>
+                      <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">Before Images</label>
                       
                       {/* Existing Before Images */}
                       {projectForm.existingBeforeImages.length > 0 && (
                         <div className="mb-4">
-                          <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">Existing Images</label>
+                          <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">Existing Images</label>
                           <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                             {projectForm.existingBeforeImages.map((url, index) => (
                               <div key={index} className="relative group">
@@ -978,7 +978,7 @@ function ManageContentWithSearchParams() {
                         </label>
                         {projectForm.beforeImages.length > 0 && (
                           <div className="mt-2">
-                            <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">{projectForm.beforeImages.length} file(s) selected</p>
+                            <p className="text-xs text-gray-700 dark:text-gray-300 mb-2">{projectForm.beforeImages.length} file(s) selected</p>
                             <div className="flex flex-wrap gap-2">
                               {projectForm.beforeImages.map((file, index) => (
                                 <div key={index} className="flex items-center bg-blue-50 px-2 py-1 rounded text-xs">
@@ -1005,12 +1005,12 @@ function ManageContentWithSearchParams() {
 
                     {/* After Images */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">After Images</label>
+                      <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">After Images</label>
                       
                       {/* Existing After Images */}
                       {projectForm.existingAfterImages.length > 0 && (
                         <div className="mb-4">
-                          <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">Existing Images</label>
+                          <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">Existing Images</label>
                           <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                             {projectForm.existingAfterImages.map((url, index) => (
                               <div key={index} className="relative group">
@@ -1056,7 +1056,7 @@ function ManageContentWithSearchParams() {
                         </label>
                         {projectForm.afterImages.length > 0 && (
                           <div className="mt-2">
-                            <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">{projectForm.afterImages.length} file(s) selected</p>
+                            <p className="text-xs text-gray-700 dark:text-gray-300 mb-2">{projectForm.afterImages.length} file(s) selected</p>
                             <div className="flex flex-wrap gap-2">
                               {projectForm.afterImages.map((file, index) => (
                                 <div key={index} className="flex items-center bg-green-50 px-2 py-1 rounded text-xs">
@@ -1083,7 +1083,7 @@ function ManageContentWithSearchParams() {
 
                     {/* Before Videos */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Before Videos</label>
+                      <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">Before Videos</label>
                       <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
                         <input
                           type="file"
@@ -1107,7 +1107,7 @@ function ManageContentWithSearchParams() {
                         </label>
                         {projectForm.beforeVideos.length > 0 && (
                           <div className="mt-2">
-                            <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">{projectForm.beforeVideos.length} file(s) selected</p>
+                            <p className="text-xs text-gray-700 dark:text-gray-300 mb-2">{projectForm.beforeVideos.length} file(s) selected</p>
                             <div className="flex flex-wrap gap-2">
                               {projectForm.beforeVideos.map((file, index) => (
                                 <div key={index} className="flex items-center bg-blue-50 px-2 py-1 rounded text-xs">
@@ -1134,7 +1134,7 @@ function ManageContentWithSearchParams() {
 
                     {/* After Videos */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">After Videos</label>
+                      <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">After Videos</label>
                       <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
                         <input
                           type="file"
@@ -1158,7 +1158,7 @@ function ManageContentWithSearchParams() {
                         </label>
                         {projectForm.afterVideos.length > 0 && (
                           <div className="mt-2">
-                            <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">{projectForm.afterVideos.length} file(s) selected</p>
+                            <p className="text-xs text-gray-700 dark:text-gray-300 mb-2">{projectForm.afterVideos.length} file(s) selected</p>
                             <div className="flex flex-wrap gap-2">
                               {projectForm.afterVideos.map((file, index) => (
                                 <div key={index} className="flex items-center bg-green-50 px-2 py-1 rounded text-xs">
@@ -1216,12 +1216,12 @@ function ManageContentWithSearchParams() {
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50 dark:bg-gray-900/40">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Project</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Client</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Progress</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Budget</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">Project</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">Client</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">Status</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">Progress</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">Budget</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
@@ -1294,7 +1294,7 @@ function ManageContentWithSearchParams() {
               <form onSubmit={handlePortfolioSubmit} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Title *</label>
+                    <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">Title *</label>
                     <input
                       type="text"
                       value={portfolioForm.title}
@@ -1304,7 +1304,7 @@ function ManageContentWithSearchParams() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Client Name</label>
+                    <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">Client Name</label>
                     <input
                       type="text"
                       value={portfolioForm.clientName}
@@ -1315,7 +1315,7 @@ function ManageContentWithSearchParams() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Description *</label>
+                  <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">Description *</label>
                   <textarea
                     value={portfolioForm.description}
                     onChange={(e) => setPortfolioForm(prev => ({ ...prev, description: e.target.value }))}
@@ -1327,7 +1327,7 @@ function ManageContentWithSearchParams() {
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                    <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">Status</label>
                     <select
                       value={portfolioForm.status}
                       onChange={(e) => setPortfolioForm(prev => ({ ...prev, status: e.target.value as "planning" | "in-progress" | "completed" | "on-hold" }))}
@@ -1340,7 +1340,7 @@ function ManageContentWithSearchParams() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
+                    <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">Start Date</label>
                     <input
                       type="date"
                       value={portfolioForm.startDate}
@@ -1349,7 +1349,7 @@ function ManageContentWithSearchParams() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">End Date</label>
+                    <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">End Date</label>
                     <input
                       type="date"
                       value={portfolioForm.endDate}
@@ -1360,7 +1360,7 @@ function ManageContentWithSearchParams() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Budget</label>
+                  <label className="block text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">Budget</label>
                   <input
                     type="number"
                     value={portfolioForm.budget}
@@ -1515,11 +1515,11 @@ function ManageContentWithSearchParams() {
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50 dark:bg-gray-900/40">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Title</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Client</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Budget</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">Title</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">Client</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">Status</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">Budget</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
