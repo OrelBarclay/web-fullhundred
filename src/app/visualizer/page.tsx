@@ -10,11 +10,11 @@ const SPACE_TYPES = [
 ];
 
 const STYLES = [
-  { id: "modern", label: "Modern Minimal", prompt: "modern minimalist bathroom, clean lines, neutral palette, matte black fixtures, large tiles, frameless glass" },
-  { id: "luxury", label: "Luxury Spa", prompt: "luxury spa bathroom, marble surfaces, warm lighting, rainfall shower, wooden accents, ambient glow" },
-  { id: "scandinavian", label: "Scandinavian", prompt: "scandinavian bathroom, light wood, white tiles, airy, functional, cozy, natural light" },
-  { id: "industrial", label: "Industrial", prompt: "industrial bathroom, concrete textures, exposed elements, metal fixtures, dramatic contrast" },
-  { id: "coastal", label: "Coastal", prompt: "coastal bathroom, soft blues, white shiplap, natural textures, bright and fresh" },
+  { id: "modern", label: "Modern Minimal", prompt: "modern minimalist design, clean lines, neutral palette, matte black fixtures, large tiles, frameless glass" },
+  { id: "luxury", label: "Luxury Spa", prompt: "luxury spa design, marble surfaces, warm lighting, elegant fixtures, wooden accents, ambient glow" },
+  { id: "scandinavian", label: "Scandinavian", prompt: "scandinavian design, light wood, white surfaces, airy, functional, cozy, natural light" },
+  { id: "industrial", label: "Industrial", prompt: "industrial design, concrete textures, exposed elements, metal fixtures, dramatic contrast" },
+  { id: "coastal", label: "Coastal", prompt: "coastal design, soft blues, white shiplap, natural textures, bright and fresh" },
 ];
 
 export default function VisualizerPage() {
@@ -101,7 +101,7 @@ export default function VisualizerPage() {
 
   async function onVisualize() {
     if (!file && !imagePreview) {
-      setError("Please upload a bathroom photo or pick a style.");
+      setError("Please upload a photo or pick a style.");
       return;
     }
     setIsLoading(true);
