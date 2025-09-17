@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(request: NextRequest) {
   try {
-    const { imageBase64, stylePrompt } = await request.json();
+    const { imageBase64, stylePrompt, width, height } = await request.json();
     if (!stylePrompt && !imageBase64) {
       return NextResponse.json({ error: 'Missing input' }, { status: 400 });
     }
@@ -13,14 +13,23 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Missing REPLICATE_API_TOKEN' }, { status: 500 });
     }
 
-    const body: { input: { prompt: string; text?: string; strength: number; image?: string; num_inference_steps?: number; guidance_scale?: number } } = {
+    const clampTo64 = (n: number, min = 64, max = 1024) => {
+      const clamped = Math.max(min, Math.min(max, Math.round(n / 64) * 64));
+      return clamped;
+    };
+    const targetW = clampTo64(typeof width === 'number' ? width : 768);
+    const targetH = clampTo64(typeof height === 'number' ? height : 768);
+
+    const body: { input: { prompt: string; text?: string; strength: number; image?: string; num_inference_steps?: number; guidance_scale?: number; width?: number; height?: number } } = {
       input: {
         prompt: stylePrompt || 'high-end bathroom renovation, professional interior render',
         text: stylePrompt || 'high-end bathroom renovation, professional interior render',
         // Guidance to preserve layout
-        strength: 0.6,
+        strength: 0.5,
         num_inference_steps: 28,
         guidance_scale: 7,
+        width: targetW,
+        height: targetH,
       },
     };
     if (imageBase64) {

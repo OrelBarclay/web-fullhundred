@@ -47,9 +47,22 @@ export default function VisualizerPage() {
     setResultUrl(null);
     setError(null);
     if (f) {
-      const reader = new FileReader();
-      reader.onload = () => setImagePreview(String(reader.result));
-      reader.readAsDataURL(f);
+      // Downscale large images to <= 1024 on longest side to avoid OOM
+      const img = new window.Image();
+      img.onload = () => {
+        const maxSide = 1024;
+        const scale = Math.min(1, maxSide / Math.max(img.width, img.height));
+        const w = Math.round(img.width * scale);
+        const h = Math.round(img.height * scale);
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        if (ctx) ctx.drawImage(img, 0, 0, w, h);
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+        setImagePreview(dataUrl);
+      };
+      img.src = URL.createObjectURL(f);
     } else {
       setImagePreview(null);
     }
@@ -104,7 +117,7 @@ export default function VisualizerPage() {
       const res = await fetch("/api/visualize", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ imageBase64: base64, stylePrompt: `${spaceLabel.toLowerCase()} ${style.prompt}` }),
+        body: JSON.stringify({ imageBase64: base64, stylePrompt: `${spaceLabel.toLowerCase()} ${style.prompt}`, width: 768, height: 768 }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Visualization failed");
