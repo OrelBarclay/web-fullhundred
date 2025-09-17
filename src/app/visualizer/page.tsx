@@ -108,7 +108,26 @@ export default function VisualizerPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Visualization failed");
-      setResultUrl(data.imageUrl || null);
+      const url: string | null = data.imageUrl || null;
+      if (url) {
+        const isImageUrl = (() => {
+          try {
+            const u = new URL(url);
+            const pathname = u.pathname.toLowerCase();
+            return /(\.png|\.jpg|\.jpeg|\.webp|\.gif)$/.test(pathname);
+          } catch {
+            return /^data:image\//i.test(url);
+          }
+        })();
+        if (!isImageUrl) {
+          setError('The model returned a non-image result. Please try a different model/version or prompt.');
+          setResultUrl(null);
+        } else {
+          setResultUrl(url);
+        }
+      } else {
+        setResultUrl(null);
+      }
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Failed to generate design";
       setError(msg);

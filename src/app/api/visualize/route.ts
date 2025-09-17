@@ -62,8 +62,24 @@ export async function POST(request: NextRequest) {
       status = pj.status;
       if (status === 'succeeded') {
         const out = pj.output;
-        if (Array.isArray(out) && out.length > 0) outputUrl = out[0];
-        else if (typeof out === 'string') outputUrl = out;
+        const isImage = (u: unknown): string | null => {
+          if (typeof u !== 'string') return null;
+          try {
+            const url = new URL(u);
+            const p = url.pathname.toLowerCase();
+            if (/(\.png|\.jpg|\.jpeg|\.webp|\.gif)$/.test(p)) return u;
+            return null;
+          } catch {
+            return /^data:image\//i.test(u) ? u : null;
+          }
+        };
+        if (Array.isArray(out) && out.length > 0) {
+          const firstImg = out.map(isImage).find(Boolean);
+          if (firstImg) outputUrl = firstImg;
+        } else if (typeof out === 'string') {
+          const maybe = isImage(out);
+          if (maybe) outputUrl = maybe;
+        }
         break;
       }
       attempts++;
@@ -74,7 +90,7 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json({ imageUrl: outputUrl });
-  } catch (e) {
+  } catch {
     return NextResponse.json({ error: 'Server error' }, { status: 500 });
   }
 }
