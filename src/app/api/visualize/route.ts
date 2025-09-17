@@ -13,12 +13,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Missing REPLICATE_API_TOKEN' }, { status: 500 });
     }
 
-    const body: { input: { prompt: string; text?: string; strength: number; image?: string } } = {
+    const body: { input: { prompt: string; text?: string; strength: number; image?: string; num_inference_steps?: number; guidance_scale?: number } } = {
       input: {
         prompt: stylePrompt || 'high-end bathroom renovation, professional interior render',
         text: stylePrompt || 'high-end bathroom renovation, professional interior render',
         // Guidance to preserve layout
         strength: 0.6,
+        num_inference_steps: 28,
+        guidance_scale: 7,
       },
     };
     if (imageBase64) {
@@ -81,6 +83,10 @@ export async function POST(request: NextRequest) {
           if (maybe) outputUrl = maybe;
         }
         break;
+      } else if (status === 'failed') {
+        const err = pj?.error || pj?.detail || pj?.message || 'AI generation failed';
+        const logs = pj?.logs;
+        return NextResponse.json({ error: err, logs }, { status: 500 });
       }
       attempts++;
     }
