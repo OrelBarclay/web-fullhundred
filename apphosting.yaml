@@ -1,0 +1,133 @@
+# Settings for Cloud Run
+runConfig:
+  minInstances: 2
+  maxInstances: 100
+  concurrency: 100
+  cpu: 2
+  memoryMiB: 1024
+
+# Environment variables and secrets
+env:
+  # Firebase Web App Config (client-side)
+  - variable: NEXT_PUBLIC_FIREBASE_API_KEY
+    value: "AIzaSyDMyQTg7F9-LJXNV2iwOWXPJlVwoFY-GDw"
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
+    value: "fullhundred-e1487.firebaseapp.com"
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: NEXT_PUBLIC_FIREBASE_PROJECT_ID
+    value: "fullhundred-e1487"
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
+    value: "fullhundred-e1487.firebasestorage.app"
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
+    value: "774067863491"
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: NEXT_PUBLIC_FIREBASE_APP_ID
+    value: "1:774067863491:web:d6ef0f6a7a79b81a644776"
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
+    value: "G-NQF81WTR83"
+    availability:
+      - BUILD
+      - RUNTIME
+
+  # Firebase Admin SDK (server-side)
+  - variable: FIREBASE_PROJECT_ID
+    value: "fullhundred-e1487"
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: FIREBASE_CLIENT_EMAIL
+    value: "firebase-adminsdk-fbsvc@fullhundred-e1487.iam.gserviceaccount.com"
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: FIREBASE_PRIVATE_KEY
+    value: "__FIREBASE_PRIVATE_KEY__"
+    availability:
+      - BUILD
+      - RUNTIME
+
+  # Cloudinary
+  - variable: CLOUDINARY_CLOUD_NAME
+    value: "dfrvm7mos"
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: CLOUDINARY_API_KEY
+    value: "627768546858642"
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: CLOUDINARY_API_SECRET
+    value: "yEFwqsIfO_KdMhZpffsOg2g9izg"
+    availability:
+      - BUILD
+      - RUNTIME
+
+  # Stripe
+  - variable: STRIPE_SECRET_KEY
+    value: "sk_test_51S5whiBWyEHSzagcvg8JSkEv6vz8IzIL1LvcspCB22qUCm8bWcRfnRAmhicyyOau6pG21uAmy9XgB7cfxI0cXV0c00JU5CU6mQ"
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+    value: "pk_test_51S5whiBWyEHSzagcDLYKF2RMKpCV3eumBUzACW4FTyvDPFQyanB1XFdkTwrQzKMBWAfSQVAuweYGlngwVVZQomHL00LSn4gRnd"
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: STRIPE_WEBHOOK_SECRET
+    value: "whsec_NgXA6zerC3jhwWPrTjmWLXETRuJ683Vh"
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: NEXT_PUBLIC_APP_URL
+    value: "https://web-fullhundred--fullhundred-e1487.us-east4.hosted.app"
+    availability:
+      - BUILD
+      - RUNTIME
+
+  # Visualizer - using secrets for sensitive values
+  - variable: REPLICATE_API_TOKEN
+    secret: projects/774067863491/secrets/REPLICATE_API_TOKEN/versions/latest
+    availability:
+      - BUILD
+      - RUNTIME 
+
+  - variable: REPLICATE_MODEL_VERSION
+    value: "15a3689ee13b0d2616e98820eca31d4c3abcd36672df6afce5cb6feb1d66087d"
+    availability:
+      - BUILD
+      - RUNTIME
+
+# Build configuration (no Turbopack)
+buildConfig:
+  commands:
+    - npm ci
+    - npm run build
+  timeout: "15m"
+  env:
+    - variable: NODE_ENV
+      value: "production"
+    - variable: NEXT_TELEMETRY_DISABLED
+      value: "1"
+    - variable: CI
+      value: "true"
+
+# Deployment configuration
+deployConfig:
+  outputDir: ".next"
