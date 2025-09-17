@@ -88,6 +88,7 @@ export default function AuthProvider() {
                         src={user.photoURL}
                         alt={user.displayName?.split(' ')[0] || user.email || 'Profile'}
                         fill
+                        sizes="(min-width: 640px) 40px, 32px"
                         className="rounded-full object-cover border-2 border-[color:var(--border)] group-hover:border-primary transition-colors"
                         onError={(e) => {
                           // Fallback to initials if image fails
