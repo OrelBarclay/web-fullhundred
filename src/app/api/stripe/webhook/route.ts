@@ -292,20 +292,40 @@ async function saveOrderToDatabase(session: Stripe.Checkout.Session) {
       const usersRef = doc(db, 'users', session.customer_email);
       const userDoc = await getDoc(usersRef);
       
+      // Check if this is a visualizer credits purchase
+      const isVisualizerCredits = (session.metadata?.type || '') === 'visualizer_credits';
+      const credits = isVisualizerCredits ? parseInt(session.metadata?.credits || '10') : 0;
+      
       if (userDoc.exists()) {
-        // Add order to user's orders array
-        await updateDoc(usersRef, {
+        const updateData: Record<string, unknown> = {
           orders: arrayUnion(session.id),
           updatedAt: new Date()
-        });
+        };
+        
+        // Add visualizer credits if this is a credits purchase
+        if (isVisualizerCredits && credits > 0) {
+          const currentCredits = userDoc.data()?.visualizerCredits || 0;
+          updateData.visualizerCredits = currentCredits + credits;
+          updateData.totalVisualizerCredits = (userDoc.data()?.totalVisualizerCredits || 0) + credits;
+        }
+        
+        await updateDoc(usersRef, updateData);
       } else {
         // Create user document if it doesn't exist
-        await setDoc(usersRef, {
+        const userData: Record<string, unknown> = {
           email: session.customer_email,
           orders: [session.id],
           createdAt: new Date(),
           updatedAt: new Date()
-        });
+        };
+        
+        // Add visualizer credits if this is a credits purchase
+        if (isVisualizerCredits && credits > 0) {
+          userData.visualizerCredits = credits;
+          userData.totalVisualizerCredits = credits;
+        }
+        
+        await setDoc(usersRef, userData);
       }
     } catch (userError) {
       // Don't throw error as order is already saved

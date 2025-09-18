@@ -30,6 +30,10 @@ export default function VisualizerPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
   const [lastError, setLastError] = useState<string | null>(null);
+  const [user, setUser] = useState<{ uid: string; isAdmin?: boolean } | null>(null);
+  const [credits, setCredits] = useState(0);
+  const [isCheckingCredits, setIsCheckingCredits] = useState(true);
+  const [needsAuth, setNeedsAuth] = useState(false);
   const priceCents: number = (() => {
     const envVal = Number(process.env.NEXT_PUBLIC_VISUALIZER_PRICE_CENTS || 499);
     return Number.isFinite(envVal) && envVal > 0 ? Math.floor(envVal) : 499;
@@ -72,22 +76,39 @@ export default function VisualizerPage() {
     }
   }
 
-  // Check admin status (admins do not pay)
+  // Check user authentication, admin status, and credits
   useEffect(() => {
-    async function checkRole() {
+    async function checkUserAndCredits() {
       try {
         const res = await fetch('/api/auth/me', { cache: 'no-store' });
         if (res.ok) {
           const data = await res.json();
+          setUser(data);
           setIsAdmin(Boolean(data?.isAdmin));
+          
+          // Check credits for non-admin users
+          if (!data?.isAdmin && data?.uid) {
+            try {
+              const creditsRes = await fetch(`/api/visualizer/credits?userId=${data.uid}`);
+              if (creditsRes.ok) {
+                const creditsData = await creditsRes.json();
+                setCredits(creditsData.credits || 0);
+              }
+            } catch (creditsError) {
+              console.error('Error fetching credits:', creditsError);
+            }
+          }
+        } else {
+          setNeedsAuth(true);
         }
       } catch {
-        setIsAdmin(false);
+        setNeedsAuth(true);
       } finally {
         setIsCheckingRole(false);
+        setIsCheckingCredits(false);
       }
     }
-    checkRole();
+    checkUserAndCredits();
   }, []);
 
   async function uploadToCloudinaryIfNeeded(dataUrlOrUrl: string | null): Promise<string | null> {
@@ -108,12 +129,43 @@ export default function VisualizerPage() {
       setError("Please upload a photo or pick a style.");
       return;
     }
+
+    // Check authentication for non-admins
+    if (!isAdmin && !user) {
+      setError("Please log in to generate designs.");
+      setNeedsAuth(true);
+      return;
+    }
+
+    // Check credits for non-admins
+    if (!isAdmin && credits <= 0) {
+      setError("You need to purchase credits to generate designs.");
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
     setResultUrl(null);
     setLastError(null);
     
     try {
+      // Consume credit for non-admin users
+      if (!isAdmin && user?.uid) {
+        const creditRes = await fetch('/api/visualizer/consume-credit', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: user.uid }),
+        });
+        
+        if (!creditRes.ok) {
+          const creditData = await creditRes.json();
+          throw new Error(creditData.error || 'Failed to consume credit');
+        }
+        
+        const creditData = await creditRes.json();
+        setCredits(creditData.credits);
+      }
+
       const style = STYLES.find((s) => s.id === selectedStyle)!;
       const spaceLabel = SPACE_TYPES.find(s => s.id === spaceType)?.label || spaceType;
       let base64: string | undefined = undefined;
@@ -199,29 +251,15 @@ export default function VisualizerPage() {
     await onVisualize();
   }
 
-  // Pay for generated image (non-admins)
-  async function onPayForDesign() {
-    if (!resultUrl) {
-      setError('Generate a design first');
-      return;
-    }
+  // Purchase credits function
+  async function onPurchaseCredits() {
     setIsSubmitting(true);
     setError(null);
     try {
-      const beforeUrl = await uploadToCloudinaryIfNeeded(imagePreview);
-      const payload = {
-        priceCents,
-        beforeImageUrl: beforeUrl,
-        resultImageUrl: resultUrl,
-        styleId: selectedStyle,
-        styleLabel: STYLES.find(s => s.id === selectedStyle)?.label || selectedStyle,
-        spaceType,
-        spaceLabel: SPACE_TYPES.find(s => s.id === spaceType)?.label || spaceType,
-      };
-      const res = await fetch('/api/visualizer/checkout', {
+      const res = await fetch('/api/visualizer/purchase-credits', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({ priceCents }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to start checkout');
@@ -235,6 +273,7 @@ export default function VisualizerPage() {
       setIsSubmitting(false);
     }
   }
+
 
   // Admins can save visualizer result as project directly without payment
   async function onAdminSaveProject() {
@@ -291,9 +330,59 @@ export default function VisualizerPage() {
     }
   }
 
+  // Show loading state while checking authentication and credits
+  if (isCheckingRole || isCheckingCredits) {
+    return (
+      <section className="mx-auto max-w-6xl px-6 py-12 text-[color:var(--foreground)]">
+        <h1 className="text-3xl font-semibold text-primary mb-6">AI-Powered Design Visualizer</h1>
+        <div className="flex items-center justify-center py-12">
+          <div className="text-[color:var(--muted-foreground)]">Loading...</div>
+        </div>
+      </section>
+    );
+  }
+
+  // Show authentication required message
+  if (needsAuth) {
+    return (
+      <section className="mx-auto max-w-6xl px-6 py-12 text-[color:var(--foreground)]">
+        <h1 className="text-3xl font-semibold text-primary mb-6">AI-Powered Design Visualizer</h1>
+        <div className="text-center py-12">
+          <div className="text-lg mb-4">Please log in to use the AI Visualizer</div>
+          <a href="/login" className="px-6 py-2 rounded bg-primary text-primary-foreground hover:opacity-90 transition">
+            Log In
+          </a>
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section className="mx-auto max-w-6xl px-6 py-12 text-[color:var(--foreground)]">
       <h1 className="text-3xl font-semibold text-primary mb-6">AI-Powered Design Visualizer</h1>
+
+      {/* Credits display for non-admin users */}
+      {!isAdmin && (
+        <div className="mb-6 p-4 bg-[color:var(--card)] border border-[color:var(--border)] rounded-lg">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="font-medium">Your Credits: {credits}</div>
+              <div className="text-sm text-[color:var(--muted-foreground)]">
+                Each generation costs 1 credit. Purchase 10 credits for ${(priceCents/100).toFixed(2)}.
+              </div>
+            </div>
+            {credits === 0 && (
+              <button 
+                onClick={onPurchaseCredits} 
+                disabled={isSubmitting}
+                className="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 transition"
+              >
+                {isSubmitting ? 'Processing...' : `Purchase 10 Credits - $${(priceCents/100).toFixed(2)}`}
+              </button>
+            )}
+          </div>
+        </div>
+      )}
 
       <div className="grid gap-8 md:grid-cols-2">
         <div className="space-y-4">
@@ -339,8 +428,14 @@ export default function VisualizerPage() {
           </div>
 
           <div className="flex gap-3 flex-wrap">
-            <button onClick={onVisualize} disabled={isLoading} className="px-6 py-2 rounded bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition">
-              {isLoading ? "Generating..." : "Generate Design"}
+            <button 
+              onClick={onVisualize} 
+              disabled={isLoading || (!isAdmin && credits <= 0)} 
+              className="px-6 py-2 rounded bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition"
+            >
+              {isLoading ? "Generating..." : 
+               (!isAdmin && credits <= 0) ? "No Credits - Purchase Required" : 
+               "Generate Design"}
             </button>
             {error && lastError && retryCount < 3 && (
               <button onClick={onRetry} disabled={isLoading} className="px-4 py-2 rounded bg-orange-600 text-white hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed transition">
@@ -374,23 +469,23 @@ export default function VisualizerPage() {
             )}
           </div>
 
-          {/* Actions for payment / save */}
-          <div className="w-full mt-4 flex items-center justify-between">
-            <div className="text-sm text-[color:var(--muted-foreground)]">
-              Recommended cost per generated image: <span className="font-semibold text-[color:var(--foreground)]">${(priceCents/100).toFixed(2)}</span>
+          {/* Actions for saving project */}
+          {resultUrl && (
+            <div className="w-full mt-4 flex items-center justify-center">
+              <div className="flex gap-3">
+                {isAdmin ? (
+                  <button onClick={onAdminSaveProject} disabled={isCheckingRole || !resultUrl || isSubmitting} className="px-4 py-2 rounded bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-50 transition">
+                    {isSubmitting ? 'Saving…' : 'Save as Project (Admin)'}
+                  </button>
+                ) : (
+                  <div className="text-sm text-[color:var(--muted-foreground)] text-center">
+                    <div>Design generated successfully!</div>
+                    <div>You can now generate another design or save this one as a project.</div>
+                  </div>
+                )}
+              </div>
             </div>
-            <div className="flex gap-3">
-              {isAdmin ? (
-                <button onClick={onAdminSaveProject} disabled={isCheckingRole || !resultUrl || isSubmitting} className="px-4 py-2 rounded bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-50 transition">
-                  {isSubmitting ? 'Saving…' : 'Save as Project (Admin)'}
-                </button>
-              ) : (
-                <button onClick={onPayForDesign} disabled={!resultUrl || isSubmitting} className="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 transition">
-                  {isSubmitting ? 'Redirecting…' : `Pay $${(priceCents/100).toFixed(2)} for this design`}
-                </button>
-              )}
-            </div>
-          </div>
+          )}
         </div>
       </div>
     </section>
