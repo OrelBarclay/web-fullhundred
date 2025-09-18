@@ -374,8 +374,52 @@ export default function AdminDashboard() {
           order: data.order || 0,
         };
       }) as Project[];
-      console.log("Processed projects:", projectsData);
-      setProjects(projectsData);
+
+      // Ensure all projects have unique order values
+      // Sort by existing order first, then by startDate for projects without order
+      const sortedProjectsData = projectsData.sort((a, b) => {
+        const aOrder = a.order || 0;
+        const bOrder = b.order || 0;
+        
+        // If both have order, sort by order
+        if (aOrder !== 0 && bOrder !== 0) {
+          return aOrder - bOrder;
+        }
+        
+        // If only one has order, prioritize it
+        if (aOrder !== 0 && bOrder === 0) return -1;
+        if (aOrder === 0 && bOrder !== 0) return 1;
+        
+        // If neither has order, sort by startDate descending
+        return b.startDate.getTime() - a.startDate.getTime();
+      });
+
+      // Assign unique order values to projects that don't have them
+      const projectsWithOrder = sortedProjectsData.map((project, index) => ({
+        ...project,
+        order: project.order || index + 1,
+      }));
+
+      // Update projects in database if we assigned new order values
+      const projectsNeedingOrderUpdate = projectsWithOrder.filter((project, index) => 
+        !projectsData[index]?.order && project.order
+      );
+
+      if (projectsNeedingOrderUpdate.length > 0) {
+        try {
+          const batch = projectsNeedingOrderUpdate.map(async (project) => {
+            const projectRef = doc(db, "projects", project.id);
+            await updateDoc(projectRef, { order: project.order });
+          });
+          await Promise.all(batch);
+          console.log("Updated order for projects without order values");
+        } catch (error) {
+          console.error("Error updating project order values:", error);
+        }
+      }
+
+      console.log("Processed projects with order:", projectsWithOrder);
+      setProjects(projectsWithOrder);
 
       // Load recent orders (latest 10)
       try {
