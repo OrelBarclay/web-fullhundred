@@ -13,6 +13,7 @@ import {
 import { isUserAdmin } from "@/lib/auth-utils";
 import type { User } from "firebase/auth";
 import Link from "next/link";
+import Image from "next/image";
 import {
   DndContext,
   closestCenter,
@@ -54,6 +55,8 @@ interface Project {
   budget: number;
   progress: number;
   order?: number;
+  afterImages?: string[];
+  beforeImages?: string[];
 }
 
 interface DashboardStats {
@@ -120,6 +123,21 @@ function SortableProjectItem({
               <path d="M7 2a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM7 8a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM7 14a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM13 2a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM13 8a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM13 14a2 2 0 1 0 0 4 2 2 0 0 0 0-4z" />
             </svg>
           </div>
+
+          {/* Project Image */}
+          {project.afterImages && project.afterImages.length > 0 && (
+            <div className="flex-shrink-0">
+              <div className="w-16 h-16 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-700">
+                <Image
+                  src={project.afterImages[0]}
+                  alt={`${project.title} - After`}
+                  width={64}
+                  height={64}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            </div>
+          )}
 
           {/* Project Info */}
           <div className="flex-1 min-w-0">
