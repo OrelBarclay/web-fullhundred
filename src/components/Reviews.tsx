@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
+import { useSearchParams } from "next/navigation";
 
 type Testimonial = {
   id?: string;
@@ -27,6 +28,9 @@ export default function Reviews() {
   const [items, setItems] = useState<Testimonial[]>(DEFAULTS);
   const [avg, setAvg] = useState<number>(4.9);
   const [count, setCount] = useState<number>(128);
+  const params = useSearchParams();
+  const projectId = params.get("projectId");
+  const customerEmail = params.get("email");
 
   useEffect(() => {
     let cancelled = false;
@@ -51,6 +55,8 @@ export default function Reviews() {
       cancelled = true;
     };
   }, []);
+
+  const canSubmit = Boolean(projectId && customerEmail);
 
   return (
     <section className="border border-[color:var(--border)] rounded-lg p-6 bg-[color:var(--card)]">
@@ -95,62 +101,70 @@ export default function Reviews() {
         ))}
       </div>
 
-      <form
-        onSubmit={async (e) => {
-          e.preventDefault();
-          const form = e.currentTarget as HTMLFormElement;
-          const fd = new FormData(form);
-          const name = String(fd.get("name") || "").trim();
-          const text = String(fd.get("text") || "").trim();
-          const rating = Number(fd.get("rating") || 5);
-          const photo = fd.get("photo") as File | null;
+      {canSubmit && (
+        <form
+          onSubmit={async (e) => {
+            e.preventDefault();
+            const form = e.currentTarget as HTMLFormElement;
+            const fd = new FormData(form);
+            const name = String(fd.get("name") || "").trim();
+            const text = String(fd.get("text") || "").trim();
+            const rating = Number(fd.get("rating") || 5);
+            const photo = fd.get("photo") as File | null;
 
-          if (!name || !text) return;
+            if (!name || !text) return;
 
-          let photoUrl: string | null = null;
-          try {
-            if (photo && photo.size > 0) {
-              const up = new FormData();
-              up.append("file", photo);
-              up.append("folder", "reviews");
-              const r = await fetch("/api/cloudinary-upload", { method: "POST", body: up });
-              if (r.ok) {
-                const j = await r.json();
-                photoUrl = j.secure_url as string;
+            let photoUrl: string | null = null;
+            try {
+              if (photo && photo.size > 0) {
+                const up = new FormData();
+                up.append("file", photo);
+                up.append("folder", "reviews");
+                const r = await fetch("/api/cloudinary-upload", { method: "POST", body: up });
+                if (r.ok) {
+                  const j = await r.json();
+                  photoUrl = j.secure_url as string;
+                }
               }
-            }
-          } catch {}
+            } catch {}
 
-          const res = await fetch("/api/reviews", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ name, text, rating, photoUrl }),
-          });
-          if (res.ok) {
-            const { id } = await res.json();
-            setItems((prev) => [{ id, name, text, rating, photoUrl }, ...prev].slice(0, 9));
-            const newAvg = (avg * count + rating) / (count + 1);
-            setAvg(newAvg);
-            setCount(count + 1);
-            form.reset();
-          }
-        }}
-        className="mt-8 border border-[color:var(--border)] rounded-lg p-4 bg-[color:var(--card)] grid gap-3"
-      >
-        <div className="grid sm:grid-cols-2 gap-3">
-          <input name="name" required placeholder="Your name" className="px-3 py-2 rounded border border-[color:var(--border)] bg-[color:var(--background)]" />
-          <select name="rating" defaultValue={5} className="px-3 py-2 rounded border border-[color:var(--border)] bg-[color:var(--background)]">
-            {[5,4,3,2,1].map((r) => (
-              <option key={r} value={r}>{r} Stars</option>
-            ))}
-          </select>
+            const res = await fetch("/api/reviews", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ name, text, rating, photoUrl, projectId, customerEmail }),
+            });
+            if (res.ok) {
+              const { id } = await res.json();
+              setItems((prev) => [{ id, name, text, rating, photoUrl }, ...prev].slice(0, 9));
+              const newAvg = (avg * count + rating) / (count + 1);
+              setAvg(newAvg);
+              setCount(count + 1);
+              form.reset();
+            }
+          }}
+          className="mt-8 border border-[color:var(--border)] rounded-lg p-4 bg-[color:var(--card)] grid gap-3"
+        >
+          <div className="grid sm:grid-cols-2 gap-3">
+            <input name="name" required placeholder="Your name" className="px-3 py-2 rounded border border-[color:var(--border)] bg-[color:var(--background)]" />
+            <select name="rating" defaultValue={5} className="px-3 py-2 rounded border border-[color:var(--border)] bg-[color:var(--background)]">
+              {[5,4,3,2,1].map((r) => (
+                <option key={r} value={r}>{r} Stars</option>
+              ))}
+            </select>
+          </div>
+          <textarea name="text" required placeholder="Share your experience" rows={3} className="px-3 py-2 rounded border border-[color:var(--border)] bg-[color:var(--background)]" />
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <input type="file" name="photo" accept="image/*" className="text-sm" />
+            <button type="submit" className="px-4 py-2 rounded bg-primary text-primary-foreground hover:opacity-90 transition">Submit Review</button>
+          </div>
+        </form>
+      )}
+
+      {!canSubmit && (
+        <div className="mt-6 text-xs text-[color:var(--muted-foreground)]">
+          Reviews can be submitted by customers after a project is completed. Use your one-time link from your completion email.
         </div>
-        <textarea name="text" required placeholder="Share your experience" rows={3} className="px-3 py-2 rounded border border-[color:var(--border)] bg-[color:var(--background)]" />
-        <div className="flex items-center justify-between gap-3 flex-wrap">
-          <input type="file" name="photo" accept="image/*" className="text-sm" />
-          <button type="submit" className="px-4 py-2 rounded bg-primary text-primary-foreground hover:opacity-90 transition">Submit Review</button>
-        </div>
-      </form>
+      )}
     </section>
   );
 }
