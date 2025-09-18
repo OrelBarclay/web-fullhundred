@@ -12,10 +12,7 @@ export default function Logo() {
     
     // Check if dark mode is enabled
     const checkDarkMode = () => {
-      // Source of truth order:
-      // 1) HTML class 'dark' (e.g., when using class strategy)
-      // 2) Explicit localStorage theme ('dark' | 'light')
-      // 3) System preference (when theme is 'system' or not set)
+  
       const htmlIsDark = document.documentElement.classList.contains('dark');
       if (htmlIsDark) {
         setIsDark(true);
@@ -82,17 +79,18 @@ export default function Logo() {
   }
 
   return (
-    <div className="flex items-center gap-2 sm:gap-3">
+    <div className="flex items-center gap-1 sm:gap-2">
       <Image
         src={isDark ? "/images/logo-dark.png" : "/images/logo-light.png"}
-        alt="Full Hundred Logo"
-        width={160}
-        height={64}
-        className="w-[100px] h-[40px] sm:w-[140px] sm:h-[56px] lg:w-[160px] lg:h-[64px]"
+        alt="Full100services Logo"
+        width={180}
+        height={48}
+        sizes="(min-width: 1024px) 180px, (min-width: 640px) 160px, 140px"
+        className="h-12 sm:h-14 lg:h-16 w-auto"
         priority
       />
       <span className="text-base sm:text-lg lg:text-xl font-semibold text-[color:var(--foreground)] hidden sm:inline">
-        Full Hundred LLC
+        Full100services
       </span>
     </div>
   );

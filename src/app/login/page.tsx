@@ -128,13 +128,13 @@ export default function LoginPage() {
         <div className="text-center mb-8">
           <div className="flex justify-center mb-6">
             {/* <Logo /> */}
-            <Image src="/images/logo-light.png" alt="Full Hundred Logo" width={160} height={64} />
+            <Image src="/images/logo-light.png" alt="Full100services Logo" width={160} height={64} />
           </div>
           <h1 className="text-3xl font-bold text-primary mb-2">
             Welcome Back
           </h1>
           <p className="text-[color:var(--muted-foreground)]">
-            Sign in to access your Full Hundred dashboard
+            Sign in to access your Full100services dashboard
           </p>
         </div>
 
