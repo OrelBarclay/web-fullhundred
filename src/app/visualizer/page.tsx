@@ -245,26 +245,45 @@ export default function VisualizerPage() {
     setIsSubmitting(true);
     setError(null);
     try {
+      console.log('Admin save project: Starting process');
       const beforeUrl = await uploadToCloudinaryIfNeeded(imagePreview);
+      console.log('Admin save project: Before URL:', beforeUrl);
+      console.log('Admin save project: Result URL:', resultUrl);
+      
+      const payload = {
+        beforeImageUrl: beforeUrl,
+        resultImageUrl: resultUrl,
+        styleId: selectedStyle,
+        styleLabel: STYLES.find(s => s.id === selectedStyle)?.label || selectedStyle,
+        spaceType,
+        spaceLabel: SPACE_TYPES.find(s => s.id === spaceType)?.label || spaceType,
+      };
+      
+      console.log('Admin save project: Payload:', payload);
+      
       const res = await fetch('/api/visualizer/create-project', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          beforeImageUrl: beforeUrl,
-          resultImageUrl: resultUrl,
-          styleId: selectedStyle,
-          styleLabel: STYLES.find(s => s.id === selectedStyle)?.label || selectedStyle,
-          spaceType,
-          spaceLabel: SPACE_TYPES.find(s => s.id === spaceType)?.label || spaceType,
-        }),
+        body: JSON.stringify(payload),
       });
+      
+      console.log('Admin save project: Response status:', res.status);
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to create project');
+      console.log('Admin save project: Response data:', data);
+      
+      if (!res.ok) {
+        throw new Error(data.error || data.details || 'Failed to create project');
+      }
+      
       // redirect to project page
       if (data.projectId) {
+        console.log('Admin save project: Redirecting to project:', data.projectId);
         window.location.href = `/project/${data.projectId}`;
+      } else {
+        throw new Error('No project ID returned from server');
       }
     } catch (e) {
+      console.error('Admin save project error:', e);
       const msg = e instanceof Error ? e.message : 'Failed to create project';
       setError(msg);
     } finally {

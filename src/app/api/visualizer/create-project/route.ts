@@ -17,7 +17,8 @@ async function uploadToCloudinary(imageUrl: string, folder: string = 'visualizer
     formData.append('file', new File([blob], 'image.png', { type: blob.type || 'image/png' }));
     formData.append('folder', folder);
     
-    const uploadResponse = await fetch('/api/cloudinary-upload', {
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    const uploadResponse = await fetch(`${baseUrl}/api/cloudinary-upload`, {
       method: 'POST',
       body: formData,
     });
@@ -36,8 +37,20 @@ async function uploadToCloudinary(imageUrl: string, folder: string = 'visualizer
 
 export async function POST(req: NextRequest) {
   try {
+    console.log('Visualizer create-project: Starting request');
     const { beforeImageUrl, resultImageUrl, styleId, styleLabel, spaceType, spaceLabel } = await req.json();
+    
+    console.log('Visualizer create-project: Request data:', {
+      hasBeforeImage: !!beforeImageUrl,
+      hasResultImage: !!resultImageUrl,
+      styleId,
+      styleLabel,
+      spaceType,
+      spaceLabel
+    });
+    
     if (!resultImageUrl) {
+      console.log('Visualizer create-project: Missing result image');
       return NextResponse.json({ error: 'Missing result image' }, { status: 400 });
     }
 
@@ -46,15 +59,18 @@ export async function POST(req: NextRequest) {
     let uploadedResultImageUrl = null;
 
     try {
+      console.log('Visualizer create-project: Starting image uploads');
       // Upload result image (required)
       uploadedResultImageUrl = await uploadToCloudinary(resultImageUrl, 'visualizer/projects');
+      console.log('Visualizer create-project: Result image uploaded:', uploadedResultImageUrl);
       
       // Upload before image if provided
       if (beforeImageUrl) {
         uploadedBeforeImageUrl = await uploadToCloudinary(beforeImageUrl, 'visualizer/projects');
+        console.log('Visualizer create-project: Before image uploaded:', uploadedBeforeImageUrl);
       }
     } catch (uploadError) {
-      console.error('Failed to upload images to Cloudinary:', uploadError);
+      console.error('Visualizer create-project: Failed to upload images to Cloudinary:', uploadError);
       return NextResponse.json({ 
         error: 'Failed to save images. Please try again.',
         details: 'The generated image could not be permanently stored.'
@@ -62,9 +78,11 @@ export async function POST(req: NextRequest) {
     }
 
     // Create the project with Cloudinary URLs
+    console.log('Visualizer create-project: Creating project in database');
     const db = getDb();
     const projectId = `viz-${Date.now()}`;
-    await setDoc(doc(db, 'projects', projectId), {
+    
+    const projectData = {
       id: projectId,
       title: `Visualizer ${spaceLabel || spaceType || ''} - ${styleLabel || styleId || 'Design'}`.trim(),
       description: 'Project created from AI Visualizer (admin)'.trim(),
@@ -78,12 +96,20 @@ export async function POST(req: NextRequest) {
       createdAt: new Date(),
       updatedAt: new Date(),
       isPortfolioProject: false,
-    }, { merge: true });
+    };
+    
+    console.log('Visualizer create-project: Project data:', projectData);
+    
+    await setDoc(doc(db, 'projects', projectId), projectData, { merge: true });
+    console.log('Visualizer create-project: Project created successfully with ID:', projectId);
 
     return NextResponse.json({ projectId });
   } catch (e) {
-    console.error('Create project error:', e);
-    return NextResponse.json({ error: 'Failed to create project' }, { status: 500 });
+    console.error('Visualizer create-project: Create project error:', e);
+    return NextResponse.json({ 
+      error: 'Failed to create project',
+      details: e instanceof Error ? e.message : 'Unknown error'
+    }, { status: 500 });
   }
 }
 
