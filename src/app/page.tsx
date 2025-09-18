@@ -2,6 +2,7 @@
 import Image from "next/image";
 import QuoteForm from "@/components/QuoteForm";
 import Reviews from "@/components/Reviews";
+import { Suspense } from "react";
 
 export default function Home() {
   return (
@@ -20,7 +21,9 @@ export default function Home() {
         </div>
       </div>
 
-      <Reviews />
+      <Suspense>
+        <Reviews />
+      </Suspense>
 
       <div id="quote">
         <QuoteForm />
