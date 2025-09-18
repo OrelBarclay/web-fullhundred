@@ -621,17 +621,23 @@ export default function AdminDashboard() {
     const { active, over } = event;
 
     if (active.id !== over?.id) {
-      const oldIndex = projects.findIndex((project) => project.id === active.id);
-      const newIndex = projects.findIndex((project) => project.id === over?.id);
-
-      const newProjects = arrayMove(projects, oldIndex, newIndex);
+      // Use the current sorted projects for drag operations
+      const currentSortedProjects = isOrderingMode 
+        ? projects 
+        : [...projects].sort((a, b) => (a.order || 0) - (b.order || 0));
       
-      // Update order values
+      const oldIndex = currentSortedProjects.findIndex((project) => project.id === active.id);
+      const newIndex = currentSortedProjects.findIndex((project) => project.id === over?.id);
+
+      const newProjects = arrayMove(currentSortedProjects, oldIndex, newIndex);
+      
+      // Update order values based on new positions
       const updatedProjects = newProjects.map((project, index) => ({
         ...project,
         order: index + 1,
       }));
 
+      // Update the main projects state with the new order
       setProjects(updatedProjects);
 
       // Update order in database
@@ -642,6 +648,7 @@ export default function AdminDashboard() {
           await updateDoc(projectRef, { order: project.order });
         });
         await Promise.all(batch);
+        console.log("Project order updated successfully");
       } catch (error) {
         console.error("Error updating project order:", error);
         // Revert on error
@@ -1319,18 +1326,20 @@ export default function AdminDashboard() {
                     onDragEnd={handleDragEnd}
                   >
                     <SortableContext
-                      items={filteredProjects.map(p => p.id)}
+                      items={sortedProjects.map(p => p.id)}
                       strategy={verticalListSortingStrategy}
                     >
-                      {filteredProjects.map((project) => (
-                        <SortableProjectItem
-                          key={project.id}
-                          project={project}
-                          onEdit={(project) => router.push(`/admin/manage?edit=${project.id}`)}
-                          onDelete={deleteProject}
-                          onStatusChange={updateProjectStatus}
-                        />
-                      ))}
+                      <div className="space-y-3">
+                        {filteredProjects.map((project) => (
+                          <SortableProjectItem
+                            key={project.id}
+                            project={project}
+                            onEdit={(project) => router.push(`/admin/manage?edit=${project.id}`)}
+                            onDelete={deleteProject}
+                            onStatusChange={updateProjectStatus}
+                          />
+                        ))}
+                      </div>
                     </SortableContext>
                   </DndContext>
                 )}
