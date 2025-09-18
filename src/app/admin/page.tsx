@@ -13,6 +13,25 @@ import {
 import { isUserAdmin } from "@/lib/auth-utils";
 import type { User } from "firebase/auth";
 import Link from "next/link";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import {
+  useSortable,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 interface Client {
   id: string;
@@ -34,6 +53,7 @@ interface Project {
   endDate: Date;
   budget: number;
   progress: number;
+  order?: number;
 }
 
 interface DashboardStats {
@@ -43,6 +63,121 @@ interface DashboardStats {
   totalRevenue: number;
   pendingQuotes: number;
   upcomingDeadlines: number;
+}
+
+// Sortable Project Item Component
+function SortableProjectItem({ 
+  project, 
+  onEdit, 
+  onDelete, 
+  onStatusChange 
+}: { 
+  project: Project; 
+  onEdit: (project: Project) => void;
+  onDelete: (projectId: string) => void;
+  onStatusChange: (projectId: string, status: string) => void;
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: project.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'completed': return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
+      case 'in-progress': return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300';
+      case 'planning': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300';
+      case 'on-hold': return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300';
+      default: return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300';
+    }
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 mb-3 hover:shadow-md transition-shadow"
+    >
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-4 flex-1">
+          {/* Drag Handle */}
+          <div
+            {...attributes}
+            {...listeners}
+            className="cursor-grab active:cursor-grabbing p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
+          >
+            <svg className="w-5 h-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M7 2a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM7 8a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM7 14a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM13 2a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM13 8a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM13 14a2 2 0 1 0 0 4 2 2 0 0 0 0-4z" />
+            </svg>
+          </div>
+
+          {/* Project Info */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center space-x-3">
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white truncate">
+                {project.title}
+              </h3>
+              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(project.status)}`}>
+                {project.status.replace('-', ' ').toUpperCase()}
+              </span>
+            </div>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+              Client: {project.clientName}
+            </p>
+            <div className="flex items-center space-x-4 mt-2 text-sm text-gray-500 dark:text-gray-400">
+              <span>Budget: ${project.budget.toLocaleString()}</span>
+              <span>Progress: {project.progress}%</span>
+              <span>Order: {project.order || 'Not set'}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Actions */}
+        <div className="flex items-center space-x-2">
+          <select
+            value={project.status}
+            onChange={(e) => onStatusChange(project.id, e.target.value)}
+            className="text-xs border border-gray-300 dark:border-gray-600 rounded px-2 py-1 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+          >
+            <option value="planning">Planning</option>
+            <option value="in-progress">In Progress</option>
+            <option value="completed">Completed</option>
+            <option value="on-hold">On Hold</option>
+          </select>
+          
+          <button
+            onClick={() => onEdit(project)}
+            className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 p-1"
+            title="Edit project"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            </svg>
+          </button>
+          
+          <button
+            onClick={() => onDelete(project.id)}
+            className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 p-1"
+            title="Delete project"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export default function AdminDashboard() {
@@ -73,7 +208,16 @@ export default function AdminDashboard() {
   >([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [isOrderingMode, setIsOrderingMode] = useState(false);
   const router = useRouter();
+
+  // Drag and drop sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
 
   useEffect(() => {
     const auth = getAuthInstance();
@@ -209,6 +353,7 @@ export default function AdminDashboard() {
           ...data,
           startDate,
           endDate,
+          order: data.order || 0,
         };
       }) as Project[];
       console.log("Processed projects:", projectsData);
@@ -245,7 +390,7 @@ export default function AdminDashboard() {
           );
           setRecentOrders(orders);
         }
-      } catch (_e) {}
+      } catch {}
 
       // Calculate stats
       const activeProjects = projectsData.filter(
@@ -297,120 +442,120 @@ export default function AdminDashboard() {
     router.push(`/admin/manage?editProject=${project.id}`);
   };
 
-  const uploadExistingServices = async () => {
-    if (
-      confirm(
-        "This will upload the hardcoded services to the database. Continue?"
-      )
-    ) {
-      const hardcodedServices = [
-        {
-          title: "Kitchen Remodeling",
-          description:
-            "Transform your kitchen into the heart of your home with our expert remodeling services. We handle everything from concept to completion.",
-          features: [
-            "Custom cabinetry and storage solutions",
-            "Countertop installation and replacement",
-            "Appliance integration and upgrades",
-            "Lighting design and installation",
-            "Flooring and backsplash options",
-          ],
-          iconColor: "blue",
-          iconPath:
-            "M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4",
-          isActive: true,
-          order: 1,
-        },
-        {
-          title: "Bathroom Renovation",
-          description:
-            "Create your dream bathroom with our comprehensive renovation services. We specialize in both aesthetic and functional improvements.",
-          features: [
-            "Full bathroom remodeling and design",
-            "Shower and tub installation",
-            "Vanity and fixture upgrades",
-            "Tile work and flooring",
-            "Plumbing and electrical updates",
-          ],
-          iconColor: "green",
-          iconPath:
-            "M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z",
-          isActive: true,
-          order: 2,
-        },
-        {
-          title: "Home Additions",
-          description:
-            "Expand your living space with our home addition services. We seamlessly integrate new spaces with your existing home design.",
-          features: [
-            "Room additions and extensions",
-            "Second story additions",
-            "Sunroom and porch construction",
-            "Garage conversions",
-            "Basement finishing",
-          ],
-          iconColor: "purple",
-          iconPath:
-            "M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4",
-          isActive: true,
-          order: 3,
-        },
-        {
-          title: "Custom Carpentry",
-          description:
-            "Add unique character to your home with our custom carpentry services. From built-ins to decorative elements, we bring your vision to life.",
-          features: [
-            "Custom built-in furniture",
-            "Crown molding and trim work",
-            "Wainscoting and paneling",
-            "Custom doors and windows",
-            "Decorative woodwork",
-          ],
-          iconColor: "orange",
-          iconPath: "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z",
-          isActive: true,
-          order: 4,
-        },
-        {
-          title: "Project Management",
-          description:
-            "Let us handle the complexity of your renovation project. Our experienced project managers ensure smooth execution from start to finish.",
-          features: [
-            "Comprehensive project planning",
-            "Timeline management and coordination",
-            "Subcontractor coordination",
-            "Quality control and inspections",
-            "Communication and updates",
-          ],
-          iconColor: "red",
-          iconPath:
-            "M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01",
-          isActive: true,
-          order: 5,
-        },
-      ];
+  // const uploadExistingServices = async () => {
+  //   if (
+  //     confirm(
+  //       "This will upload the hardcoded services to the database. Continue?"
+  //     )
+  //   ) {
+  //     const hardcodedServices = [
+  //       {
+  //         title: "Kitchen Remodeling",
+  //         description:
+  //           "Transform your kitchen into the heart of your home with our expert remodeling services. We handle everything from concept to completion.",
+  //         features: [
+  //           "Custom cabinetry and storage solutions",
+  //           "Countertop installation and replacement",
+  //           "Appliance integration and upgrades",
+  //           "Lighting design and installation",
+  //           "Flooring and backsplash options",
+  //         ],
+  //         iconColor: "blue",
+  //         iconPath:
+  //           "M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4",
+  //         isActive: true,
+  //         order: 1,
+  //       },
+  //       {
+  //         title: "Bathroom Renovation",
+  //         description:
+  //           "Create your dream bathroom with our comprehensive renovation services. We specialize in both aesthetic and functional improvements.",
+  //         features: [
+  //           "Full bathroom remodeling and design",
+  //           "Shower and tub installation",
+  //           "Vanity and fixture upgrades",
+  //           "Tile work and flooring",
+  //           "Plumbing and electrical updates",
+  //         ],
+  //         iconColor: "green",
+  //         iconPath:
+  //           "M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z",
+  //         isActive: true,
+  //         order: 2,
+  //       },
+  //       {
+  //         title: "Home Additions",
+  //         description:
+  //           "Expand your living space with our home addition services. We seamlessly integrate new spaces with your existing home design.",
+  //         features: [
+  //           "Room additions and extensions",
+  //           "Second story additions",
+  //           "Sunroom and porch construction",
+  //           "Garage conversions",
+  //           "Basement finishing",
+  //         ],
+  //         iconColor: "purple",
+  //         iconPath:
+  //           "M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4",
+  //         isActive: true,
+  //         order: 3,
+  //       },
+  //       {
+  //         title: "Custom Carpentry",
+  //         description:
+  //           "Add unique character to your home with our custom carpentry services. From built-ins to decorative elements, we bring your vision to life.",
+  //         features: [
+  //           "Custom built-in furniture",
+  //           "Crown molding and trim work",
+  //           "Wainscoting and paneling",
+  //           "Custom doors and windows",
+  //           "Decorative woodwork",
+  //         ],
+  //         iconColor: "orange",
+  //         iconPath: "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z",
+  //         isActive: true,
+  //         order: 4,
+  //       },
+  //       {
+  //         title: "Project Management",
+  //         description:
+  //           "Let us handle the complexity of your renovation project. Our experienced project managers ensure smooth execution from start to finish.",
+  //         features: [
+  //           "Comprehensive project planning",
+  //           "Timeline management and coordination",
+  //           "Subcontractor coordination",
+  //           "Quality control and inspections",
+  //           "Communication and updates",
+  //         ],
+  //         iconColor: "red",
+  //         iconPath:
+  //           "M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01",
+  //         isActive: true,
+  //         order: 5,
+  //       },
+  //     ];
 
-      try {
-        for (const service of hardcodedServices) {
-          await fetch("/api/services", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify(service),
-          });
-        }
-        alert(
-          "Services uploaded successfully! You can now manage them in the Services section."
-        );
-        // Optionally reload dashboard data
-        await loadDashboardData();
-      } catch (error) {
-        console.error("Error uploading services:", error);
-        alert("Failed to upload services. Please try again.");
-      }
-    }
-  };
+  //     try {
+  //       for (const service of hardcodedServices) {
+  //         await fetch("/api/services", {
+  //           method: "POST",
+  //           headers: {
+  //             "Content-Type": "application/json",
+  //           },
+  //           body: JSON.stringify(service),
+  //         });
+  //       }
+  //       alert(
+  //         "Services uploaded successfully! You can now manage them in the Services section."
+  //       );
+  //       // Optionally reload dashboard data
+  //       await loadDashboardData();
+  //     } catch (error) {
+  //       console.error("Error uploading services:", error);
+  //       alert("Failed to upload services. Please try again.");
+  //     }
+  //   }
+  // };
 
   const handleLogout = async () => {
     try {
@@ -433,7 +578,12 @@ export default function AdminDashboard() {
     }
   };
 
-  const filteredProjects = projects.filter((project) => {
+  // Sort projects by order when not in ordering mode
+  const sortedProjects = isOrderingMode 
+    ? projects 
+    : [...projects].sort((a, b) => (a.order || 0) - (b.order || 0));
+
+  const filteredProjects = sortedProjects.filter((project) => {
     const matchesSearch =
       project.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       project.clientName.toLowerCase().includes(searchTerm.toLowerCase());
@@ -447,6 +597,40 @@ export default function AdminDashboard() {
       client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       client.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  // Handle drag end for project reordering
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (active.id !== over?.id) {
+      const oldIndex = projects.findIndex((project) => project.id === active.id);
+      const newIndex = projects.findIndex((project) => project.id === over?.id);
+
+      const newProjects = arrayMove(projects, oldIndex, newIndex);
+      
+      // Update order values
+      const updatedProjects = newProjects.map((project, index) => ({
+        ...project,
+        order: index + 1,
+      }));
+
+      setProjects(updatedProjects);
+
+      // Update order in database
+      try {
+        const db = getDb();
+        const batch = updatedProjects.map(async (project) => {
+          const projectRef = doc(db, "projects", project.id);
+          await updateDoc(projectRef, { order: project.order });
+        });
+        await Promise.all(batch);
+      } catch (error) {
+        console.error("Error updating project order:", error);
+        // Revert on error
+        setProjects(projects);
+      }
+    }
+  };
 
   if (isLoading) {
     return (
@@ -1026,12 +1210,24 @@ export default function AdminDashboard() {
               <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white dark:text-white">
                 Project Management
               </h2>
-              <button
-                onClick={() => router.push("/admin/manage")}
-                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm sm:text-base"
-              >
-                Add New Project
-              </button>
+              <div className="flex space-x-3">
+                <button
+                  onClick={() => setIsOrderingMode(!isOrderingMode)}
+                  className={`px-4 py-2 rounded-lg transition-colors text-sm sm:text-base ${
+                    isOrderingMode 
+                      ? 'bg-green-600 text-white hover:bg-green-700' 
+                      : 'bg-gray-600 text-white hover:bg-gray-700'
+                  }`}
+                >
+                  {isOrderingMode ? 'Exit Ordering' : 'Reorder Projects'}
+                </button>
+                <button
+                  onClick={() => router.push("/admin/manage")}
+                  className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm sm:text-base"
+                >
+                  Add New Project
+                </button>
+              </div>
             </div>
 
             <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 mb-6">
@@ -1055,158 +1251,226 @@ export default function AdminDashboard() {
               </select>
             </div>
 
-            <div className="bg-white rounded-lg shadow">
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50 dark:bg-gray-900/40">
-                    <tr>
-                      <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                        Project
-                      </th>
-                      <th className="hidden sm:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                        Client
-                      </th>
-                      <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                        Status
-                      </th>
-                      <th className="hidden md:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                        Progress
-                      </th>
-                      <th className="hidden lg:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                        Budget
-                      </th>
-                      <th className="hidden xl:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                        Timeline
-                      </th>
-                      <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                        Actions
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {filteredProjects.length === 0 ? (
+            {isOrderingMode ? (
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+                <div className="mb-4">
+                  <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                    Drag and Drop to Reorder Projects
+                  </h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    Drag projects by the grip handle to reorder them. The order will be saved automatically.
+                  </p>
+                </div>
+                
+                {filteredProjects.length === 0 ? (
+                  <div className="text-center py-12">
+                    <svg
+                      className="w-12 h-12 text-gray-400 mb-4 mx-auto"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                      />
+                    </svg>
+                    <p className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                      No projects found
+                    </p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                      {projects.length === 0
+                        ? "You haven't created any projects yet. Click 'Add New Project' to get started."
+                        : "No projects match your current search or filter criteria."}
+                    </p>
+                    {projects.length === 0 && (
+                      <button
+                        onClick={() => router.push("/admin/manage")}
+                        className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                      >
+                        Create Your First Project
+                      </button>
+                    )}
+                  </div>
+                ) : (
+                  <DndContext
+                    sensors={sensors}
+                    collisionDetection={closestCenter}
+                    onDragEnd={handleDragEnd}
+                  >
+                    <SortableContext
+                      items={filteredProjects.map(p => p.id)}
+                      strategy={verticalListSortingStrategy}
+                    >
+                      {filteredProjects.map((project) => (
+                        <SortableProjectItem
+                          key={project.id}
+                          project={project}
+                          onEdit={(project) => router.push(`/admin/manage?edit=${project.id}`)}
+                          onDelete={deleteProject}
+                          onStatusChange={updateProjectStatus}
+                        />
+                      ))}
+                    </SortableContext>
+                  </DndContext>
+                )}
+              </div>
+            ) : (
+              <div className="bg-white rounded-lg shadow">
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50 dark:bg-gray-900/40">
                       <tr>
-                        <td
-                          colSpan={7}
-                          className="px-6 py-12 text-center text-gray-500 dark:text-gray-400"
-                        >
-                          <div className="flex flex-col items-center">
-                            <svg
-                              className="w-12 h-12 text-gray-400 mb-4"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                              />
-                            </svg>
-                            <p className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-                              No projects found
-                            </p>
-                            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-                              {projects.length === 0
-                                ? "You haven't created any projects yet. Click 'Add New Project' to get started."
-                                : "No projects match your current search or filter criteria."}
-                            </p>
-                            {projects.length === 0 && (
-                              <button
-                                onClick={() => router.push("/admin/manage")}
-                                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-                              >
-                                Create Your First Project
-                              </button>
-                            )}
-                          </div>
-                        </td>
+                        <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                          Project
+                        </th>
+                        <th className="hidden sm:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                          Client
+                        </th>
+                        <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                          Status
+                        </th>
+                        <th className="hidden md:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                          Progress
+                        </th>
+                        <th className="hidden lg:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                          Budget
+                        </th>
+                        <th className="hidden xl:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                          Timeline
+                        </th>
+                        <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                          Actions
+                        </th>
                       </tr>
-                    ) : (
-                      filteredProjects.map((project) => (
-                        <tr key={project.id}>
-                          <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
-                            <div>
-                              <div className="text-sm font-medium text-gray-900 dark:text-white">
-                                {project.title}
-                              </div>
-                              <div className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
-                                ID: {project.id}
-                              </div>
-                              <div className="sm:hidden text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                {project.clientName}
-                              </div>
-                            </div>
-                          </td>
-                          <td className="hidden sm:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                            {project.clientName}
-                          </td>
-                          <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
-                            <select
-                              value={project.status}
-                              onChange={(e) =>
-                                updateProjectStatus(project.id, e.target.value)
-                              }
-                              className={`px-2 py-1 text-xs font-medium rounded-full border-0 ${
-                                project.status === "completed"
-                                  ? "bg-green-100 text-green-800"
-                                  : project.status === "in-progress"
-                                  ? "bg-blue-100 text-blue-800"
-                                  : project.status === "planning"
-                                  ? "bg-yellow-100 text-yellow-800"
-                                  : "bg-gray-100 text-gray-800"
-                              }`}
-                            >
-                              <option value="planning">Planning</option>
-                              <option value="in-progress">In Progress</option>
-                              <option value="completed">Completed</option>
-                              <option value="on-hold">On Hold</option>
-                            </select>
-                          </td>
-                          <td className="hidden md:table-cell px-6 py-4 whitespace-nowrap">
-                            <div className="flex items-center">
-                              <div className="w-16 bg-gray-200 rounded-full h-2 mr-2">
-                                <div
-                                  className="bg-blue-600 h-2 rounded-full"
-                                  style={{ width: `${project.progress || 0}%` }}
-                                ></div>
-                              </div>
-                              <span className="text-sm text-gray-900 dark:text-white">
-                                {project.progress || 0}%
-                              </span>
-                            </div>
-                          </td>
-                          <td className="hidden lg:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                            ${project.budget?.toLocaleString() || "0"}
-                          </td>
-                          <td className="hidden xl:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                            <div>{project.startDate.toLocaleDateString()}</div>
-                            <div>to {project.endDate.toLocaleDateString()}</div>
-                          </td>
-                          <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <div className="flex flex-col sm:flex-row space-y-1 sm:space-y-0 sm:space-x-3">
-                              <button
-                                onClick={() => editProject(project)}
-                                className="text-blue-600 hover:text-blue-900 text-xs sm:text-sm"
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {filteredProjects.length === 0 ? (
+                        <tr>
+                          <td
+                            colSpan={7}
+                            className="px-6 py-12 text-center text-gray-500 dark:text-gray-400"
+                          >
+                            <div className="flex flex-col items-center">
+                              <svg
+                                className="w-12 h-12 text-gray-400 mb-4"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
                               >
-                                Edit
-                              </button>
-                              <button
-                                onClick={() => deleteProject(project.id)}
-                                className="text-red-600 hover:text-red-900 text-xs sm:text-sm"
-                              >
-                                Delete
-                              </button>
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                                />
+                              </svg>
+                              <p className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                                No projects found
+                              </p>
+                              <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                                {projects.length === 0
+                                  ? "You haven't created any projects yet. Click 'Add New Project' to get started."
+                                  : "No projects match your current search or filter criteria."}
+                              </p>
+                              {projects.length === 0 && (
+                                <button
+                                  onClick={() => router.push("/admin/manage")}
+                                  className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                                >
+                                  Create Your First Project
+                                </button>
+                              )}
                             </div>
                           </td>
                         </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
+                      ) : (
+                        filteredProjects.map((project) => (
+                          <tr key={project.id}>
+                            <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
+                              <div>
+                                <div className="text-sm font-medium text-gray-900 dark:text-white">
+                                  {project.title}
+                                </div>
+                                <div className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+                                  ID: {project.id}
+                                </div>
+                                <div className="sm:hidden text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                  {project.clientName}
+                                </div>
+                              </div>
+                            </td>
+                            <td className="hidden sm:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                              {project.clientName}
+                            </td>
+                            <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
+                              <select
+                                value={project.status}
+                                onChange={(e) =>
+                                  updateProjectStatus(project.id, e.target.value)
+                                }
+                                className={`px-2 py-1 text-xs font-medium rounded-full border-0 ${
+                                  project.status === "completed"
+                                    ? "bg-green-100 text-green-800"
+                                    : project.status === "in-progress"
+                                    ? "bg-blue-100 text-blue-800"
+                                    : project.status === "planning"
+                                    ? "bg-yellow-100 text-yellow-800"
+                                    : "bg-gray-100 text-gray-800"
+                                }`}
+                              >
+                                <option value="planning">Planning</option>
+                                <option value="in-progress">In Progress</option>
+                                <option value="completed">Completed</option>
+                                <option value="on-hold">On Hold</option>
+                              </select>
+                            </td>
+                            <td className="hidden md:table-cell px-6 py-4 whitespace-nowrap">
+                              <div className="flex items-center">
+                                <div className="w-16 bg-gray-200 rounded-full h-2 mr-2">
+                                  <div
+                                    className="bg-blue-600 h-2 rounded-full"
+                                    style={{ width: `${project.progress || 0}%` }}
+                                  ></div>
+                                </div>
+                                <span className="text-sm text-gray-900 dark:text-white">
+                                  {project.progress || 0}%
+                                </span>
+                              </div>
+                            </td>
+                            <td className="hidden lg:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                              ${project.budget?.toLocaleString() || "0"}
+                            </td>
+                            <td className="hidden xl:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                              <div>{project.startDate.toLocaleDateString()}</div>
+                              <div>to {project.endDate.toLocaleDateString()}</div>
+                            </td>
+                            <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-sm font-medium">
+                              <div className="flex flex-col sm:flex-row space-y-1 sm:space-y-0 sm:space-x-3">
+                                <button
+                                  onClick={() => editProject(project)}
+                                  className="text-blue-600 hover:text-blue-900 text-xs sm:text-sm"
+                                >
+                                  Edit
+                                </button>
+                                <button
+                                  onClick={() => deleteProject(project.id)}
+                                  className="text-red-600 hover:text-red-900 text-xs sm:text-sm"
+                                >
+                                  Delete
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
               </div>
-            </div>
+            )}
           </div>
         )}
 
