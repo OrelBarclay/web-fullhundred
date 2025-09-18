@@ -56,11 +56,11 @@ export function middleware(request: NextRequest) {
     }
   }
   // Protect visualizer routes
-  if (pathname.startsWith('/visualizer')) {
-    if (!hasValidToken) {
-      return NextResponse.redirect(new URL('/login', request.url));
-    }
-  }
+  // if (pathname.startsWith('/visualizer')) {
+  //   if (!hasValidToken) {
+  //     return NextResponse.redirect(new URL('/login', request.url));
+  //   }
+  // }
   
   return NextResponse.next();
 }

@@ -33,7 +33,6 @@ export default function VisualizerPage() {
   const [user, setUser] = useState<{ uid: string; isAdmin?: boolean } | null>(null);
   const [credits, setCredits] = useState(0);
   const [isCheckingCredits, setIsCheckingCredits] = useState(true);
-  const [needsAuth, setNeedsAuth] = useState(false);
   const priceCents: number = (() => {
     const envVal = Number(process.env.NEXT_PUBLIC_VISUALIZER_PRICE_CENTS || 499);
     return Number.isFinite(envVal) && envVal > 0 ? Math.floor(envVal) : 499;
@@ -98,11 +97,10 @@ export default function VisualizerPage() {
               console.error('Error fetching credits:', creditsError);
             }
           }
-        } else {
-          setNeedsAuth(true);
         }
+        // Don't set needsAuth to true here - allow everyone to visit
       } catch {
-        setNeedsAuth(true);
+        // Don't set needsAuth to true here - allow everyone to visit
       } finally {
         setIsCheckingRole(false);
         setIsCheckingCredits(false);
@@ -132,14 +130,13 @@ export default function VisualizerPage() {
 
     // Check authentication for non-admins
     if (!isAdmin && !user) {
-      setError("Please log in to generate designs.");
-      setNeedsAuth(true);
+      setError("Please log in to generate designs. You can create an account or log in to continue.");
       return;
     }
 
     // Check credits for non-admins
     if (!isAdmin && credits <= 0) {
-      setError("You need to purchase credits to generate designs.");
+      setError("You need to purchase credits to generate designs. Please log in and purchase credits to continue.");
       return;
     }
 
@@ -253,6 +250,15 @@ export default function VisualizerPage() {
 
   // Purchase credits function
   async function onPurchaseCredits() {
+    // Check if user is authenticated
+    if (!user) {
+      setError("Please log in to purchase credits. You'll be redirected to the login page.");
+      setTimeout(() => {
+        window.location.href = '/login';
+      }, 2000);
+      return;
+    }
+
     setIsSubmitting(true);
     setError(null);
     try {
@@ -342,21 +348,6 @@ export default function VisualizerPage() {
     );
   }
 
-  // Show authentication required message
-  if (needsAuth) {
-    return (
-      <section className="mx-auto max-w-6xl px-6 py-12 text-[color:var(--foreground)]">
-        <h1 className="text-3xl font-semibold text-primary mb-6">AI-Powered Design Visualizer</h1>
-        <div className="text-center py-12">
-          <div className="text-lg mb-4">Please log in to use the AI Visualizer</div>
-          <a href="/login" className="px-6 py-2 rounded bg-primary text-primary-foreground hover:opacity-90 transition">
-            Log In
-          </a>
-        </div>
-      </section>
-    );
-  }
-
   return (
     <section className="mx-auto max-w-6xl px-6 py-12 text-[color:var(--foreground)]">
       <h1 className="text-3xl font-semibold text-primary mb-6">AI-Powered Design Visualizer</h1>
@@ -366,19 +357,31 @@ export default function VisualizerPage() {
         <div className="mb-6 p-4 bg-[color:var(--card)] border border-[color:var(--border)] rounded-lg">
           <div className="flex items-center justify-between">
             <div>
-              <div className="font-medium">Your Credits: {credits}</div>
+              <div className="font-medium">
+                {user ? `Your Credits: ${credits}` : 'AI Design Credits'}
+              </div>
               <div className="text-sm text-[color:var(--muted-foreground)]">
                 Each generation costs 1 credit. Purchase 10 credits for ${(priceCents/100).toFixed(2)}.
+                {!user && ' Log in to purchase credits and generate designs.'}
               </div>
             </div>
-            {credits === 0 && (
-              <button 
-                onClick={onPurchaseCredits} 
-                disabled={isSubmitting}
-                className="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 transition"
+            {user ? (
+              credits === 0 && (
+                <button 
+                  onClick={onPurchaseCredits} 
+                  disabled={isSubmitting}
+                  className="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 transition"
+                >
+                  {isSubmitting ? 'Processing...' : `Purchase 10 Credits - $${(priceCents/100).toFixed(2)}`}
+                </button>
+              )
+            ) : (
+              <a 
+                href="/login"
+                className="px-4 py-2 rounded bg-primary text-primary-foreground hover:opacity-90 transition"
               >
-                {isSubmitting ? 'Processing...' : `Purchase 10 Credits - $${(priceCents/100).toFixed(2)}`}
-              </button>
+                Log In to Purchase Credits
+              </a>
             )}
           </div>
         </div>
@@ -430,10 +433,11 @@ export default function VisualizerPage() {
           <div className="flex gap-3 flex-wrap">
             <button 
               onClick={onVisualize} 
-              disabled={isLoading || (!isAdmin && credits <= 0)} 
+              disabled={isLoading || (!isAdmin && !user) || (!isAdmin && credits <= 0)} 
               className="px-6 py-2 rounded bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition"
             >
               {isLoading ? "Generating..." : 
+               (!isAdmin && !user) ? "Log In Required" :
                (!isAdmin && credits <= 0) ? "No Credits - Purchase Required" : 
                "Generate Design"}
             </button>
