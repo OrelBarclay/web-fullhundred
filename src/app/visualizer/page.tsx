@@ -28,6 +28,8 @@ export default function VisualizerPage() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [isCheckingRole, setIsCheckingRole] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
+  const [lastError, setLastError] = useState<string | null>(null);
   const priceCents: number = (() => {
     const envVal = Number(process.env.NEXT_PUBLIC_VISUALIZER_PRICE_CENTS || 499);
     return Number.isFinite(envVal) && envVal > 0 ? Math.floor(envVal) : 499;
@@ -46,6 +48,8 @@ export default function VisualizerPage() {
     setFile(f);
     setResultUrl(null);
     setError(null);
+    setLastError(null);
+    setRetryCount(0);
     if (f) {
       // Downscale large images to <= 1024 on longest side to avoid OOM
       const img = new window.Image();
@@ -107,6 +111,8 @@ export default function VisualizerPage() {
     setIsLoading(true);
     setError(null);
     setResultUrl(null);
+    setLastError(null);
+    
     try {
       const style = STYLES.find((s) => s.id === selectedStyle)!;
       const spaceLabel = SPACE_TYPES.find(s => s.id === spaceType)?.label || spaceType;
@@ -114,39 +120,83 @@ export default function VisualizerPage() {
       if (imagePreview?.startsWith("data:")) {
         base64 = imagePreview;
       }
+      
       const res = await fetch("/api/visualize", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ imageBase64: base64, stylePrompt: `${spaceLabel.toLowerCase()} ${style.prompt}`, width: 768, height: 768 }),
+        body: JSON.stringify({ 
+          imageBase64: base64, 
+          stylePrompt: `${spaceLabel.toLowerCase()} ${style.prompt}`, 
+          width: 768, 
+          height: 768 
+        }),
       });
+      
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Visualization failed");
+      if (!res.ok) {
+        const errorMsg = data.error || "Visualization failed";
+        setLastError(errorMsg);
+        throw new Error(errorMsg);
+      }
+      
       const url: string | null = data.imageUrl || null;
       if (url) {
-        const isImageUrl = (() => {
+        // More lenient image URL validation
+        const isValidImageUrl = (() => {
           try {
+            // Check if it's a data URL
+            if (url.startsWith('data:image/')) return true;
+            
+            // Check if it's a valid URL with image extension
             const u = new URL(url);
             const pathname = u.pathname.toLowerCase();
-            return /(\.png|\.jpg|\.jpeg|\.webp|\.gif)$/.test(pathname);
+            const hasImageExtension = /(\.png|\.jpg|\.jpeg|\.webp|\.gif)$/.test(pathname);
+            
+            // Also accept URLs from common image hosting services
+            const isImageHost = ['replicate.delivery', 'storage.googleapis.com', 'firebasestorage.googleapis.com', 'res.cloudinary.com'].some(host => u.hostname.includes(host));
+            
+            return hasImageExtension || isImageHost;
           } catch {
+            // If URL parsing fails, check if it looks like a data URL
             return /^data:image\//i.test(url);
           }
         })();
-        if (!isImageUrl) {
-          setError('The model returned a non-image result. Please try a different model/version or prompt.');
+        
+        if (!isValidImageUrl) {
+          const errorMsg = 'The AI returned a non-image result. This sometimes happens - try again.';
+          setLastError(errorMsg);
+          setError(errorMsg);
           setResultUrl(null);
         } else {
           setResultUrl(url);
+          setError(null);
+          setLastError(null);
+          setRetryCount(0); // Reset retry count on success
         }
       } else {
+        const errorMsg = 'No image was generated. This sometimes happens - try again.';
+        setLastError(errorMsg);
+        setError(errorMsg);
         setResultUrl(null);
       }
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Failed to generate design";
+      setLastError(msg);
       setError(msg);
     } finally {
       setIsLoading(false);
     }
+  }
+
+  // Retry function
+  async function onRetry() {
+    if (retryCount >= 3) {
+      setError("Maximum retry attempts reached. Please try uploading a different image or changing the style.");
+      return;
+    }
+    setRetryCount(prev => prev + 1);
+    setError(null);
+    await onVisualize();
   }
 
   // Pay for generated image (non-admins)
@@ -269,12 +319,31 @@ export default function VisualizerPage() {
             </div>
           </div>
 
-          <div className="flex gap-3">
+          <div className="flex gap-3 flex-wrap">
             <button onClick={onVisualize} disabled={isLoading} className="px-6 py-2 rounded bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition">
               {isLoading ? "Generating..." : "Generate Design"}
             </button>
+            {error && lastError && retryCount < 3 && (
+              <button onClick={onRetry} disabled={isLoading} className="px-4 py-2 rounded bg-orange-600 text-white hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed transition">
+                {isLoading ? "Retrying..." : `Retry (${retryCount}/3)`}
+              </button>
+            )}
           </div>
-          {error && <div className="text-red-600 text-sm">{error}</div>}
+          {error && (
+            <div className="text-red-600 text-sm space-y-2">
+              <div>{error}</div>
+              {retryCount > 0 && retryCount < 3 && (
+                <div className="text-xs text-gray-500">
+                  Attempt {retryCount + 1} of 3. Sometimes the AI needs a few tries to generate a good result.
+                </div>
+              )}
+              {retryCount >= 3 && (
+                <div className="text-xs text-gray-500">
+                  Try uploading a different image or selecting a different style.
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         <div className="border border-[color:var(--border)] rounded-lg p-4 bg-[color:var(--card)] min-h-[320px] flex flex-col items-center justify-between">

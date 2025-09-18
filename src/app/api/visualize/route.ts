@@ -62,51 +62,96 @@ export async function POST(request: NextRequest) {
     let status = pred.status;
     let outputUrl: string | null = null;
     const pollUrl: string | undefined = pred.urls?.get;
-    const maxAttempts = 40;
+    const maxAttempts = 50; // Increased from 40
     let attempts = 0;
-    while (status !== 'succeeded' && status !== 'failed' && attempts < maxAttempts && pollUrl) {
-      await new Promise((r) => setTimeout(r, 1500));
-      const pr = await fetch(pollUrl, {
-        headers: { Authorization: `Token ${token}` },
-      });
-      const pj = await pr.json();
-      status = pj.status;
-      if (status === 'succeeded') {
-        const out = pj.output;
-        const isImage = (u: unknown): string | null => {
-          if (typeof u !== 'string') return null;
-          try {
-            const url = new URL(u);
-            const p = url.pathname.toLowerCase();
-            if (/(\.png|\.jpg|\.jpeg|\.webp|\.gif)$/.test(p)) return u;
-            return null;
-          } catch {
-            return /^data:image\//i.test(u) ? u : null;
-          }
-        };
-        if (Array.isArray(out) && out.length > 0) {
-          const firstImg = out.map(isImage).find(Boolean);
-          if (firstImg) outputUrl = firstImg;
-        } else if (typeof out === 'string') {
-          const maybe = isImage(out);
-          if (maybe) outputUrl = maybe;
-        }
-        break;
-      } else if (status === 'failed') {
-        const err = pj?.error || pj?.detail || pj?.message || 'AI generation failed';
-        const logs = pj?.logs;
-        return NextResponse.json({ error: err, logs }, { status: 500 });
-      }
+    
+    if (!pollUrl) {
+      return NextResponse.json({ error: 'Invalid prediction response - no polling URL' }, { status: 500 });
+    }
+    
+    while (status !== 'succeeded' && status !== 'failed' && attempts < maxAttempts) {
+      await new Promise((r) => setTimeout(r, 2000)); // Increased from 1500ms
       attempts++;
+      
+      try {
+        const pr = await fetch(pollUrl, {
+          headers: { Authorization: `Token ${token}` },
+        });
+        
+        if (!pr.ok) {
+          console.error(`Polling attempt ${attempts} failed:`, pr.status, pr.statusText);
+          continue;
+        }
+        
+        const pj = await pr.json();
+        status = pj.status;
+        
+        if (status === 'succeeded') {
+          const out = pj.output;
+          const isImage = (u: unknown): string | null => {
+            if (typeof u !== 'string') return null;
+            try {
+              // More lenient image detection
+              if (u.startsWith('data:image/')) return u;
+              
+              const url = new URL(u);
+              const p = url.pathname.toLowerCase();
+              const hasImageExtension = /(\.png|\.jpg|\.jpeg|\.webp|\.gif)$/.test(p);
+              
+              // Also accept URLs from common image hosting services
+              const isImageHost = ['replicate.delivery', 'storage.googleapis.com', 'firebasestorage.googleapis.com', 'res.cloudinary.com'].some(host => url.hostname.includes(host));
+              
+              return hasImageExtension || isImageHost ? u : null;
+            } catch {
+              return /^data:image\//i.test(u) ? u : null;
+            }
+          };
+          
+          if (Array.isArray(out) && out.length > 0) {
+            const firstImg = out.map(isImage).find(Boolean);
+            if (firstImg) outputUrl = firstImg;
+          } else if (typeof out === 'string') {
+            const maybe = isImage(out);
+            if (maybe) outputUrl = maybe;
+          }
+          break;
+        } else if (status === 'failed') {
+          const err = pj?.error || pj?.detail || pj?.message || 'AI generation failed';
+          const logs = pj?.logs;
+          console.error('AI generation failed:', err, logs);
+          return NextResponse.json({ 
+            error: err, 
+            logs,
+            details: 'The AI model failed to generate an image. This can happen due to content policy restrictions or model limitations.'
+          }, { status: 500 });
+        }
+      } catch (pollError) {
+        console.error(`Polling error on attempt ${attempts}:`, pollError);
+        // Continue polling unless we've reached max attempts
+        if (attempts >= maxAttempts) {
+          return NextResponse.json({ 
+            error: 'Polling timeout - the AI generation is taking too long',
+            details: 'Please try again with a different image or style.'
+          }, { status: 500 });
+        }
+      }
     }
 
     if (!outputUrl) {
-      return NextResponse.json({ error: 'No output from AI' }, { status: 500 });
+      return NextResponse.json({ 
+        error: 'No image was generated. This can happen due to content policy restrictions or model limitations. Please try again with a different image or style.',
+        details: `Status: ${status}, Attempts: ${attempts}/${maxAttempts}`
+      }, { status: 500 });
     }
 
     return NextResponse.json({ imageUrl: outputUrl });
-  } catch {
-    return NextResponse.json({ error: 'Server error' }, { status: 500 });
+  } catch (error) {
+    console.error('Visualize API error:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Server error';
+    return NextResponse.json({ 
+      error: `Generation failed: ${errorMessage}`,
+      details: 'Please try again or contact support if the issue persists.'
+    }, { status: 500 });
   }
 }
 
