@@ -1,6 +1,7 @@
 "use client";
 import Image from "next/image";
 import QuoteForm from "@/components/QuoteForm";
+import Reviews from "@/components/Reviews";
 
 export default function Home() {
   return (
@@ -18,6 +19,8 @@ export default function Home() {
           <Image src="/images/hero.jpg" alt="Hero" className="w-full h-full object-cover rounded-lg" width={1000} height={1000} />
         </div>
       </div>
+
+      <Reviews />
 
       <div id="quote">
         <QuoteForm />
