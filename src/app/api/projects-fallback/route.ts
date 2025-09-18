@@ -15,12 +15,12 @@ export async function GET() {
     const projects = projectsSnapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data()
-    }));
+    })) as Array<Record<string, unknown>>;
     
     // Sort by order field (ascending), then by startDate (descending) as fallback
     const sortedProjects = projects.sort((a, b) => {
-      const aOrder = a.order || 0;
-      const bOrder = b.order || 0;
+      const aOrder = (a.order as number) || 0;
+      const bOrder = (b.order as number) || 0;
       
       // If both have order, sort by order
       if (aOrder !== 0 && bOrder !== 0) {
@@ -32,8 +32,8 @@ export async function GET() {
       if (aOrder === 0 && bOrder !== 0) return 1;
       
       // If neither has order, sort by startDate descending
-      const aStart = a.startDate ? new Date(a.startDate).getTime() : 0;
-      const bStart = b.startDate ? new Date(b.startDate).getTime() : 0;
+      const aStart = a.startDate ? new Date(a.startDate as string | number | Date).getTime() : 0;
+      const bStart = b.startDate ? new Date(b.startDate as string | number | Date).getTime() : 0;
       return bStart - aStart;
     });
     
