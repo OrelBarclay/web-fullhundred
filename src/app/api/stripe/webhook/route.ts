@@ -5,6 +5,37 @@ import { getDb } from '@/lib/firebase';
 import { doc, setDoc, getDoc, updateDoc, arrayUnion } from 'firebase/firestore';
 import Stripe from 'stripe';
 
+// Utility function to upload image to Cloudinary
+async function uploadToCloudinary(imageUrl: string, folder: string = 'visualizer/projects'): Promise<string> {
+  try {
+    // Fetch the image
+    const response = await fetch(imageUrl);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch image: ${response.statusText}`);
+    }
+    
+    const blob = await response.blob();
+    const formData = new FormData();
+    formData.append('file', new File([blob], 'image.png', { type: blob.type || 'image/png' }));
+    formData.append('folder', folder);
+    
+    const uploadResponse = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/cloudinary-upload`, {
+      method: 'POST',
+      body: formData,
+    });
+    
+    if (!uploadResponse.ok) {
+      throw new Error('Failed to upload to Cloudinary');
+    }
+    
+    const data = await uploadResponse.json();
+    return data.secure_url;
+  } catch (error) {
+    console.error('Cloudinary upload error:', error);
+    throw error;
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.text();
@@ -220,9 +251,29 @@ async function saveOrderToDatabase(session: Stripe.Checkout.Session) {
     if (isVisualizer) {
       const beforeUrl = session.metadata?.beforeImageUrl || '';
       const resultImageUrl = session.metadata?.resultImageUrl || '';
+      
+      // Upload images to Cloudinary for permanent storage
+      let uploadedBeforeImageUrl = null;
+      let uploadedResultImageUrl = null;
+
+      try {
+        // Upload result image (required)
+        if (resultImageUrl) {
+          uploadedResultImageUrl = await uploadToCloudinary(resultImageUrl, 'visualizer/projects');
+        }
+        
+        // Upload before image if provided
+        if (beforeUrl) {
+          uploadedBeforeImageUrl = await uploadToCloudinary(beforeUrl, 'visualizer/projects');
+        }
+      } catch (uploadError) {
+        console.error('Failed to upload visualizer images to Cloudinary:', uploadError);
+        // Continue with original URLs as fallback, but log the error
+      }
+
       baseProject['projectType'] = 'visualizer';
-      baseProject['beforeImages'] = beforeUrl ? [beforeUrl] : [];
-      baseProject['afterImages'] = resultImageUrl ? [resultImageUrl] : [];
+      baseProject['beforeImages'] = uploadedBeforeImageUrl ? [uploadedBeforeImageUrl] : (beforeUrl ? [beforeUrl] : []);
+      baseProject['afterImages'] = uploadedResultImageUrl ? [uploadedResultImageUrl] : (resultImageUrl ? [resultImageUrl] : []);
       baseProject['spaceType'] = session.metadata?.spaceType || 'unknown';
       if (session.metadata?.spaceLabel) {
         baseProject['title'] = `Visualizer ${session.metadata.spaceLabel} - ${primaryTitle}`;
