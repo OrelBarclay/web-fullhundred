@@ -8,6 +8,7 @@ type Project = {
   title: string;
   description?: string | null;
   status?: string;
+  order?: number;
   clientName?: string;
   clientEmail?: string;
   customerEmail?: string;

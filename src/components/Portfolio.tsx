@@ -7,6 +7,7 @@ type Project = {
   title: string;
   description?: string | null;
   status?: string;
+  order?: number;
   // Media fields saved on the project document
   beforeImages?: string[];
   afterImages?: string[];
@@ -46,6 +47,20 @@ export default function Portfolio() {
       // Only show completed projects in portfolio
       const isCompleted = p.status === 'completed';
       return matchText && matchStatus && isCompleted;
+    }).sort((a, b) => {
+      // Maintain order from API (already sorted by order field)
+      const aOrder = a.order || 0;
+      const bOrder = b.order || 0;
+      
+      if (aOrder !== 0 && bOrder !== 0) {
+        return aOrder - bOrder;
+      }
+      
+      if (aOrder !== 0 && bOrder === 0) return -1;
+      if (aOrder === 0 && bOrder !== 0) return 1;
+      
+      // If neither has order, maintain original order
+      return 0;
     });
   }, [projects, query, status]);
 

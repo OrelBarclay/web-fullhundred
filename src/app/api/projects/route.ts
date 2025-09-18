@@ -72,6 +72,19 @@ export async function GET(request: NextRequest) {
     };
 
     const projects = Array.from(resultsMap.values()).sort((a, b) => {
+      const aOrder = (a as Record<string, unknown>)['order'] as number || 0;
+      const bOrder = (b as Record<string, unknown>)['order'] as number || 0;
+      
+      // If both have order, sort by order
+      if (aOrder !== 0 && bOrder !== 0) {
+        return aOrder - bOrder;
+      }
+      
+      // If only one has order, prioritize it
+      if (aOrder !== 0 && bOrder === 0) return -1;
+      if (aOrder === 0 && bOrder !== 0) return 1;
+      
+      // If neither has order, sort by startDate descending
       const aStart = (a as Record<string, unknown>)['startDate'];
       const bStart = (b as Record<string, unknown>)['startDate'];
       const aDate = toDateSafe(aStart);

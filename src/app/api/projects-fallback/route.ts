@@ -17,8 +17,28 @@ export async function GET() {
       ...doc.data()
     }));
     
-    console.log('projects-fallback: Successfully fetched projects:', projects.length);
-    return NextResponse.json(projects);
+    // Sort by order field (ascending), then by startDate (descending) as fallback
+    const sortedProjects = projects.sort((a, b) => {
+      const aOrder = a.order || 0;
+      const bOrder = b.order || 0;
+      
+      // If both have order, sort by order
+      if (aOrder !== 0 && bOrder !== 0) {
+        return aOrder - bOrder;
+      }
+      
+      // If only one has order, prioritize it
+      if (aOrder !== 0 && bOrder === 0) return -1;
+      if (aOrder === 0 && bOrder !== 0) return 1;
+      
+      // If neither has order, sort by startDate descending
+      const aStart = a.startDate ? new Date(a.startDate).getTime() : 0;
+      const bStart = b.startDate ? new Date(b.startDate).getTime() : 0;
+      return bStart - aStart;
+    });
+    
+    console.log('projects-fallback: Successfully fetched and sorted projects:', sortedProjects.length);
+    return NextResponse.json(sortedProjects);
     
   } catch (error) {
     console.error('projects-fallback: Error:', error);
