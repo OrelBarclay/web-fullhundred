@@ -75,6 +75,13 @@ export default function MobileMenu() {
                 Our Work
               </Link>
               <Link 
+                href="/about" 
+                className="block px-3 py-2 text-sm font-medium text-[color:var(--foreground)] hover:bg-[color:var(--muted)] rounded-md transition-colors"
+                onClick={() => setOpen(false)}
+              >
+                About
+              </Link>
+              <Link 
                 href="/contact" 
                 className="block px-3 py-2 text-sm font-medium text-[color:var(--foreground)] hover:bg-[color:var(--muted)] rounded-md transition-colors"
                 onClick={() => setOpen(false)}

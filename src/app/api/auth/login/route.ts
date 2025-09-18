@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getFirebaseApp } from '@/lib/firebase';
 import { getFirestore, doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
-import { isUserAdmin } from '@/lib/auth-utils';
+
 
 export async function POST(request: NextRequest) {
   ;
@@ -24,9 +24,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'ID token required' }, { status: 400 });
     }
 
-    // For now, skip Admin SDK verification and use the user data from the client
-    // This is a temporary workaround until Firebase Admin permissions are fixed
-    
     if (!userData || !userData.uid) {
       return NextResponse.json({ error: 'User data required' }, { status: 400 });
     }
@@ -37,8 +34,7 @@ export async function POST(request: NextRequest) {
       name: userData.displayName,
       picture: userData.photoURL
     };
-    // Store/update user in Firestore
-    
+  
     const app = getFirebaseApp();
     const db = getFirestore(app);
     
@@ -72,8 +68,6 @@ export async function POST(request: NextRequest) {
     
     const user = userDataToStore;
     
-    // Check if user is admin using custom claims
-    // For now, we'll check the user's role in Firestore and custom claims
     let isAdminUser = false;
     
     // Check if user has admin role in Firestore

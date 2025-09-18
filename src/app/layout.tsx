@@ -25,7 +25,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://fullhundred.com"),
   title: {
-    default: "Full Hundred - Transforming Spaces with Precision and Craft",
+    default: "Full100services - Transforming Spaces with Precision and Craft",
     template: "%s | Full Hundred",
   },
   description:
@@ -35,7 +35,7 @@ export const metadata: Metadata = {
     "bathroom remodel",
     "kitchen remodeling",
     "custom carpentry",
-    "Full Hundred",
+    "Full100services",
   ],
   alternates: {
     canonical: "/",
@@ -43,7 +43,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     url: "/",
-    title: "Full Hundred - Transforming Spaces with Precision and Craft",
+    title: "Full100services - Transforming Spaces with Precision and Craft",
     description:
       "We design, build, and renovate with a relentless focus on quality. Explore our portfolio and get a free, no-obligation quote today.",
     images: [
@@ -51,13 +51,13 @@ export const metadata: Metadata = {
         url: "/images/og/cover.jpg",
         width: 1200,
         height: 630,
-        alt: "Full Hundred craftsmanship",
+        alt: "Full100services craftsmanship",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Full Hundred - Transforming Spaces with Precision and Craft",
+    title: "Full100services - Transforming Spaces with Precision and Craft",
     description:
       "We design, build, and renovate with a relentless focus on quality. Explore our portfolio and get a free, no-obligation quote today.",
     images: ["/images/og/cover.jpg"],
@@ -101,6 +101,7 @@ export default function RootLayout({
               <nav className="hidden lg:flex items-center space-x-1">
                 <ActiveLink href="/services">Services</ActiveLink>
                 <ActiveLink href="/portfolio">Our Work</ActiveLink>
+                <ActiveLink href="/about">About</ActiveLink>
                 <ActiveLink href="/contact">Contact</ActiveLink>
                 {/* <Link 
                   href="/#quote" 
@@ -132,7 +133,7 @@ export default function RootLayout({
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
               {/* Company Info */}
               <div className="lg:col-span-2">
-                <h3 className="text-2xl font-bold mb-4">Full Hundred</h3>
+                <h3 className="text-2xl font-bold mb-4">Full100services</h3>
                 <p className="text-[color:var(--muted-foreground)] mb-6 max-w-md">
                   We design, build, and renovate with a relentless focus on quality. 
                   Transforming spaces with precision and craft since day one.
@@ -181,6 +182,11 @@ export default function RootLayout({
                     </Link>
                   </li>
                   <li>
+                    <Link href="/about" className="text-[color:var(--muted-foreground)] hover:text-[color:var(--foreground)] transition-colors">
+                      About
+                    </Link>
+                  </li>
+                  <li>
                     <Link href="/contact" className="text-[color:var(--muted-foreground)] hover:text-[color:var(--foreground)] transition-colors">
                       Contact
                     </Link>
@@ -215,7 +221,7 @@ export default function RootLayout({
             <div className="border-t border-[color:var(--border)] mt-12 pt-8">
               <div className="flex flex-col md:flex-row justify-between items-center">
                 <div className="text-[color:var(--muted-foreground)] text-sm mb-4 md:mb-0">
-                  © {new Date().getFullYear()} Full Hundred. All rights reserved.
+                  © {new Date().getFullYear()} Full100services. All rights reserved.
                 </div>
                 <div className="flex space-x-6 text-sm">
                   <Link href="#" className="text-[color:var(--muted-foreground)] hover:text-[color:var(--foreground)] transition-colors">
