@@ -77,9 +77,9 @@ export default function AuthProvider() {
       {!isLoading && (
         <>
           {user ? (
-            <div className="flex items-center gap-3 sm:gap-4">
-              {/* Profile Section */}
-              <div className="flex items-center gap-2 sm:gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
+              {/* Profile Section - Compact on mobile */}
+              <div className="flex items-center gap-2">
                 {/* Profile Image */}
                 <Link href="/profile" className="group flex items-center gap-2 hover:opacity-80 transition-all duration-200">
                   <div className="relative w-8 h-8 sm:w-10 sm:h-10">
@@ -108,8 +108,8 @@ export default function AuthProvider() {
                     </div>
                   </div>
                   
-                  {/* User name */}
-                  <div className="hidden sm:block">
+                  {/* User name - Hidden on mobile, shown on desktop */}
+                  <div className="hidden lg:block">
                     <div className="text-sm font-medium text-[color:var(--foreground)]">
                       {user.displayName?.split(' ')[0] || user.email?.split('@')[0] || 'User'}
                     </div>
@@ -120,8 +120,8 @@ export default function AuthProvider() {
                 </Link>
               </div>
               
-              {/* Action Buttons */}
-              <div className="flex items-center gap-2">
+              {/* Action Buttons - Hidden on mobile, shown on desktop */}
+              <div className="hidden lg:flex items-center gap-2">
                 {isAdmin ? (
                   <Link 
                     href="/admin" 

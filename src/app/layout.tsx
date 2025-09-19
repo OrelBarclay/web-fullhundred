@@ -94,12 +94,12 @@ export default function RootLayout({
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between h-16">
               {/* Logo */}
-              <Link href="/" className="flex items-center group">
+              <Link href="/" className="flex items-center group flex-shrink-0">
                 <Logo />
               </Link>
               
               {/* Desktop Navigation */}
-              <nav className="hidden lg:flex items-center space-x-1">
+              <nav className="hidden lg:flex items-center space-x-1 flex-1 justify-center">
                 <ActiveLink href="/services">Services</ActiveLink>
                 <ActiveLink href="/portfolio">Our Work</ActiveLink>
                 <ActiveLink href="/about">About</ActiveLink>
@@ -114,15 +114,19 @@ export default function RootLayout({
                 <ActiveLink href="/visualizer">Visualizer</ActiveLink>
               </nav>
               
-              {/* Right side - Cart, Theme, Auth */}
-              <div className="flex items-center gap-2 sm:gap-3">
+              {/* Right side - Cart, Theme, Auth (Desktop) */}
+              <div className="hidden lg:flex items-center gap-2 sm:gap-3 flex-shrink-0">
                 <CartIcon />
                 <ThemeToggle />
                 <AuthProvider />
               </div>
               
-              {/* Mobile Menu */}
-              <MobileMenu />
+              {/* Mobile Controls */}
+              <div className="flex lg:hidden items-center gap-2 flex-shrink-0">
+                <CartIcon />
+                <ThemeToggle />
+                <MobileMenu />
+              </div>
             </div>
           </div>
         </header>
