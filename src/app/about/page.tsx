@@ -26,6 +26,7 @@ export default function AboutPage() {
           <h2 className="text-xl font-semibold mb-3 text-primary">What We Do</h2>
           <ul className="list-disc pl-5 space-y-2 text-[color:var(--muted-foreground)]">
             <li>Kitchen, bathroom, and outdoor/patio renovations</li>
+            <li>Plumbing, painting, tiling, and deck construction services</li>
             <li>Custom design and build with material guidance</li>
             <li>AI Design Visualizer to explore styles before construction</li>
             <li>Project tracking, transparent estimates, and clear timelines</li>

@@ -28,8 +28,11 @@ const PROJECT_TYPES = [
   { value: "kitchen", label: "Kitchen Remodeling", basePrice: 15000 },
   { value: "bathroom", label: "Bathroom Renovation", basePrice: 8000 },
   { value: "addition", label: "Home Addition", basePrice: 25000 },
+  { value: "plumbing", label: "Plumbing Services", basePrice: 3000 },
+  { value: "painting", label: "Painting Services", basePrice: 4000 },
+  { value: "tiling", label: "Tiling Services", basePrice: 5000 },
+  { value: "deck", label: "Deck Construction", basePrice: 6000 },
   { value: "basement", label: "Basement Finishing", basePrice: 12000 },
-  { value: "deck", label: "Deck/Patio", basePrice: 6000 },
   { value: "roofing", label: "Roofing", basePrice: 10000 },
   { value: "flooring", label: "Flooring", basePrice: 5000 },
   { value: "custom", label: "Custom Project", basePrice: 0 }

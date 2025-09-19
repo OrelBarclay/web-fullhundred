@@ -113,6 +113,78 @@ export default function ServicesPage() {
     },
     {
       id: "hardcoded-5",
+      title: "Plumbing Services",
+      description: "Professional plumbing solutions for your home. From repairs to installations, we ensure your plumbing systems work efficiently and reliably.",
+      features: [
+        "Pipe repair and replacement",
+        "Fixture installation and upgrades",
+        "Water heater services",
+        "Drain cleaning and repair",
+        "Emergency plumbing repairs"
+      ],
+      iconColor: "cyan",
+      iconPath: "M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z",
+      isActive: true,
+      order: 5,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    },
+    {
+      id: "hardcoded-6",
+      title: "Painting Services",
+      description: "Transform your space with our professional painting services. We provide high-quality interior and exterior painting with attention to detail.",
+      features: [
+        "Interior and exterior painting",
+        "Color consultation and design",
+        "Surface preparation and priming",
+        "Cabinet and furniture refinishing",
+        "Decorative painting techniques"
+      ],
+      iconColor: "pink",
+      iconPath: "M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zM21 5a2 2 0 00-2-2h-4a2 2 0 00-2 2v12a4 4 0 004 4h4a2 2 0 002-2V5z",
+      isActive: true,
+      order: 6,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    },
+    {
+      id: "hardcoded-7",
+      title: "Tiling Services",
+      description: "Expert tile installation and repair services for all areas of your home. We work with all tile types and create beautiful, durable surfaces.",
+      features: [
+        "Floor and wall tile installation",
+        "Bathroom and kitchen tiling",
+        "Backsplash installation",
+        "Tile repair and replacement",
+        "Grout cleaning and sealing"
+      ],
+      iconColor: "indigo",
+      iconPath: "M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z",
+      isActive: true,
+      order: 7,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    },
+    {
+      id: "hardcoded-8",
+      title: "Deck Construction",
+      description: "Build the perfect outdoor living space with our custom deck construction services. We create durable, beautiful decks that enhance your home.",
+      features: [
+        "Custom deck design and construction",
+        "Composite and wood decking options",
+        "Railings and safety features",
+        "Deck repair and maintenance",
+        "Outdoor lighting integration"
+      ],
+      iconColor: "amber",
+      iconPath: "M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2zM3 7l9-4 9 4M3 7l9 4 9-4M12 3v18",
+      isActive: true,
+      order: 8,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    },
+    {
+      id: "hardcoded-9",
       title: "Project Management",
       description: "Let us handle the complexity of your renovation project. Our experienced project managers ensure smooth execution from start to finish.",
       features: [
@@ -125,7 +197,7 @@ export default function ServicesPage() {
       iconColor: "red",
       iconPath: "M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01",
       isActive: true,
-      order: 5,
+      order: 9,
       createdAt: new Date(),
       updatedAt: new Date()
     }
