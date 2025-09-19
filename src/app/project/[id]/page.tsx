@@ -170,35 +170,7 @@ export default function ProjectDetail() {
 
   if (!isLoading && !project) return notFound();
 
-  // Check access permissions
-  if (!isLoading && project && !hasAccess) {
-    return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Access Denied</h1>
-          <p className="text-gray-600 dark:text-gray-300 mb-6">
-            You don&apos;t have permission to view this project.
-          </p>
-          <div className="flex gap-4 justify-center">
-            <Link 
-              href="/portfolio" 
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              View Portfolio
-            </Link>
-            {user && (
-              <Link 
-                href="/dashboard" 
-                className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors"
-              >
-                Back to Dashboard
-              </Link>
-            )}
-          </div>
-        </div>
-      </div>
-    );
-  }
+  
 
   // Extract all possible image and video fields from project
   const images: string[] = [
