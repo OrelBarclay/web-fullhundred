@@ -26,6 +26,7 @@ type Project = {
   orderTotal?: number | null;
   paymentStatus?: string | null;
   createdFromOrderId?: string | null;
+  isPortfolioProject?: boolean;
   orderSummary?: {
     totalItems: number;
     orderTotal: number;
@@ -131,7 +132,16 @@ export default function ProjectDetail() {
 
   // Check access permissions
   useEffect(() => {
-    if (!project || !user) return;
+    if (!project) return;
+
+    // If no user is logged in, check if project is public/portfolio
+    if (!user) {
+      // Allow access to portfolio projects or public projects
+      const isPortfolioProject = project.isPortfolioProject === true;
+      const isPublicProject = project.projectType === 'visualizer' || project.projectType === 'portfolio';
+      setHasAccess(isPortfolioProject || isPublicProject);
+      return;
+    }
 
     const userEmail = user.email?.toLowerCase() || '';
     const projectClientEmail = project.clientEmail?.toLowerCase() || '';
@@ -152,14 +162,16 @@ export default function ProjectDetail() {
       return;
     }
 
-    // No access
-    setHasAccess(false);
+    // Allow access to portfolio projects or public projects for all users
+    const isPortfolioProject = project.isPortfolioProject === true;
+    const isPublicProject = project.projectType === 'visualizer' || project.projectType === 'portfolio';
+    setHasAccess(isPortfolioProject || isPublicProject);
   }, [project, user, isAdmin]);
 
   if (!isLoading && !project) return notFound();
 
   // Check access permissions
-  if (!isLoading && project && user && !hasAccess) {
+  if (!isLoading && project && !hasAccess) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
@@ -167,12 +179,22 @@ export default function ProjectDetail() {
           <p className="text-gray-600 dark:text-gray-300 mb-6">
             You don&apos;t have permission to view this project.
           </p>
-          <Link 
-            href="/dashboard" 
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            Back to Dashboard
-          </Link>
+          <div className="flex gap-4 justify-center">
+            <Link 
+              href="/portfolio" 
+              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              View Portfolio
+            </Link>
+            {user && (
+              <Link 
+                href="/dashboard" 
+                className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors"
+              >
+                Back to Dashboard
+              </Link>
+            )}
+          </div>
         </div>
       </div>
     );
